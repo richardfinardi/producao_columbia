@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programação Semanal de Produção V5.2</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+
+    <!-- HEADER -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            
+            <!-- Título & Logo Maior no Cabeçalho -->
+            <div class="flex items-center gap-4">
+                <div class="flex items-center justify-center p-1 bg-slate-950/80 rounded-xl border border-slate-800 shadow-inner">
+                    <img src="./logo.png" alt="Logo" class="h-10 max-h-12 w-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="hidden p-2 bg-amber-500 rounded-xl text-slate-950 font-bold items-center justify-center">
+                        <i data-lucide="factory" class="w-6 h-6"></i>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-wide text-white">Controle Semanal de Produção V5.2</h1>
+                    <p class="text-xs text-slate-400">Agrupado por <span class="text-amber-400 font-mono">entrega_normalizada</span></p>
+                </div>
+            </div>
+
+            <!-- NAVEGADOR DE MÊS -->
+            <div class="flex items-center bg-slate-900/90 border border-slate-700/80 rounded-2xl px-2 py-1.5 shadow-md">
+                <button onclick="changeMonth(-1)" class="p-1.5 hover:bg-slate-800 rounded-xl text-slate-300 hover:text-white transition">
+                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                </button>
+                
+                <div class="flex items-center gap-2 px-3">
+                    <i data-lucide="calendar" class="w-5 h-5 text-amber-400"></i>
+                    <span id="currentMonthYearLabel" class="font-bold text-sm text-white capitalize tracking-wide min-w-[130px] text-center">
+                        Carregando...
+                    </span>
+                </div>
+
+                <button onclick="changeMonth(1)" class="p-1.5 hover:bg-slate-800 rounded-xl text-slate-300 hover:text-white transition">
+                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                </button>
+
+                <button onclick="resetToToday()" class="ml-2 px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold text-white transition">
+                    Hoje
+                </button>
+            </div>
+
+            <!-- Botão Atualizar -->
+            <div class="flex items-center gap-2">
+                <button id="btnRefresh" onclick="fetchData()" class="flex items-center gap-2 px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-bold text-xs transition-all shadow">
+                    <i data-lucide="refresh-cw" class="w-4 h-4" id="refreshIcon"></i>
+                    Atualizar Dados
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- METRICS BAR -->
+    <div class="bg-slate-900/60 border-b border-slate-800 text-white shadow-inner">
+        <div class="max-w-7xl mx-auto px-4 py-3 grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-400 font-bold uppercase block">Total de OS (Filtrado)</span>
+                <span id="metricTotalOS" class="text-xl font-extrabold text-slate-100">0</span>
+            </div>
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-400 font-bold uppercase block">OS Atrasadas</span>
+                <span id="metricAtrasadas" class="text-xl font-extrabold text-red-400">0</span>
+            </div>
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-400 font-bold uppercase block">Valor Geral Total</span>
+                <span id="metricValorTotal" class="text-xl font-extrabold text-emerald-400">R$ 0,00</span>
+            </div>
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-400 font-bold uppercase block">Sem Orçamento</span>
+                <span id="metricSemOrcamento" class="text-xl font-extrabold text-amber-400">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTROLES E FILTROS -->
+    <main class="max-w-7xl w-full mx-auto p-4 flex flex-col gap-4 flex-1">
+        
+        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+            
+            <!-- Busca Geral Universal -->
+            <div class="flex items-center gap-2 flex-1 min-w-[200px] bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
+                <input type="text" id="searchInput" oninput="renderCalendar()" placeholder="Pesquisar qualquer coisa (OS, Pedido, SC, Título, Cliente...)" 
+                       class="w-full text-xs bg-transparent text-white focus:outline-none placeholder-slate-500">
+            </div>
+
+            <!-- Filtro por Cliente -->
+            <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+                <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+                <select id="clientFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-white focus:outline-none cursor-pointer max-w-[140px]">
+                    <option value="" class="bg-slate-900">Todos os Clientes</option>
+                </select>
+            </div>
+
+            <!-- Filtro por Status Compras -->
+            <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+                <i data-lucide="shopping-cart" class="w-4 h-4 text-slate-400"></i>
+                <select id="comprasFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-white focus:outline-none cursor-pointer max-w-[140px]">
+                    <option value="" class="bg-slate-900">Status Compras (Todos)</option>
+                </select>
+            </div>
+
+            <!-- Filtro por Status Terceiros -->
+            <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+                <i data-lucide="truck" class="w-4 h-4 text-slate-400"></i>
+                <select id="terceirosFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-white focus:outline-none cursor-pointer max-w-[140px]">
+                    <option value="" class="bg-slate-900">Status Terceiros (Todos)</option>
+                </select>
+            </div>
+
+            <!-- BOTÕES DE FILTRO SEPARADOS -->
+            <div class="flex items-center gap-2">
+                <button id="btnToggleMonth" onclick="toggleMonthFilter()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                    <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span id="txtToggleMonth">Apenas Mês Selecionado</span>
+                </button>
+
+                <button id="btnToggleOrcamento" onclick="toggleOrcamentoFilter()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                    <i data-lucide="dollar-sign" class="w-3.5 h-3.5 text-emerald-400"></i>
+                    <span id="txtToggleOrcamento">Apenas Com Orçamento</span>
+                </button>
+
+                <!-- BOTÃO LIMPAR FILTROS -->
+                <button onclick="clearAllFilters()" title="Limpar todos os filtros acionados" class="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                    <i data-lucide="filter-x" class="w-3.5 h-3.5 text-red-400"></i>
+                    <span>Limpar Filtros</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- LEGENDAS -->
+        <div class="flex items-center gap-4 text-xs font-medium px-1 text-slate-400">
+            <span>Legendas:</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-500"></span> Atrasada</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-600"></span> No Prazo</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-400"></span> Sem Orçamento</span>
+        </div>
+
+        <!-- GRID DE SEMANAS -->
+        <div id="calendarGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+            <!-- As semanas serão geradas aqui -->
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-4 mt-8">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+            <div class="flex items-center gap-2">
+                <i data-lucide="code-2" class="w-4 h-4 text-amber-500"></i>
+                <span>© 2026 Sistema de Gestão de Produção</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL DE DETALHES -->
+    <div id="osModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 text-slate-100 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-800">
+            <div class="bg-slate-950 px-6 py-4 flex justify-between items-center border-b border-slate-800">
+                <div>
+                    <span id="mOS" class="text-xs font-bold bg-amber-500 text-slate-950 px-2 py-0.5 rounded uppercase"></span>
+                    <h3 id="mTitulo" class="font-bold text-sm mt-1 text-white"></h3>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div class="p-5 space-y-3 text-xs">
+                <div class="grid grid-cols-2 gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <div><span class="text-slate-400 block font-semibold">Nº Pedido</span><span id="mPedido" class="font-bold text-slate-200"></span></div>
+                    <div><span class="text-slate-400 block font-semibold">Cliente</span><span id="mCliente" class="font-bold text-slate-200"></span></div>
+                    <div><span class="text-slate-400 block font-semibold">Preço Geral / Valor</span><span id="mPreco" class="font-bold text-emerald-400"></span></div>
+                    <div><span class="text-slate-400 block font-semibold">Possui Orçamento</span><span id="mPossuiOrcamento" class="font-bold text-slate-200"></span></div>
+                    <div class="col-span-2 border-t border-slate-800/80 pt-1.5 mt-0.5">
+                        <span class="text-slate-400 block font-semibold">Nº do Orçamento</span>
+                        <span id="mNumOrcamento" class="font-bold text-amber-400"></span>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <h4 class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Status da Operação</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-slate-950 p-2 rounded-lg border border-slate-800"><span class="text-slate-400 block">Compras</span><span id="mCompras" class="font-semibold text-slate-200"></span></div>
+                        <div class="bg-slate-950 p-2 rounded-lg border border-slate-800"><span class="text-slate-400 block">Terceiros</span><span id="mTerceiros" class="font-semibold text-slate-200"></span></div>
+                        <div class="bg-slate-950 p-2 rounded-lg border border-slate-800"><span class="text-slate-400 block">Produção</span><span id="mProducao" class="font-semibold text-blue-400"></span></div>
+                        <div class="bg-slate-950 p-2 rounded-lg border border-slate-800"><span class="text-slate-400 block">Atrasada</span><span id="mAtrasada" class="font-bold"></span></div>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5 text-[11px] pt-2 border-t border-slate-800">
+                    <div><span class="text-slate-400">Abertura OS:</span> <span id="mAbertura" class="font-medium text-slate-300"></span></div>
+                    <div><span class="text-slate-400">Prazo Entrega Original:</span> <span id="mPrazoOriginal" class="font-bold text-blue-400"></span></div>
+                    <div><span class="text-slate-400">Último Apontamento:</span> <span id="mApontamento" class="font-medium text-slate-300"></span></div>
+                    <div><span class="text-slate-400">Entrega Normalizada:</span> <span id="mEntregaNorm" class="font-bold text-amber-400"></span></div>
+                </div>
+            </div>
+
+            <div class="bg-slate-950 px-5 py-3 border-t border-slate-800 flex justify-end">
+                <button onclick="closeModal()" class="px-4 py-1.5 bg-slate-800 text-white rounded-xl font-semibold hover:bg-slate-700">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://sintercan.consultoriarf.net/PRODUCAO';
+        let rawData = [];
+        
+        let currentDate = new Date();
+
+        let onlyCurrentMonth = true;
+        let onlyWithBudget = true;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            fetchData();
+        });
+
+        async function fetchData() {
+            const icon = document.getElementById('refreshIcon');
+            if(icon) icon.classList.add('animate-spin');
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'GET',
+                    headers: { 'ngrok-skip-browser-warning': '69420' }
+                });
+
+                if (!response.ok) throw new Error(`Status HTTP: ${response.status}`);
+                
+                const data = await response.json();
+                rawData = Array.isArray(data) ? data : [data];
+                
+                populateDropdowns();
+                renderCalendar();
+            } catch (err) {
+                console.error("Erro ao buscar API do Ngrok:", err);
+                alert("Erro de conexão! Verifique se a API local e o Ngrok estão ativos.");
+            } finally {
+                if(icon) icon.classList.remove('animate-spin');
+            }
+        }
+
+        function clearAllFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clientFilter').value = '';
+            document.getElementById('comprasFilter').value = '';
+            document.getElementById('terceirosFilter').value = '';
+
+            onlyCurrentMonth = true;
+            onlyWithBudget = true;
+
+            document.getElementById('txtToggleMonth').textContent = "Apenas Mês Selecionado";
+            document.getElementById('btnToggleMonth').className = "px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+
+            document.getElementById('txtToggleOrcamento').textContent = "Apenas Com Orçamento";
+            document.getElementById('btnToggleOrcamento').className = "px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+
+            renderCalendar();
+        }
+
+        function getFullTitle(item) {
+            const sc = item.sc ? item.sc.toString().trim() : '';
+            const titulo = item.titulo ? item.titulo.toString().trim() : 'Sem título';
+            return sc ? `${sc} - ${titulo}` : titulo;
+        }
+
+        function formatDateOnly(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return '-';
+            return d.toLocaleDateString('pt-BR');
+        }
+
+        function populateDropdowns() {
+            const clientSelect = document.getElementById('clientFilter');
+            const comprasSelect = document.getElementById('comprasFilter');
+            const terceirosSelect = document.getElementById('terceirosFilter');
+
+            clientSelect.innerHTML = '<option value="" class="bg-slate-900">Todos os Clientes</option>';
+            comprasSelect.innerHTML = '<option value="" class="bg-slate-900">Status Compras (Todos)</option>';
+            terceirosSelect.innerHTML = '<option value="" class="bg-slate-900">Status Terceiros (Todos)</option>';
+
+            const clients = new Set();
+            const comprasStatus = new Set();
+            const terceirosStatus = new Set();
+
+            rawData.forEach(item => {
+                if (item.cliente && item.cliente.trim() !== "") clients.add(item.cliente.trim());
+                if (item.status_compras && item.status_compras.trim() !== "") comprasStatus.add(item.status_compras.trim());
+                if (item.status_terceiros && item.status_terceiros.trim() !== "") terceirosStatus.add(item.status_terceiros.trim());
+            });
+
+            Array.from(clients).sort().forEach(val => {
+                clientSelect.appendChild(new Option(val, val, false, false)).className = 'bg-slate-900';
+            });
+
+            Array.from(comprasStatus).sort().forEach(val => {
+                comprasSelect.appendChild(new Option(val, val, false, false)).className = 'bg-slate-900';
+            });
+
+            Array.from(terceirosStatus).sort().forEach(val => {
+                terceirosSelect.appendChild(new Option(val, val, false, false)).className = 'bg-slate-900';
+            });
+        }
+
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function resetToToday() {
+            currentDate = new Date();
+            renderCalendar();
+        }
+
+        function toggleMonthFilter() {
+            onlyCurrentMonth = !onlyCurrentMonth;
+            const btn = document.getElementById('btnToggleMonth');
+            const txt = document.getElementById('txtToggleMonth');
+
+            if (onlyCurrentMonth) {
+                txt.textContent = "Apenas Mês Selecionado";
+                btn.className = "px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+            } else {
+                txt.textContent = "Exibindo Toda Semana";
+                btn.className = "px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 border border-amber-600 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
+            }
+            renderCalendar();
+        }
+
+        function toggleOrcamentoFilter() {
+            onlyWithBudget = !onlyWithBudget;
+            const btn = document.getElementById('btnToggleOrcamento');
+            const txt = document.getElementById('txtToggleOrcamento');
+
+            if (onlyWithBudget) {
+                txt.textContent = "Apenas Com Orçamento";
+                btn.className = "px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+            } else {
+                txt.textContent = "Exibindo Sem Orçamento";
+                btn.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-600 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
+            }
+            renderCalendar();
+        }
+
+        function parseValue(val) {
+            if (val === null || val === undefined || val === '') return 0;
+            if (typeof val === 'number') return val;
+            let str = val.toString().replace(/[^\d,-]/g, '').replace(',', '.');
+            return parseFloat(str) || 0;
+        }
+
+        function formatBRL(val) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseValue(val));
+        }
+
+        // Função de cálculo de semanas ajustada para fragmentar semanas que cruzam o mês
+        function getSplitWeekDetails(itemDate) {
+            const year = itemDate.getFullYear();
+            const month = itemDate.getMonth();
+
+            // Cálculo do Número da Semana ISO
+            const d = new Date(Date.UTC(year, month, itemDate.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+
+            // Segunda e Domingo nominais da semana ISO
+            const monday = new Date(itemDate);
+            monday.setDate(itemDate.getDate() - (itemDate.getDay() === 0 ? 6 : itemDate.getDay() - 1));
+            
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+
+            // Intervalo restrito ao mês da data do item
+            const firstDayOfMonth = new Date(year, month, 1);
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+
+            const startSegment = monday < firstDayOfMonth ? firstDayOfMonth : monday;
+            const endSegment = sunday > lastDayOfMonth ? lastDayOfMonth : sunday;
+
+            const formatShort = (dt) => `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}`;
+
+            return {
+                groupKey: `${year}-${String(month + 1).padStart(2, '0')}-W${weekNo}`,
+                weekNum: weekNo,
+                sortDate: startSegment,
+                label: `SEMANA ${weekNo} (${formatShort(startSegment)} A ${formatShort(endSegment)})`
+            };
+        }
+
+        function renderCalendar() {
+            const monthStr = currentDate.toLocaleDateString('pt-BR', { month: 'long' });
+            const capitalizedMonth = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
+            document.getElementById('currentMonthYearLabel').textContent = `${capitalizedMonth} De ${currentDate.getFullYear()}`;
+
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const selectedClient = document.getElementById('clientFilter').value;
+            const selectedCompras = document.getElementById('comprasFilter').value;
+            const selectedTerceiros = document.getElementById('terceirosFilter').value;
+
+            let filtered = rawData.filter(item => {
+                if (!item.entrega_normalizada) return false;
+                const date = new Date(item.entrega_normalizada);
+                if (isNaN(date)) return false;
+
+                if (onlyCurrentMonth) {
+                    if (date.getMonth() !== currentDate.getMonth() || date.getFullYear() !== currentDate.getFullYear()) {
+                        return false;
+                    }
+                }
+
+                if (onlyWithBudget) {
+                    const hasBudget = (item.possui_orcamento && item.possui_orcamento.toLowerCase() === 'sim') || (parseValue(item.preco_geral_a_vista || item.orcamento) > 0);
+                    if (!hasBudget) return false;
+                }
+
+                if (selectedClient && item.cliente !== selectedClient) return false;
+                if (selectedCompras && item.status_compras !== selectedCompras) return false;
+                if (selectedTerceiros && item.status_terceiros !== selectedTerceiros) return false;
+
+                if (search) {
+                    const allValuesText = Object.values(item)
+                        .filter(v => v !== null && v !== undefined)
+                        .join(' ')
+                        .toLowerCase();
+                    
+                    if (!allValuesText.includes(search)) return false;
+                }
+
+                return true;
+            });
+
+            let totalVal = 0, atrasadasCount = 0, semOrcCount = 0;
+            filtered.forEach(item => {
+                const val = parseValue(item.preco_geral_a_vista || item.orcamento);
+                totalVal += val;
+                if (item.atrasada === 'sim') atrasadasCount++;
+                if (item.possui_orcamento === 'não' || val === 0) semOrcCount++;
+            });
+
+            document.getElementById('metricTotalOS').textContent = filtered.length;
+            document.getElementById('metricAtrasadas').textContent = atrasadasCount;
+            document.getElementById('metricValorTotal').textContent = formatBRL(totalVal);
+            document.getElementById('metricSemOrcamento').textContent = semOrcCount;
+
+            const weeksMap = {};
+            filtered.forEach(item => {
+                const date = new Date(item.entrega_normalizada);
+                const weekInfo = getSplitWeekDetails(date);
+
+                if (!weeksMap[weekInfo.groupKey]) {
+                    weeksMap[weekInfo.groupKey] = {
+                        label: weekInfo.label,
+                        sortDate: weekInfo.sortDate,
+                        items: []
+                    };
+                }
+                weeksMap[weekInfo.groupKey].items.push(item);
+            });
+
+            const sortedWeeks = Object.values(weeksMap).sort((a, b) => a.sortDate - b.sortDate);
+
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            if (sortedWeeks.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-slate-900 p-8 text-center rounded-2xl border border-slate-800 text-slate-400">
+                        <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>
+                        Nenhuma Ordem de Serviço encontrada para os filtros selecionados.
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            sortedWeeks.forEach(week => {
+                const weekTotal = week.items.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
+                
+                const col = document.createElement('div');
+                col.className = 'bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex flex-col shadow-sm';
+
+                col.innerHTML = `
+                    <div class="bg-amber-500 text-slate-950 px-3 py-2 font-black text-xs flex justify-between items-center border-b border-amber-600">
+                        <span>${week.label}</span>
+                        <span class="bg-slate-950 text-white px-2 py-0.5 rounded-full text-[10px] font-mono font-normal">${week.items.length} OS</span>
+                    </div>
+                    <div class="bg-slate-950/60 px-3 py-1.5 border-b border-slate-800 flex justify-between text-[11px] font-semibold text-slate-300">
+                        <span>Previsto:</span>
+                        <span class="text-emerald-400 font-bold">${formatBRL(weekTotal)}</span>
+                    </div>
+                    <div class="p-2 space-y-2 max-h-[550px] overflow-y-auto custom-scroll flex-1">
+                        ${week.items.map(item => renderItemCard(item)).join('')}
+                    </div>
+                `;
+                grid.appendChild(col);
+            });
+
+            lucide.createIcons();
+        }
+
+        function renderItemCard(item) {
+            const isAtrasada = item.atrasada === 'sim';
+            const val = parseValue(item.preco_geral_a_vista || item.orcamento);
+            
+            let valColor = 'bg-emerald-600 text-white';
+            if (isAtrasada) valColor = 'bg-red-600 text-white font-bold';
+            else if (val === 0) valColor = 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
+
+            const payload = JSON.stringify(item).replace(/'/g, "&apos;");
+            const fullTitle = getFullTitle(item);
+
+            return `
+                <div onclick='openModal(${payload})' class="border border-slate-800 rounded-xl p-2.5 bg-slate-950/80 hover:border-amber-500/50 hover:shadow-lg transition cursor-pointer flex flex-col gap-1.5 text-xs">
+                    
+                    <div class="flex items-center justify-between font-mono">
+                        <span class="font-semibold text-slate-300 truncate max-w-[90px]">${item.n_pedido || 'SEM PEDIDO'}</span>
+                        <span class="bg-slate-900 text-amber-400 px-1.5 py-0.5 rounded font-bold border border-slate-800">OS ${item.n_os}</span>
+                        <span class="px-1.5 py-0.5 rounded text-[10px] ${valColor}">${formatBRL(val)}</span>
+                    </div>
+
+                    ${item.status ? `
+                        <div class="flex items-center gap-1">
+                            <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider">
+                                ${item.status}
+                            </span>
+                        </div>
+                    ` : ''}
+
+                    <div class="text-[11px] text-slate-300 line-clamp-2 leading-snug font-medium" title="${fullTitle}">
+                        ${fullTitle}
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-0.5 text-[10px] bg-slate-900/90 p-1.5 rounded-lg border border-slate-800/80 text-slate-400">
+                        <div class="flex items-center justify-between truncate">
+                            <span class="text-slate-500 flex items-center gap-1"><i data-lucide="shopping-cart" class="w-3 h-3 text-slate-400"></i> Compras:</span>
+                            <span class="font-semibold text-slate-300 truncate max-w-[120px]">${item.status_compras || '-'}</span>
+                        </div>
+                        <div class="flex items-center justify-between truncate">
+                            <span class="text-slate-500 flex items-center gap-1"><i data-lucide="truck" class="w-3 h-3 text-slate-400"></i> Terceiros:</span>
+                            <span class="font-semibold text-slate-300 truncate max-w-[120px]">${item.status_terceiros || '-'}</span>
+                        </div>
+                        <div class="flex items-center justify-between truncate">
+                            <span class="text-slate-500 flex items-center gap-1"><i data-lucide="activity" class="w-3 h-3 text-slate-400"></i> Produção:</span>
+                            <span class="font-bold text-blue-400">${item.status_producao || '0%'}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-900">
+                        <span class="truncate max-w-[110px]" title="${item.cliente || 'Sem cliente'}">${item.cliente || 'Sem cliente'}</span>
+                        <span class="${isAtrasada ? 'text-red-400 font-bold' : 'text-slate-400'}">${isAtrasada ? 'Atrasado' : 'No prazo'}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function openModal(item) {
+            document.getElementById('mOS').textContent = `OS #${item.n_os}`;
+            document.getElementById('mTitulo').textContent = getFullTitle(item);
+            document.getElementById('mPedido').textContent = item.n_pedido || 'Não informado';
+            document.getElementById('mCliente').textContent = item.cliente || 'Não informado';
+            document.getElementById('mPreco').textContent = formatBRL(item.preco_geral_a_vista || item.orcamento);
+            document.getElementById('mPossuiOrcamento').textContent = item.possui_orcamento || '-';
+            
+            document.getElementById('mNumOrcamento').textContent = item.orcamento || 'Não possui';
+
+            document.getElementById('mCompras').textContent = item.status_compras || '-';
+            document.getElementById('mTerceiros').textContent = item.status_terceiros || '-';
+            document.getElementById('mProducao').textContent = item.status_producao || '-';
+            document.getElementById('mAtrasada').textContent = item.atrasada === 'sim' ? 'SIM' : 'NÃO';
+            
+            const temOrcamento = item.possui_orcamento && item.possui_orcamento.toLowerCase() === 'sim';
+            const prazoOriginalStr = temOrcamento ? item.prev_entrega_orcamento : item.prev_entrega_os;
+
+            document.getElementById('mAbertura').textContent = formatDateOnly(item.abertura_os);
+            document.getElementById('mPrazoOriginal').textContent = formatDateOnly(prazoOriginalStr);
+            document.getElementById('mApontamento').textContent = formatDateOnly(item.ultimo_apontamento);
+            document.getElementById('mEntregaNorm').textContent = formatDateOnly(item.entrega_normalizada);
+
+            const modal = document.getElementById('osModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('osModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    </script>
+</body>
+</html>
