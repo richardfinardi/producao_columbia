@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Programação Semanal de Produção - Columbia V1.1</title>
+    <title>Programação Semanal de Produção - Columbia V1.2</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -49,7 +49,7 @@
                     </div>
                 </div>
                 <div>
-                    <h1 class="text-xl font-extrabold tracking-wide text-white">Controle Semanal de Produção V1.1</h1>
+                    <h1 class="text-xl font-extrabold tracking-wide text-white">Controle Semanal de Produção V1.2</h1>
                     <p class="text-xs text-columbia-100">Columbia Machine Brasil</p>
                 </div>
             </div>
@@ -76,8 +76,15 @@
                 </button>
             </div>
 
-            <!-- Botão Atualizar -->
+            <!-- Botões de Ação do Topo -->
             <div class="flex items-center gap-2">
+                <!-- Botão Trava / Exibir Valores -->
+                <button id="btnToggleValues" onclick="handleValueVisibility()" class="flex items-center gap-2 px-3 py-2 bg-columbia-800 hover:bg-columbia-900 border border-columbia-600 text-white rounded-xl font-bold text-xs transition shadow">
+                    <i data-lucide="eye-off" class="w-4 h-4 text-amber-400" id="iconValueVisibility"></i>
+                    <span id="txtValueVisibility">Exibir Valores</span>
+                </button>
+
+                <!-- Botão Atualizar -->
                 <button id="btnRefresh" onclick="fetchData()" class="flex items-center gap-2 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-all shadow">
                     <i data-lucide="refresh-cw" class="w-4 h-4" id="refreshIcon"></i>
                     Atualizar Dados
@@ -99,7 +106,7 @@
             </div>
             <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <span class="text-[10px] text-slate-500 font-bold uppercase block">Valor Geral Total</span>
-                <span id="metricValorTotal" class="text-xl font-extrabold text-emerald-600">R$ 0,00</span>
+                <span id="metricValorTotal" class="text-xl font-extrabold text-emerald-600">R$ *****</span>
             </div>
             <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <span class="text-[10px] text-slate-500 font-bold uppercase block">Sem Orçamento</span>
@@ -128,7 +135,7 @@
                 </select>
             </div>
 
-            <!-- Filtro por Engenharia (NOVO) -->
+            <!-- Filtro por Engenharia -->
             <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="cpu" class="w-4 h-4 text-slate-400"></i>
                 <select id="engenhariaFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
@@ -154,14 +161,14 @@
 
             <!-- BOTÕES DE FILTRO SEPARADOS -->
             <div class="flex items-center gap-2">
-                <button id="btnToggleMonth" onclick="toggleMonthFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
-                    <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-columbia-600"></i>
+                <button id="btnToggleMonth" onclick="toggleMonthFilter()" class="px-3 py-2 bg-columbia-700 text-white border border-columbia-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                    <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-columbia-100"></i>
                     <span id="txtToggleMonth">Apenas Mês Selecionado</span>
                 </button>
 
                 <button id="btnToggleOrcamento" onclick="toggleOrcamentoFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i data-lucide="dollar-sign" class="w-3.5 h-3.5 text-emerald-600"></i>
-                    <span id="txtToggleOrcamento">Apenas Com Orçamento</span>
+                    <span id="txtToggleOrcamento">Exibir Todas OS's</span>
                 </button>
 
                 <!-- BOTÃO LIMPAR FILTROS -->
@@ -215,14 +222,13 @@
                     <div><span class="text-slate-500 block font-semibold">Código Interno</span><span id="mCodInterno" class="font-bold text-slate-800 font-mono"></span></div>
                     <div><span class="text-slate-500 block font-semibold">Origem</span><span id="mOrigem" class="font-bold text-slate-800"></span></div>
                     <div><span class="text-slate-500 block font-semibold">Engenharia Status</span><span id="mEngenhariaStatus" class="font-bold text-slate-800"></span></div>
-                    <div><span class="text-slate-500 block font-semibold">Preço Geral / Valor</span><span id="mPreco" class="font-bold text-emerald-600"></span></div>
+                    <div><span class="text-slate-500 block font-semibold">OS Filho</span><span id="mOsFilho" class="font-bold text-slate-800 uppercase"></span></div>
                     <div><span class="text-slate-500 block font-semibold">Possui Orçamento</span><span id="mPossuiOrcamento" class="font-bold text-slate-800"></span></div>
-                    <div class="col-span-2 border-t border-slate-200 pt-1.5 mt-0.5">
-                        <span class="text-slate-500 block font-semibold">Nº do Orçamento</span>
-                        <span id="mNumOrcamento" class="font-bold text-columbia-700"></span>
-                    </div>
+                    <div><span class="text-slate-500 block font-semibold">Preço Geral / Valor</span><span id="mPreco" class="font-bold text-emerald-600"></span></div>
+                    <div><span class="text-slate-500 block font-semibold">Nº do Orçamento</span><span id="mNumOrcamento" class="font-bold text-columbia-700"></span></div>
                 </div>
 
+                <!-- STATUS OPERAÇÃO -->
                 <div class="space-y-1.5">
                     <h4 class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Status da Operação</h4>
                     <div class="grid grid-cols-2 gap-2">
@@ -233,11 +239,17 @@
                     </div>
                 </div>
 
-                <div class="space-y-1.5 text-[11px] pt-2 border-t border-slate-200">
-                    <div><span class="text-slate-500">Abertura OS:</span> <span id="mAbertura" class="font-medium text-slate-700"></span></div>
-                    <div><span class="text-slate-500">Prazo Entrega Original:</span> <span id="mPrazoOriginal" class="font-bold text-columbia-700"></span></div>
-                    <div><span class="text-slate-500">Último Apontamento:</span> <span id="mApontamento" class="font-medium text-slate-700"></span></div>
-                    <div><span class="text-slate-500">Entrega Normalizada:</span> <span id="mEntregaNorm" class="font-bold text-amber-600"></span></div>
+                <!-- TODAS AS DATAS MAPEADAS -->
+                <div class="space-y-1.5 pt-2 border-t border-slate-200">
+                    <h4 class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Datas do Processo</h4>
+                    <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px]">
+                        <div><span class="text-slate-500 block">Abertura OS:</span> <span id="mAbertura" class="font-semibold text-slate-700"></span></div>
+                        <div><span class="text-slate-500 block">Data Renegociada:</span> <span id="mDtRenegociada" class="font-bold text-purple-700"></span></div>
+                        <div><span class="text-slate-500 block">Prev. Entrega Orçamento:</span> <span id="mPrevEntregaOrcamento" class="font-semibold text-columbia-700"></span></div>
+                        <div><span class="text-slate-500 block">Prev. Entrega OS:</span> <span id="mPrevEntregaOS" class="font-semibold text-columbia-700"></span></div>
+                        <div><span class="text-slate-500 block">Último Apontamento:</span> <span id="mApontamento" class="font-semibold text-slate-700"></span></div>
+                        <div><span class="text-slate-500 block">Entrega Normalizada:</span> <span id="mEntregaNorm" class="font-bold text-amber-600"></span></div>
+                    </div>
                 </div>
             </div>
 
@@ -253,13 +265,50 @@
         
         let currentDate = new Date();
 
+        // PADRÃO SOLICITADO: Mês Selecionado Ativo, Exibir Todas as OSs (sem restrição de orçamento)
         let onlyCurrentMonth = true;
-        let onlyWithBudget = true;
+        let onlyWithBudget = false;
+
+        // CONTROLE DE VISIBILIDADE DE VALORES
+        let isValuesUnlocked = false;
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             fetchData();
         });
+
+        function handleValueVisibility() {
+            if (isValuesUnlocked) {
+                isValuesUnlocked = false;
+                updateValueVisibilityUI();
+                renderCalendar();
+            } else {
+                const pass = prompt("Digite a senha para exibir os valores:");
+                if (pass === "Colmac@2026") {
+                    isValuesUnlocked = true;
+                    updateValueVisibilityUI();
+                    renderCalendar();
+                } else if (pass !== null) {
+                    alert("Senha incorreta!");
+                }
+            }
+        }
+
+        function updateValueVisibilityUI() {
+            const btnTxt = document.getElementById('txtValueVisibility');
+            const icon = document.getElementById('iconValueVisibility');
+
+            if (isValuesUnlocked) {
+                btnTxt.textContent = "Ocultar Valores";
+                icon.setAttribute('data-lucide', 'eye');
+                icon.className = "w-4 h-4 text-emerald-400";
+            } else {
+                btnTxt.textContent = "Exibir Valores";
+                icon.setAttribute('data-lucide', 'eye-off');
+                icon.className = "w-4 h-4 text-amber-400";
+            }
+            lucide.createIcons();
+        }
 
         async function fetchData() {
             const icon = document.getElementById('refreshIcon');
@@ -294,14 +343,9 @@
             document.getElementById('terceirosFilter').value = '';
 
             onlyCurrentMonth = true;
-            onlyWithBudget = true;
+            onlyWithBudget = false;
 
-            document.getElementById('txtToggleMonth').textContent = "Apenas Mês Selecionado";
-            document.getElementById('btnToggleMonth').className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
-
-            document.getElementById('txtToggleOrcamento').textContent = "Apenas Com Orçamento";
-            document.getElementById('btnToggleOrcamento').className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
-
+            updateFilterButtonsUI();
             renderCalendar();
         }
 
@@ -340,21 +384,10 @@
                 if (item.status_terceiros && item.status_terceiros.trim() !== "") terceirosStatus.add(item.status_terceiros.trim());
             });
 
-            Array.from(clients).sort().forEach(val => {
-                clientSelect.appendChild(new Option(val, val));
-            });
-
-            Array.from(engenhariaStatus).sort().forEach(val => {
-                engenhariaSelect.appendChild(new Option(val, val));
-            });
-
-            Array.from(comprasStatus).sort().forEach(val => {
-                comprasSelect.appendChild(new Option(val, val));
-            });
-
-            Array.from(terceirosStatus).sort().forEach(val => {
-                terceirosSelect.appendChild(new Option(val, val));
-            });
+            Array.from(clients).sort().forEach(val => clientSelect.appendChild(new Option(val, val)));
+            Array.from(engenhariaStatus).sort().forEach(val => engenhariaSelect.appendChild(new Option(val, val)));
+            Array.from(comprasStatus).sort().forEach(val => comprasSelect.appendChild(new Option(val, val)));
+            Array.from(terceirosStatus).sort().forEach(val => terceirosSelect.appendChild(new Option(val, val)));
         }
 
         function changeMonth(delta) {
@@ -369,32 +402,37 @@
 
         function toggleMonthFilter() {
             onlyCurrentMonth = !onlyCurrentMonth;
-            const btn = document.getElementById('btnToggleMonth');
-            const txt = document.getElementById('txtToggleMonth');
-
-            if (onlyCurrentMonth) {
-                txt.textContent = "Apenas Mês Selecionado";
-                btn.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
-            } else {
-                txt.textContent = "Exibindo Toda Semana";
-                btn.className = "px-3 py-2 bg-columbia-700 hover:bg-columbia-800 text-white border border-columbia-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
-            }
+            updateFilterButtonsUI();
             renderCalendar();
         }
 
         function toggleOrcamentoFilter() {
             onlyWithBudget = !onlyWithBudget;
-            const btn = document.getElementById('btnToggleOrcamento');
-            const txt = document.getElementById('txtToggleOrcamento');
+            updateFilterButtonsUI();
+            renderCalendar();
+        }
+
+        function updateFilterButtonsUI() {
+            const btnM = document.getElementById('btnToggleMonth');
+            const txtM = document.getElementById('txtToggleMonth');
+            const btnO = document.getElementById('btnToggleOrcamento');
+            const txtO = document.getElementById('txtToggleOrcamento');
+
+            if (onlyCurrentMonth) {
+                txtM.textContent = "Apenas Mês Selecionado";
+                btnM.className = "px-3 py-2 bg-columbia-700 text-white border border-columbia-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
+            } else {
+                txtM.textContent = "Exibir Todas Semanas";
+                btnM.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+            }
 
             if (onlyWithBudget) {
-                txt.textContent = "Apenas Com Orçamento";
-                btn.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+                txtO.textContent = "Exibir Apenas Com Orçamento";
+                btnO.className = "px-3 py-2 bg-emerald-600 text-white border border-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
             } else {
-                txt.textContent = "Exibindo Sem Orçamento";
-                btn.className = "px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
+                txtO.textContent = "Exibir Todas OS's";
+                btnO.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
             }
-            renderCalendar();
         }
 
         function parseValue(val) {
@@ -405,6 +443,7 @@
         }
 
         function formatBRL(val) {
+            if (!isValuesUnlocked) return "R$ *****";
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseValue(val));
         }
 
@@ -557,12 +596,10 @@
             const isAtrasada = item.atrasada === 'sim';
             const val = parseValue(item.preco_geral_a_vista || item.orcamento);
             
-            // Badge Prazo Superior Direito
             let statusBadge = isAtrasada 
                 ? '<span class="bg-red-500 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">Atrasado</span>'
                 : '<span class="bg-emerald-600 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">No prazo</span>';
 
-            // Estilo do Valor no Rodapé
             let valColor = 'text-emerald-600 font-extrabold';
             if (val === 0) valColor = 'text-amber-600 font-bold';
 
@@ -572,13 +609,11 @@
             return `
                 <div onclick='openModal(${payload})' class="border border-slate-200 rounded-xl p-2.5 bg-white hover:border-columbia-500 hover:shadow-md transition cursor-pointer flex flex-col gap-1.5 text-xs">
                     
-                    <!-- Cabeçalho do Card (Sem Pedido) -->
                     <div class="flex items-center justify-between font-mono">
                         <span class="bg-columbia-50 text-columbia-700 px-1.5 py-0.5 rounded font-bold border border-columbia-100">OS ${item.n_os}</span>
                         ${statusBadge}
                     </div>
 
-                    <!-- Segmento Destacado + Status Geral -->
                     <div class="flex flex-wrap items-center gap-1 my-0.5">
                         ${item.segmento ? `
                             <span class="bg-columbia-100 text-columbia-800 border border-columbia-200 text-[10px] px-2 py-0.5 rounded-md font-extrabold tracking-wide uppercase">
@@ -592,12 +627,10 @@
                         ` : ''}
                     </div>
 
-                    <!-- Título -->
                     <div class="text-[11px] text-slate-800 line-clamp-2 leading-snug font-semibold" title="${fullTitle}">
                         ${fullTitle}
                     </div>
 
-                    <!-- Grade de Status da Operação (Engenharia, Compras, Terceiros, Produção) -->
                     <div class="grid grid-cols-1 gap-0.5 text-[10px] bg-slate-50 p-1.5 rounded-lg border border-slate-200 text-slate-600">
                         <div class="flex items-center justify-between truncate">
                             <span class="text-slate-500 flex items-center gap-1"><i data-lucide="cpu" class="w-3 h-3 text-slate-400"></i> Eng:</span>
@@ -617,7 +650,6 @@
                         </div>
                     </div>
 
-                    <!-- Rodapé com Cliente e Valor -->
                     <div class="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100">
                         <span class="truncate max-w-[100px] text-slate-500 font-medium" title="${item.cliente || 'Sem cliente'}">${item.cliente || 'Sem cliente'}</span>
                         <span class="${valColor} text-[11px]">${formatBRL(val)}</span>
@@ -635,6 +667,7 @@
             document.getElementById('mCodInterno').textContent = item.cod_interno || 'Não informado';
             document.getElementById('mOrigem').textContent = item.origem || 'Não informado';
             document.getElementById('mEngenhariaStatus').textContent = item.engenharia_status || 'Não informado';
+            document.getElementById('mOsFilho').textContent = item.os_filho || 'Não';
             
             document.getElementById('mPreco').textContent = formatBRL(item.preco_geral_a_vista || item.orcamento);
             document.getElementById('mPossuiOrcamento').textContent = item.possui_orcamento || '-';
@@ -645,11 +678,11 @@
             document.getElementById('mProducao').textContent = item.status_producao || '-';
             document.getElementById('mAtrasada').textContent = item.atrasada === 'sim' ? 'SIM' : 'NÃO';
             
-            const temOrcamento = item.possui_orcamento && item.possui_orcamento.toLowerCase() === 'sim';
-            const prazoOriginalStr = temOrcamento ? item.prev_entrega_orcamento : item.prev_entrega_os;
-
+            // MAPEMENTO DE TODAS AS DATAS SOLICITADAS
             document.getElementById('mAbertura').textContent = formatDateOnly(item.abertura_os);
-            document.getElementById('mPrazoOriginal').textContent = formatDateOnly(prazoOriginalStr);
+            document.getElementById('mDtRenegociada').textContent = formatDateOnly(item.dt_renegociada);
+            document.getElementById('mPrevEntregaOrcamento').textContent = formatDateOnly(item.prev_entrega_orcamento);
+            document.getElementById('mPrevEntregaOS').textContent = formatDateOnly(item.prev_entrega_os);
             document.getElementById('mApontamento').textContent = formatDateOnly(item.ultimo_apontamento);
             document.getElementById('mEntregaNorm').textContent = formatDateOnly(item.entrega_normalizada);
 
