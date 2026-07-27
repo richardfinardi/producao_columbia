@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Programação Semanal de Produção - Columbia V1.0</title>
+    <title>Programação Semanal de Produção - Columbia V1.7</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -50,7 +50,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle Semanal de Produção V1.0</p>
+                    <p class="text-xs text-columbia-100">Controle Semanal de Produção V1.7</p>
                 </div>
             </div>
 
@@ -127,11 +127,21 @@
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
             </div>
 
-            <!-- Filtro por Segmento (NOVO) -->
+            <!-- Filtro por Segmento -->
             <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="layers" class="w-4 h-4 text-slate-400"></i>
                 <select id="segmentoFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
                     <option value="">Segmento (Todos)</option>
+                </select>
+            </div>
+
+            <!-- Filtro por Status Produção (NOVO: Finalizado / Não Finalizado) -->
+            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                <i data-lucide="activity" class="w-4 h-4 text-slate-400"></i>
+                <select id="producaoFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[140px] font-medium">
+                    <option value="">Produção (Todos)</option>
+                    <option value="finalizado">Finalizado (100%)</option>
+                    <option value="nao_finalizado">Não Finalizado (&lt;100%)</option>
                 </select>
             </div>
 
@@ -422,6 +432,7 @@
         function clearAllFilters() {
             document.getElementById('searchInput').value = '';
             document.getElementById('segmentoFilter').value = '';
+            document.getElementById('producaoFilter').value = '';
             document.getElementById('clientFilter').value = '';
             document.getElementById('engenhariaFilter').value = '';
             document.getElementById('comprasFilter').value = '';
@@ -576,6 +587,7 @@
 
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
             const selectedSegmento = document.getElementById('segmentoFilter').value;
+            const selectedProducao = document.getElementById('producaoFilter').value;
             const selectedClient = document.getElementById('clientFilter').value;
             const selectedEngenharia = document.getElementById('engenhariaFilter').value;
             const selectedCompras = document.getElementById('comprasFilter').value;
@@ -602,6 +614,15 @@
                 if (selectedEngenharia && item.engenharia_status !== selectedEngenharia) return false;
                 if (selectedCompras && item.status_compras !== selectedCompras) return false;
                 if (selectedTerceiros && item.status_terceiros !== selectedTerceiros) return false;
+
+                // Lógica de Filtro por Produção (Finalizado vs Não Finalizado)
+                if (selectedProducao) {
+                    const prodStatus = (item.status_producao || '').trim();
+                    const isFinalizado = prodStatus === '100%' || (item.status && item.status.toUpperCase() === 'CONCLUÍDO');
+                    
+                    if (selectedProducao === 'finalizado' && !isFinalizado) return false;
+                    if (selectedProducao === 'nao_finalizado' && isFinalizado) return false;
+                }
 
                 if (search) {
                     const allValuesText = Object.values(item)
