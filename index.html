@@ -3,63 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Programação Semanal de Produção V5.2</title>
+    <title>Programação Semanal de Produção - Columbia V1.0</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        columbia: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#1d72b8',
+                            600: '#155b96',
+                            700: '#003e7e',
+                            800: '#002e61',
+                            900: '#001e40',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #0f172a; color: #f8fafc; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #0f172a; }
         .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #1e293b; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+<body class="min-h-screen flex flex-col bg-slate-100 text-slate-800">
 
     <!-- HEADER -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-md">
+    <header class="bg-columbia-700 text-white sticky top-0 z-50 shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
             
-            <!-- Título & Logo Maior no Cabeçalho -->
+            <!-- Título & Logo Columbia -->
             <div class="flex items-center gap-4">
-                <div class="flex items-center justify-center p-1 bg-slate-950/80 rounded-xl border border-slate-800 shadow-inner">
-                    <img src="./logo.png" alt="Logo" class="h-10 max-h-12 w-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="hidden p-2 bg-amber-500 rounded-xl text-slate-950 font-bold items-center justify-center">
+                <div class="flex items-center justify-center p-1.5 bg-white rounded-xl shadow-sm">
+                    <img src="./logo.png" alt="Columbia Machine" class="h-9 max-h-10 w-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="hidden p-1.5 bg-columbia-700 rounded-lg text-white font-bold items-center justify-center">
                         <i data-lucide="factory" class="w-6 h-6"></i>
                     </div>
                 </div>
                 <div>
-                    <h1 class="text-xl font-extrabold tracking-wide text-white">Controle Semanal de Produção V5.2</h1>
-                    <p class="text-xs text-slate-400">Agrupado por <span class="text-amber-400 font-mono">entrega_normalizada</span></p>
+                    <h1 class="text-xl font-extrabold tracking-wide text-white">Controle Semanal de Produção V1.0</h1>
+                    <p class="text-xs text-columbia-100">Columbia Machine Brasil <span class="font-mono font-semibold"></span></p>
                 </div>
             </div>
 
             <!-- NAVEGADOR DE MÊS -->
-            <div class="flex items-center bg-slate-900/90 border border-slate-700/80 rounded-2xl px-2 py-1.5 shadow-md">
-                <button onclick="changeMonth(-1)" class="p-1.5 hover:bg-slate-800 rounded-xl text-slate-300 hover:text-white transition">
+            <div class="flex items-center bg-columbia-800/80 border border-columbia-600 rounded-2xl px-2 py-1.5 shadow-inner">
+                <button onclick="changeMonth(-1)" class="p-1.5 hover:bg-columbia-700 rounded-xl text-columbia-100 hover:text-white transition">
                     <i data-lucide="chevron-left" class="w-5 h-5"></i>
                 </button>
                 
                 <div class="flex items-center gap-2 px-3">
-                    <i data-lucide="calendar" class="w-5 h-5 text-amber-400"></i>
+                    <i data-lucide="calendar" class="w-5 h-5 text-columbia-100"></i>
                     <span id="currentMonthYearLabel" class="font-bold text-sm text-white capitalize tracking-wide min-w-[130px] text-center">
                         Carregando...
                     </span>
                 </div>
 
-                <button onclick="changeMonth(1)" class="p-1.5 hover:bg-slate-800 rounded-xl text-slate-300 hover:text-white transition">
+                <button onclick="changeMonth(1)" class="p-1.5 hover:bg-columbia-700 rounded-xl text-columbia-100 hover:text-white transition">
                     <i data-lucide="chevron-right" class="w-5 h-5"></i>
                 </button>
 
-                <button onclick="resetToToday()" class="ml-2 px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold text-white transition">
+                <button onclick="resetToToday()" class="ml-2 px-3 py-1 bg-white hover:bg-slate-100 rounded-xl text-xs font-bold text-columbia-800 transition shadow-sm">
                     Hoje
                 </button>
             </div>
 
             <!-- Botão Atualizar -->
             <div class="flex items-center gap-2">
-                <button id="btnRefresh" onclick="fetchData()" class="flex items-center gap-2 px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-bold text-xs transition-all shadow">
+                <button id="btnRefresh" onclick="fetchData()" class="flex items-center gap-2 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-all shadow">
                     <i data-lucide="refresh-cw" class="w-4 h-4" id="refreshIcon"></i>
                     Atualizar Dados
                 </button>
@@ -68,23 +87,23 @@
     </header>
 
     <!-- METRICS BAR -->
-    <div class="bg-slate-900/60 border-b border-slate-800 text-white shadow-inner">
+    <div class="bg-white border-b border-slate-200 text-slate-800 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 py-3 grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                <span class="text-[10px] text-slate-400 font-bold uppercase block">Total de OS (Filtrado)</span>
-                <span id="metricTotalOS" class="text-xl font-extrabold text-slate-100">0</span>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span class="text-[10px] text-slate-500 font-bold uppercase block">Total de OS (Filtrado)</span>
+                <span id="metricTotalOS" class="text-xl font-extrabold text-columbia-700">0</span>
             </div>
-            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                <span class="text-[10px] text-slate-400 font-bold uppercase block">OS Atrasadas</span>
-                <span id="metricAtrasadas" class="text-xl font-extrabold text-red-400">0</span>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span class="text-[10px] text-slate-500 font-bold uppercase block">OS Atrasadas</span>
+                <span id="metricAtrasadas" class="text-xl font-extrabold text-red-600">0</span>
             </div>
-            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                <span class="text-[10px] text-slate-400 font-bold uppercase block">Valor Geral Total</span>
-                <span id="metricValorTotal" class="text-xl font-extrabold text-emerald-400">R$ 0,00</span>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span class="text-[10px] text-slate-500 font-bold uppercase block">Valor Geral Total</span>
+                <span id="metricValorTotal" class="text-xl font-extrabold text-emerald-600">R$ 0,00</span>
             </div>
-            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                <span class="text-[10px] text-slate-400 font-bold uppercase block">Sem Orçamento</span>
-                <span id="metricSemOrcamento" class="text-xl font-extrabold text-amber-400">0</span>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span class="text-[10px] text-slate-500 font-bold uppercase block">Sem Orçamento</span>
+                <span id="metricSemOrcamento" class="text-xl font-extrabold text-amber-600">0</span>
             </div>
         </div>
     </div>
@@ -92,65 +111,65 @@
     <!-- CONTROLES E FILTROS -->
     <main class="max-w-7xl w-full mx-auto p-4 flex flex-col gap-4 flex-1">
         
-        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-sm">
             
             <!-- Busca Geral Universal -->
-            <div class="flex items-center gap-2 flex-1 min-w-[200px] bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+            <div class="flex items-center gap-2 flex-1 min-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
-                <input type="text" id="searchInput" oninput="renderCalendar()" placeholder="Pesquisar qualquer coisa (OS, Pedido, SC, Título, Cliente...)" 
-                       class="w-full text-xs bg-transparent text-white focus:outline-none placeholder-slate-500">
+                <input type="text" id="searchInput" oninput="renderCalendar()" placeholder="Pesquisar (OS, Pedido, Título, Cliente, Origem, Cod. Interno...)" 
+                       class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
             </div>
 
             <!-- Filtro por Cliente -->
-            <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
-                <select id="clientFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-white focus:outline-none cursor-pointer max-w-[140px]">
-                    <option value="" class="bg-slate-900">Todos os Clientes</option>
+                <select id="clientFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[140px] font-medium">
+                    <option value="">Todos os Clientes</option>
                 </select>
             </div>
 
             <!-- Filtro por Status Compras -->
-            <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="shopping-cart" class="w-4 h-4 text-slate-400"></i>
-                <select id="comprasFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-white focus:outline-none cursor-pointer max-w-[140px]">
-                    <option value="" class="bg-slate-900">Status Compras (Todos)</option>
+                <select id="comprasFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[140px] font-medium">
+                    <option value="">Status Compras (Todos)</option>
                 </select>
             </div>
 
             <!-- Filtro por Status Terceiros -->
-            <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="truck" class="w-4 h-4 text-slate-400"></i>
-                <select id="terceirosFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-white focus:outline-none cursor-pointer max-w-[140px]">
-                    <option value="" class="bg-slate-900">Status Terceiros (Todos)</option>
+                <select id="terceirosFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[140px] font-medium">
+                    <option value="">Status Terceiros (Todos)</option>
                 </select>
             </div>
 
             <!-- BOTÕES DE FILTRO SEPARADOS -->
             <div class="flex items-center gap-2">
-                <button id="btnToggleMonth" onclick="toggleMonthFilter()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
-                    <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-amber-400"></i>
+                <button id="btnToggleMonth" onclick="toggleMonthFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                    <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-columbia-600"></i>
                     <span id="txtToggleMonth">Apenas Mês Selecionado</span>
                 </button>
 
-                <button id="btnToggleOrcamento" onclick="toggleOrcamentoFilter()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
-                    <i data-lucide="dollar-sign" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <button id="btnToggleOrcamento" onclick="toggleOrcamentoFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                    <i data-lucide="dollar-sign" class="w-3.5 h-3.5 text-emerald-600"></i>
                     <span id="txtToggleOrcamento">Apenas Com Orçamento</span>
                 </button>
 
                 <!-- BOTÃO LIMPAR FILTROS -->
-                <button onclick="clearAllFilters()" title="Limpar todos os filtros acionados" class="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
-                    <i data-lucide="filter-x" class="w-3.5 h-3.5 text-red-400"></i>
+                <button onclick="clearAllFilters()" title="Limpar todos os filtros acionados" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                    <i data-lucide="filter-x" class="w-3.5 h-3.5 text-red-600"></i>
                     <span>Limpar Filtros</span>
                 </button>
             </div>
         </div>
 
         <!-- LEGENDAS -->
-        <div class="flex items-center gap-4 text-xs font-medium px-1 text-slate-400">
+        <div class="flex items-center gap-4 text-xs font-medium px-1 text-slate-500">
             <span>Legendas:</span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-500"></span> Atrasada</span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-600"></span> No Prazo</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-400"></span> Sem Orçamento</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500"></span> Sem Orçamento</span>
         </div>
 
         <!-- GRID DE SEMANAS -->
@@ -160,58 +179,62 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-slate-900 border-t border-slate-800 py-4 mt-8">
-        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
-            <div class="flex items-center gap-2">
-                <i data-lucide="code-2" class="w-4 h-4 text-amber-500"></i>
-                <span>© 2026 Sistema de Gestão de Produção</span>
+    <footer class="bg-white border-t border-slate-200 py-4 mt-8">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+            <div class="flex items-center gap-2 font-medium">
+                <i data-lucide="code-2" class="w-4 h-4 text-columbia-600"></i>
+                <span>© 2026 Columbia Machine Brasil — Sistema de Gestão de Produção</span>
             </div>
         </div>
     </footer>
 
     <!-- MODAL DE DETALHES -->
-    <div id="osModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 text-slate-100 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-800">
-            <div class="bg-slate-950 px-6 py-4 flex justify-between items-center border-b border-slate-800">
+    <div id="osModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
+            <div class="bg-columbia-700 px-6 py-4 flex justify-between items-center text-white">
                 <div>
-                    <span id="mOS" class="text-xs font-bold bg-amber-500 text-slate-950 px-2 py-0.5 rounded uppercase"></span>
+                    <span id="mOS" class="text-xs font-bold bg-columbia-900 text-white px-2 py-0.5 rounded uppercase"></span>
                     <h3 id="mTitulo" class="font-bold text-sm mt-1 text-white"></h3>
                 </div>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeModal()" class="text-columbia-100 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
             <div class="p-5 space-y-3 text-xs">
-                <div class="grid grid-cols-2 gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                    <div><span class="text-slate-400 block font-semibold">Nº Pedido</span><span id="mPedido" class="font-bold text-slate-200"></span></div>
-                    <div><span class="text-slate-400 block font-semibold">Cliente</span><span id="mCliente" class="font-bold text-slate-200"></span></div>
-                    <div><span class="text-slate-400 block font-semibold">Preço Geral / Valor</span><span id="mPreco" class="font-bold text-emerald-400"></span></div>
-                    <div><span class="text-slate-400 block font-semibold">Possui Orçamento</span><span id="mPossuiOrcamento" class="font-bold text-slate-200"></span></div>
-                    <div class="col-span-2 border-t border-slate-800/80 pt-1.5 mt-0.5">
-                        <span class="text-slate-400 block font-semibold">Nº do Orçamento</span>
-                        <span id="mNumOrcamento" class="font-bold text-amber-400"></span>
+                <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div><span class="text-slate-500 block font-semibold">Nº Pedido</span><span id="mPedido" class="font-bold text-slate-800"></span></div>
+                    <div><span class="text-slate-500 block font-semibold">Cliente</span><span id="mCliente" class="font-bold text-slate-800"></span></div>
+                    <div><span class="text-slate-500 block font-semibold">Segmento</span><span id="mSegmento" class="font-bold text-columbia-700"></span></div>
+                    <div><span class="text-slate-500 block font-semibold">Código Interno</span><span id="mCodInterno" class="font-bold text-slate-800 font-mono"></span></div>
+                    <div><span class="text-slate-500 block font-semibold">Origem</span><span id="mOrigem" class="font-bold text-slate-800"></span></div>
+                    <div><span class="text-slate-500 block font-semibold">Engenharia Status</span><span id="mEngenhariaStatus" class="font-bold text-slate-800"></span></div>
+                    <div><span class="text-slate-500 block font-semibold">Preço Geral / Valor</span><span id="mPreco" class="font-bold text-emerald-600"></span></div>
+                    <div><span class="text-slate-500 block font-semibold">Possui Orçamento</span><span id="mPossuiOrcamento" class="font-bold text-slate-800"></span></div>
+                    <div class="col-span-2 border-t border-slate-200 pt-1.5 mt-0.5">
+                        <span class="text-slate-500 block font-semibold">Nº do Orçamento</span>
+                        <span id="mNumOrcamento" class="font-bold text-columbia-700"></span>
                     </div>
                 </div>
 
                 <div class="space-y-1.5">
-                    <h4 class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Status da Operação</h4>
+                    <h4 class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Status da Operação</h4>
                     <div class="grid grid-cols-2 gap-2">
-                        <div class="bg-slate-950 p-2 rounded-lg border border-slate-800"><span class="text-slate-400 block">Compras</span><span id="mCompras" class="font-semibold text-slate-200"></span></div>
-                        <div class="bg-slate-950 p-2 rounded-lg border border-slate-800"><span class="text-slate-400 block">Terceiros</span><span id="mTerceiros" class="font-semibold text-slate-200"></span></div>
-                        <div class="bg-slate-950 p-2 rounded-lg border border-slate-800"><span class="text-slate-400 block">Produção</span><span id="mProducao" class="font-semibold text-blue-400"></span></div>
-                        <div class="bg-slate-950 p-2 rounded-lg border border-slate-800"><span class="text-slate-400 block">Atrasada</span><span id="mAtrasada" class="font-bold"></span></div>
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200"><span class="text-slate-500 block">Compras</span><span id="mCompras" class="font-semibold text-slate-800"></span></div>
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200"><span class="text-slate-500 block">Terceiros</span><span id="mTerceiros" class="font-semibold text-slate-800"></span></div>
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200"><span class="text-slate-500 block">Produção</span><span id="mProducao" class="font-semibold text-columbia-600"></span></div>
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200"><span class="text-slate-500 block">Atrasada</span><span id="mAtrasada" class="font-bold"></span></div>
                     </div>
                 </div>
 
-                <div class="space-y-1.5 text-[11px] pt-2 border-t border-slate-800">
-                    <div><span class="text-slate-400">Abertura OS:</span> <span id="mAbertura" class="font-medium text-slate-300"></span></div>
-                    <div><span class="text-slate-400">Prazo Entrega Original:</span> <span id="mPrazoOriginal" class="font-bold text-blue-400"></span></div>
-                    <div><span class="text-slate-400">Último Apontamento:</span> <span id="mApontamento" class="font-medium text-slate-300"></span></div>
-                    <div><span class="text-slate-400">Entrega Normalizada:</span> <span id="mEntregaNorm" class="font-bold text-amber-400"></span></div>
+                <div class="space-y-1.5 text-[11px] pt-2 border-t border-slate-200">
+                    <div><span class="text-slate-500">Abertura OS:</span> <span id="mAbertura" class="font-medium text-slate-700"></span></div>
+                    <div><span class="text-slate-500">Prazo Entrega Original:</span> <span id="mPrazoOriginal" class="font-bold text-columbia-700"></span></div>
+                    <div><span class="text-slate-500">Último Apontamento:</span> <span id="mApontamento" class="font-medium text-slate-700"></span></div>
+                    <div><span class="text-slate-500">Entrega Normalizada:</span> <span id="mEntregaNorm" class="font-bold text-amber-600"></span></div>
                 </div>
             </div>
 
-            <div class="bg-slate-950 px-5 py-3 border-t border-slate-800 flex justify-end">
-                <button onclick="closeModal()" class="px-4 py-1.5 bg-slate-800 text-white rounded-xl font-semibold hover:bg-slate-700">Fechar</button>
+            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end">
+                <button onclick="closeModal()" class="px-4 py-1.5 bg-columbia-700 text-white rounded-xl font-semibold hover:bg-columbia-800 shadow-sm transition">Fechar</button>
             </div>
         </div>
     </div>
@@ -248,8 +271,8 @@
                 populateDropdowns();
                 renderCalendar();
             } catch (err) {
-                console.error("Erro ao buscar API do Ngrok:", err);
-                alert("Erro de conexão! Verifique se a API local e o Ngrok estão ativos.");
+                console.error("Erro ao buscar API:", err);
+                alert("Erro de conexão! Verifique se a API está ativa.");
             } finally {
                 if(icon) icon.classList.remove('animate-spin');
             }
@@ -265,22 +288,21 @@
             onlyWithBudget = true;
 
             document.getElementById('txtToggleMonth').textContent = "Apenas Mês Selecionado";
-            document.getElementById('btnToggleMonth').className = "px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+            document.getElementById('btnToggleMonth').className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
 
             document.getElementById('txtToggleOrcamento').textContent = "Apenas Com Orçamento";
-            document.getElementById('btnToggleOrcamento').className = "px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+            document.getElementById('btnToggleOrcamento').className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
 
             renderCalendar();
         }
 
         function getFullTitle(item) {
-            const sc = item.sc ? item.sc.toString().trim() : '';
             const titulo = item.titulo ? item.titulo.toString().trim() : 'Sem título';
-            return sc ? `${sc} - ${titulo}` : titulo;
+            return item.cod_interno ? `[${item.cod_interno}] ${titulo}` : titulo;
         }
 
         function formatDateOnly(dateStr) {
-            if (!dateStr) return '-';
+            if (!dateStr || dateStr === 'NaT') return '-';
             const d = new Date(dateStr);
             if (isNaN(d.getTime())) return '-';
             return d.toLocaleDateString('pt-BR');
@@ -291,9 +313,9 @@
             const comprasSelect = document.getElementById('comprasFilter');
             const terceirosSelect = document.getElementById('terceirosFilter');
 
-            clientSelect.innerHTML = '<option value="" class="bg-slate-900">Todos os Clientes</option>';
-            comprasSelect.innerHTML = '<option value="" class="bg-slate-900">Status Compras (Todos)</option>';
-            terceirosSelect.innerHTML = '<option value="" class="bg-slate-900">Status Terceiros (Todos)</option>';
+            clientSelect.innerHTML = '<option value="">Todos os Clientes</option>';
+            comprasSelect.innerHTML = '<option value="">Status Compras (Todos)</option>';
+            terceirosSelect.innerHTML = '<option value="">Status Terceiros (Todos)</option>';
 
             const clients = new Set();
             const comprasStatus = new Set();
@@ -306,15 +328,15 @@
             });
 
             Array.from(clients).sort().forEach(val => {
-                clientSelect.appendChild(new Option(val, val, false, false)).className = 'bg-slate-900';
+                clientSelect.appendChild(new Option(val, val));
             });
 
             Array.from(comprasStatus).sort().forEach(val => {
-                comprasSelect.appendChild(new Option(val, val, false, false)).className = 'bg-slate-900';
+                comprasSelect.appendChild(new Option(val, val));
             });
 
             Array.from(terceirosStatus).sort().forEach(val => {
-                terceirosSelect.appendChild(new Option(val, val, false, false)).className = 'bg-slate-900';
+                terceirosSelect.appendChild(new Option(val, val));
             });
         }
 
@@ -335,10 +357,10 @@
 
             if (onlyCurrentMonth) {
                 txt.textContent = "Apenas Mês Selecionado";
-                btn.className = "px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+                btn.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
             } else {
                 txt.textContent = "Exibindo Toda Semana";
-                btn.className = "px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 border border-amber-600 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
+                btn.className = "px-3 py-2 bg-columbia-700 hover:bg-columbia-800 text-white border border-columbia-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
             }
             renderCalendar();
         }
@@ -350,10 +372,10 @@
 
             if (onlyWithBudget) {
                 txt.textContent = "Apenas Com Orçamento";
-                btn.className = "px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+                btn.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
             } else {
                 txt.textContent = "Exibindo Sem Orçamento";
-                btn.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-600 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
+                btn.className = "px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
             }
             renderCalendar();
         }
@@ -369,26 +391,22 @@
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseValue(val));
         }
 
-        // Função de cálculo de semanas ajustada para fragmentar semanas que cruzam o mês
         function getSplitWeekDetails(itemDate) {
             const year = itemDate.getFullYear();
             const month = itemDate.getMonth();
 
-            // Cálculo do Número da Semana ISO
             const d = new Date(Date.UTC(year, month, itemDate.getDate()));
             const dayNum = d.getUTCDay() || 7;
             d.setUTCDate(d.getUTCDate() + 4 - dayNum);
             const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
             const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 
-            // Segunda e Domingo nominais da semana ISO
             const monday = new Date(itemDate);
             monday.setDate(itemDate.getDate() - (itemDate.getDay() === 0 ? 6 : itemDate.getDay() - 1));
             
             const sunday = new Date(monday);
             sunday.setDate(monday.getDate() + 6);
 
-            // Intervalo restrito ao mês da data do item
             const firstDayOfMonth = new Date(year, month, 1);
             const lastDayOfMonth = new Date(year, month + 1, 0);
 
@@ -452,7 +470,7 @@
                 const val = parseValue(item.preco_geral_a_vista || item.orcamento);
                 totalVal += val;
                 if (item.atrasada === 'sim') atrasadasCount++;
-                if (item.possui_orcamento === 'não' || val === 0) semOrcCount++;
+                if (item.possui_orcamento === 'não' || item.possui_orcamento === 'nao' || val === 0) semOrcCount++;
             });
 
             document.getElementById('metricTotalOS').textContent = filtered.length;
@@ -482,8 +500,8 @@
 
             if (sortedWeeks.length === 0) {
                 grid.innerHTML = `
-                    <div class="col-span-full bg-slate-900 p-8 text-center rounded-2xl border border-slate-800 text-slate-400">
-                        <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>
+                    <div class="col-span-full bg-white p-8 text-center rounded-2xl border border-slate-200 text-slate-500 shadow-sm">
+                        <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-2 opacity-40 text-slate-400"></i>
                         Nenhuma Ordem de Serviço encontrada para os filtros selecionados.
                     </div>
                 `;
@@ -495,16 +513,16 @@
                 const weekTotal = week.items.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
                 
                 const col = document.createElement('div');
-                col.className = 'bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex flex-col shadow-sm';
+                col.className = 'bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col shadow-sm hover:shadow transition-shadow';
 
                 col.innerHTML = `
-                    <div class="bg-amber-500 text-slate-950 px-3 py-2 font-black text-xs flex justify-between items-center border-b border-amber-600">
+                    <div class="bg-columbia-700 text-white px-3.5 py-2 font-black text-xs flex justify-between items-center border-b border-columbia-800">
                         <span>${week.label}</span>
-                        <span class="bg-slate-950 text-white px-2 py-0.5 rounded-full text-[10px] font-mono font-normal">${week.items.length} OS</span>
+                        <span class="bg-columbia-900 text-white px-2 py-0.5 rounded-full text-[10px] font-mono font-bold">${week.items.length} OS</span>
                     </div>
-                    <div class="bg-slate-950/60 px-3 py-1.5 border-b border-slate-800 flex justify-between text-[11px] font-semibold text-slate-300">
+                    <div class="bg-slate-50 px-3 py-1.5 border-b border-slate-200 flex justify-between text-[11px] font-semibold text-slate-600">
                         <span>Previsto:</span>
-                        <span class="text-emerald-400 font-bold">${formatBRL(weekTotal)}</span>
+                        <span class="text-emerald-600 font-bold">${formatBRL(weekTotal)}</span>
                     </div>
                     <div class="p-2 space-y-2 max-h-[550px] overflow-y-auto custom-scroll flex-1">
                         ${week.items.map(item => renderItemCard(item)).join('')}
@@ -520,52 +538,57 @@
             const isAtrasada = item.atrasada === 'sim';
             const val = parseValue(item.preco_geral_a_vista || item.orcamento);
             
-            let valColor = 'bg-emerald-600 text-white';
+            let valColor = 'bg-emerald-600 text-white font-bold';
             if (isAtrasada) valColor = 'bg-red-600 text-white font-bold';
-            else if (val === 0) valColor = 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
+            else if (val === 0) valColor = 'bg-amber-100 text-amber-700 border border-amber-300 font-bold';
 
             const payload = JSON.stringify(item).replace(/'/g, "&apos;");
             const fullTitle = getFullTitle(item);
 
             return `
-                <div onclick='openModal(${payload})' class="border border-slate-800 rounded-xl p-2.5 bg-slate-950/80 hover:border-amber-500/50 hover:shadow-lg transition cursor-pointer flex flex-col gap-1.5 text-xs">
+                <div onclick='openModal(${payload})' class="border border-slate-200 rounded-xl p-2.5 bg-white hover:border-columbia-500 hover:shadow-md transition cursor-pointer flex flex-col gap-1.5 text-xs">
                     
                     <div class="flex items-center justify-between font-mono">
-                        <span class="font-semibold text-slate-300 truncate max-w-[90px]">${item.n_pedido || 'SEM PEDIDO'}</span>
-                        <span class="bg-slate-900 text-amber-400 px-1.5 py-0.5 rounded font-bold border border-slate-800">OS ${item.n_os}</span>
+                        <span class="font-bold text-slate-700 truncate max-w-[90px]">${item.n_pedido || 'SEM PEDIDO'}</span>
+                        <span class="bg-columbia-50 text-columbia-700 px-1.5 py-0.5 rounded font-bold border border-columbia-100">OS ${item.n_os}</span>
                         <span class="px-1.5 py-0.5 rounded text-[10px] ${valColor}">${formatBRL(val)}</span>
                     </div>
 
-                    ${item.status ? `
-                        <div class="flex items-center gap-1">
-                            <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider">
+                    <div class="flex flex-wrap items-center gap-1">
+                        ${item.status ? `
+                            <span class="bg-columbia-50 text-columbia-700 border border-columbia-100 text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider">
                                 ${item.status}
                             </span>
-                        </div>
-                    ` : ''}
+                        ` : ''}
+                        ${item.segmento ? `
+                            <span class="bg-slate-100 text-slate-600 border border-slate-200 text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase">
+                                ${item.segmento}
+                            </span>
+                        ` : ''}
+                    </div>
 
-                    <div class="text-[11px] text-slate-300 line-clamp-2 leading-snug font-medium" title="${fullTitle}">
+                    <div class="text-[11px] text-slate-800 line-clamp-2 leading-snug font-semibold" title="${fullTitle}">
                         ${fullTitle}
                     </div>
 
-                    <div class="grid grid-cols-1 gap-0.5 text-[10px] bg-slate-900/90 p-1.5 rounded-lg border border-slate-800/80 text-slate-400">
+                    <div class="grid grid-cols-1 gap-0.5 text-[10px] bg-slate-50 p-1.5 rounded-lg border border-slate-200 text-slate-600">
                         <div class="flex items-center justify-between truncate">
                             <span class="text-slate-500 flex items-center gap-1"><i data-lucide="shopping-cart" class="w-3 h-3 text-slate-400"></i> Compras:</span>
-                            <span class="font-semibold text-slate-300 truncate max-w-[120px]">${item.status_compras || '-'}</span>
+                            <span class="font-semibold text-slate-700 truncate max-w-[120px]">${item.status_compras || '-'}</span>
                         </div>
                         <div class="flex items-center justify-between truncate">
                             <span class="text-slate-500 flex items-center gap-1"><i data-lucide="truck" class="w-3 h-3 text-slate-400"></i> Terceiros:</span>
-                            <span class="font-semibold text-slate-300 truncate max-w-[120px]">${item.status_terceiros || '-'}</span>
+                            <span class="font-semibold text-slate-700 truncate max-w-[120px]">${item.status_terceiros || '-'}</span>
                         </div>
                         <div class="flex items-center justify-between truncate">
                             <span class="text-slate-500 flex items-center gap-1"><i data-lucide="activity" class="w-3 h-3 text-slate-400"></i> Produção:</span>
-                            <span class="font-bold text-blue-400">${item.status_producao || '0%'}</span>
+                            <span class="font-bold text-columbia-700">${item.status_producao || '0%'}</span>
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-900">
-                        <span class="truncate max-w-[110px]" title="${item.cliente || 'Sem cliente'}">${item.cliente || 'Sem cliente'}</span>
-                        <span class="${isAtrasada ? 'text-red-400 font-bold' : 'text-slate-400'}">${isAtrasada ? 'Atrasado' : 'No prazo'}</span>
+                    <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+                        <span class="truncate max-w-[110px] font-medium" title="${item.cliente || 'Sem cliente'}">${item.cliente || 'Sem cliente'}</span>
+                        <span class="${isAtrasada ? 'text-red-600 font-bold' : 'text-emerald-600 font-semibold'}">${isAtrasada ? 'Atrasado' : 'No prazo'}</span>
                     </div>
                 </div>
             `;
@@ -576,9 +599,13 @@
             document.getElementById('mTitulo').textContent = getFullTitle(item);
             document.getElementById('mPedido').textContent = item.n_pedido || 'Não informado';
             document.getElementById('mCliente').textContent = item.cliente || 'Não informado';
+            document.getElementById('mSegmento').textContent = item.segmento || 'Não informado';
+            document.getElementById('mCodInterno').textContent = item.cod_interno || 'Não informado';
+            document.getElementById('mOrigem').textContent = item.origem || 'Não informado';
+            document.getElementById('mEngenhariaStatus').textContent = item.engenharia_status || 'Não informado';
+            
             document.getElementById('mPreco').textContent = formatBRL(item.preco_geral_a_vista || item.orcamento);
             document.getElementById('mPossuiOrcamento').textContent = item.possui_orcamento || '-';
-            
             document.getElementById('mNumOrcamento').textContent = item.orcamento || 'Não possui';
 
             document.getElementById('mCompras').textContent = item.status_compras || '-';
