@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Programação Semanal de Produção - Columbia V1.2</title>
+    <title>Programação Semanal de Produção - Columbia V1.3</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -49,7 +49,7 @@
                     </div>
                 </div>
                 <div>
-                    <h1 class="text-xl font-extrabold tracking-wide text-white">Controle Semanal de Produção V1.2</h1>
+                    <h1 class="text-xl font-extrabold tracking-wide text-white">Controle Semanal de Produção V1.3</h1>
                     <p class="text-xs text-columbia-100">Columbia Machine Brasil</p>
                 </div>
             </div>
@@ -161,14 +161,14 @@
 
             <!-- BOTÕES DE FILTRO SEPARADOS -->
             <div class="flex items-center gap-2">
-                <button id="btnToggleMonth" onclick="toggleMonthFilter()" class="px-3 py-2 bg-columbia-700 text-white border border-columbia-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                    <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-columbia-100"></i>
-                    <span id="txtToggleMonth">Apenas Mês Selecionado</span>
+                <button id="btnToggleMonth" onclick="toggleMonthFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                    <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-columbia-600"></i>
+                    <span id="txtToggleMonth">Exibir todas as semanas</span>
                 </button>
 
                 <button id="btnToggleOrcamento" onclick="toggleOrcamentoFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i data-lucide="dollar-sign" class="w-3.5 h-3.5 text-emerald-600"></i>
-                    <span id="txtToggleOrcamento">Exibir Todas OS's</span>
+                    <span id="txtToggleOrcamento">Exibir somente com Orçamentos</span>
                 </button>
 
                 <!-- BOTÃO LIMPAR FILTROS -->
@@ -239,7 +239,7 @@
                     </div>
                 </div>
 
-                <!-- TODAS AS DATAS MAPEADAS -->
+                <!-- DATAS MAPEADAS -->
                 <div class="space-y-1.5 pt-2 border-t border-slate-200">
                     <h4 class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Datas do Processo</h4>
                     <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px]">
@@ -265,11 +265,11 @@
         
         let currentDate = new Date();
 
-        // PADRÃO SOLICITADO: Mês Selecionado Ativo, Exibir Todas as OSs (sem restrição de orçamento)
-        let onlyCurrentMonth = true;
+        // ESTADO PADRÃO DESSES FILTROS É DESATIVADO (FALSE)
+        let onlyCurrentMonth = false;
         let onlyWithBudget = false;
 
-        // CONTROLE DE VISIBILIDADE DE VALORES
+        // CONTROLE DE VISIBILIDADE DE VALORES (PROTEGIDO)
         let isValuesUnlocked = false;
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -342,7 +342,7 @@
             document.getElementById('comprasFilter').value = '';
             document.getElementById('terceirosFilter').value = '';
 
-            onlyCurrentMonth = true;
+            onlyCurrentMonth = false;
             onlyWithBudget = false;
 
             updateFilterButtonsUI();
@@ -419,18 +419,18 @@
             const txtO = document.getElementById('txtToggleOrcamento');
 
             if (onlyCurrentMonth) {
-                txtM.textContent = "Apenas Mês Selecionado";
+                txtM.textContent = "Apenas mês selecionado";
                 btnM.className = "px-3 py-2 bg-columbia-700 text-white border border-columbia-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
             } else {
-                txtM.textContent = "Exibir Todas Semanas";
+                txtM.textContent = "Exibir todas as semanas";
                 btnM.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
             }
 
             if (onlyWithBudget) {
-                txtO.textContent = "Exibir Apenas Com Orçamento";
+                txtO.textContent = "Exibir somente com Orçamentos";
                 btnO.className = "px-3 py-2 bg-emerald-600 text-white border border-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
             } else {
-                txtO.textContent = "Exibir Todas OS's";
+                txtO.textContent = "Exibir somente com Orçamentos";
                 btnO.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
             }
         }
@@ -678,7 +678,6 @@
             document.getElementById('mProducao').textContent = item.status_producao || '-';
             document.getElementById('mAtrasada').textContent = item.atrasada === 'sim' ? 'SIM' : 'NÃO';
             
-            // MAPEMENTO DE TODAS AS DATAS SOLICITADAS
             document.getElementById('mAbertura').textContent = formatDateOnly(item.abertura_os);
             document.getElementById('mDtRenegociada').textContent = formatDateOnly(item.dt_renegociada);
             document.getElementById('mPrevEntregaOrcamento').textContent = formatDateOnly(item.prev_entrega_orcamento);
