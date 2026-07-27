@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Programação Semanal de Produção - Columbia V1.3</title>
+    <title>Programação Semanal de Produção - Columbia V1.5</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -49,8 +49,8 @@
                     </div>
                 </div>
                 <div>
-                    <h1 class="text-xl font-extrabold tracking-wide text-white">Controle Semanal de Produção V1.3</h1>
-                    <p class="text-xs text-columbia-100">Columbia Machine Brasil</p>
+                    <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
+                    <p class="text-xs text-columbia-100">Controle Semanal de Produção V1.5</p>
                 </div>
             </div>
 
@@ -203,7 +203,39 @@
         </div>
     </footer>
 
-    <!-- MODAL DE DETALHES -->
+    <!-- MODAL CUSTOMIZADO DE SENHA -->
+    <div id="passwordModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200">
+            <div class="bg-columbia-700 px-5 py-3.5 flex justify-between items-center text-white">
+                <div class="flex items-center gap-2 font-bold text-sm">
+                    <i data-lucide="lock" class="w-4 h-4 text-amber-400"></i>
+                    <span>Acesso Restrito</span>
+                </div>
+                <button onclick="closePasswordModal()" class="text-columbia-100 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            
+            <div class="p-5 space-y-4 text-xs">
+                <p class="text-slate-600 font-medium">Digite a senha para exibir os valores de orçamento e totais:</p>
+                
+                <div class="relative">
+                    <input type="password" id="inputPassword" onkeydown="checkPasswordKey(event)" placeholder="Digite a senha..." 
+                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-slate-800 text-xs focus:outline-none focus:border-columbia-600 font-medium">
+                    <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                        <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <p id="passwordError" class="text-red-600 text-[11px] font-bold hidden">Senha incorreta. Tente novamente.</p>
+            </div>
+
+            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end gap-2">
+                <button onclick="closePasswordModal()" class="px-3.5 py-1.5 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition">Cancelar</button>
+                <button onclick="validatePassword()" class="px-4 py-1.5 bg-columbia-700 text-white rounded-xl font-bold hover:bg-columbia-800 shadow-sm transition">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DETALHES DA OS -->
     <div id="osModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
             <div class="bg-columbia-700 px-6 py-4 flex justify-between items-center text-white">
@@ -265,11 +297,10 @@
         
         let currentDate = new Date();
 
-        // ESTADO PADRÃO DESSES FILTROS É DESATIVADO (FALSE)
-        let onlyCurrentMonth = false;
+        // PADRÃO: Filtra o mês selecionado por padrão (true), mas o botão fica desativado convidando para "Exibir todas as semanas"
+        let onlyCurrentMonth = true;
         let onlyWithBudget = false;
 
-        // CONTROLE DE VISIBILIDADE DE VALORES (PROTEGIDO)
         let isValuesUnlocked = false;
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -283,14 +314,60 @@
                 updateValueVisibilityUI();
                 renderCalendar();
             } else {
-                const pass = prompt("Digite a senha para exibir os valores:");
-                if (pass === "Colmac@2026") {
-                    isValuesUnlocked = true;
-                    updateValueVisibilityUI();
-                    renderCalendar();
-                } else if (pass !== null) {
-                    alert("Senha incorreta!");
-                }
+                openPasswordModal();
+            }
+        }
+
+        function openPasswordModal() {
+            const input = document.getElementById('inputPassword');
+            input.value = '';
+            input.type = 'password';
+            document.getElementById('eyeIcon').setAttribute('data-lucide', 'eye');
+            document.getElementById('passwordError').classList.add('hidden');
+            
+            const modal = document.getElementById('passwordModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            setTimeout(() => input.focus(), 100);
+            lucide.createIcons();
+        }
+
+        function closePasswordModal() {
+            const modal = document.getElementById('passwordModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('inputPassword');
+            const icon = document.getElementById('eyeIcon');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
+
+        function checkPasswordKey(event) {
+            if (event.key === 'Enter') {
+                validatePassword();
+            }
+        }
+
+        function validatePassword() {
+            const pass = document.getElementById('inputPassword').value;
+            if (pass === "Colmac@2026") {
+                isValuesUnlocked = true;
+                closePasswordModal();
+                updateValueVisibilityUI();
+                renderCalendar();
+            } else {
+                document.getElementById('passwordError').classList.remove('hidden');
             }
         }
 
@@ -342,7 +419,7 @@
             document.getElementById('comprasFilter').value = '';
             document.getElementById('terceirosFilter').value = '';
 
-            onlyCurrentMonth = false;
+            onlyCurrentMonth = true;
             onlyWithBudget = false;
 
             updateFilterButtonsUI();
@@ -418,12 +495,14 @@
             const btnO = document.getElementById('btnToggleOrcamento');
             const txtO = document.getElementById('txtToggleOrcamento');
 
+            // Se apenas mês selecionado estiver ativado (padrão nativo) -> botão fica neutro e diz "Exibir todas as semanas"
             if (onlyCurrentMonth) {
-                txtM.textContent = "Apenas mês selecionado";
-                btnM.className = "px-3 py-2 bg-columbia-700 text-white border border-columbia-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
-            } else {
                 txtM.textContent = "Exibir todas as semanas";
                 btnM.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+            } else {
+                // Se clicou para exibir todas as semanas -> botão fica selecionado/ativo e diz "Exibir apenas mês selecionado"
+                txtM.textContent = "Exibir apenas mês selecionado";
+                btnM.className = "px-3 py-2 bg-columbia-700 text-white border border-columbia-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
             }
 
             if (onlyWithBudget) {
