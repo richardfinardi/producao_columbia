@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Programação Semanal de Produção - Columbia V1.7</title>
+    <title>Programação Semanal de Produção - Columbia V1.8</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -50,7 +50,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle Semanal de Produção V1.7</p>
+                    <p class="text-xs text-columbia-100">Controle Semanal de Produção V1.8</p>
                 </div>
             </div>
 
@@ -135,7 +135,7 @@
                 </select>
             </div>
 
-            <!-- Filtro por Status Produção (NOVO: Finalizado / Não Finalizado) -->
+            <!-- Filtro por Status Produção -->
             <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="activity" class="w-4 h-4 text-slate-400"></i>
                 <select id="producaoFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[140px] font-medium">
@@ -272,7 +272,7 @@
                     <div><span class="text-slate-500 block font-semibold">Código Interno</span><span id="mCodInterno" class="font-bold text-slate-800 font-mono"></span></div>
                     <div><span class="text-slate-500 block font-semibold">Origem</span><span id="mOrigem" class="font-bold text-slate-800"></span></div>
                     <div><span class="text-slate-500 block font-semibold">Engenharia Status</span><span id="mEngenhariaStatus" class="font-bold text-slate-800"></span></div>
-                    <div><span class="text-slate-500 block font-semibold">OS Filho</span><span id="mOsFilho" class="font-bold text-slate-800 uppercase"></span></div>
+                    <div><span class="text-slate-500 block font-semibold">OS Filhos (Quais)</span><span id="mOsFilhosQuais" class="font-bold text-columbia-700 font-mono"></span></div>
                     <div><span class="text-slate-500 block font-semibold">Possui Orçamento</span><span id="mPossuiOrcamento" class="font-bold text-slate-800"></span></div>
                     <div><span class="text-slate-500 block font-semibold">Preço Geral / Valor</span><span id="mPreco" class="font-bold text-emerald-600"></span></div>
                     <div><span class="text-slate-500 block font-semibold">Nº do Orçamento</span><span id="mNumOrcamento" class="font-bold text-columbia-700"></span></div>
@@ -615,7 +615,6 @@
                 if (selectedCompras && item.status_compras !== selectedCompras) return false;
                 if (selectedTerceiros && item.status_terceiros !== selectedTerceiros) return false;
 
-                // Lógica de Filtro por Produção (Finalizado vs Não Finalizado)
                 if (selectedProducao) {
                     const prodStatus = (item.status_producao || '').trim();
                     const isFinalizado = prodStatus === '100%' || (item.status && item.status.toUpperCase() === 'CONCLUÍDO');
@@ -780,7 +779,9 @@
             document.getElementById('mCodInterno').textContent = item.cod_interno || 'Não informado';
             document.getElementById('mOrigem').textContent = item.origem || 'Não informado';
             document.getElementById('mEngenhariaStatus').textContent = item.engenharia_status || 'Não informado';
-            document.getElementById('mOsFilho').textContent = item.os_filho || 'Não';
+            
+            // TROCADO DE os_filho PARA os_filhos_quais
+            document.getElementById('mOsFilhosQuais').textContent = item.os_filhos_quais || 'Sem filhos';
             
             document.getElementById('mPreco').textContent = formatBRL(item.preco_geral_a_vista || item.orcamento);
             document.getElementById('mPossuiOrcamento').textContent = item.possui_orcamento || '-';
