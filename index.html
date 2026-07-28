@@ -4,21 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Favicon (Ícone da Aba do Navegador) -->
-<link rel="icon" type="image/png" href="LOGO MINIMALISTA.png">
-<link rel="apple-touch-icon" href="LOGO MINIMALISTA.png">
+    <!-- Favicon (Ícone da Aba do Navegador) -->
+    <link rel="icon" type="image/png" href="LOGO MINIMALISTA.png">
+    <link rel="apple-touch-icon" href="LOGO MINIMALISTA.png">
 
-<!-- Meta Tags para Prévia no WhatsApp / Redes Sociais (Open Graph) -->
-<meta property="og:title" content="Controle Semanal de Produção | Consultoria RF">
-<meta property="og:description" content="Dashboard de acompanhamento e controle de produção.">
-<meta property="og:image" content="https://consultoriarf.net/PRODUCAO_SINTERCAN/LOGO MINIMALISTA.png">
-<meta property="og:image:type" content="image/png">
-<meta property="og:image:width" content="500">
-<meta property="og:image:height" content="500">
-<meta property="og:url" content="https://consultoriarf.net/PRODUCAO_SINTERCAN/">
-<meta property="og:type" content="website">
+    <!-- Meta Tags para Prévia no WhatsApp / Redes Sociais (Open Graph) -->
+    <meta property="og:title" content="Controle Semanal de Produção | Consultoria RF">
+    <meta property="og:description" content="Dashboard de acompanhamento e controle de produção.">
+    <meta property="og:image" content="https://consultoriarf.net/PRODUCAO_SINTERCAN/LOGO MINIMALISTA.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="500">
+    <meta property="og:image:height" content="500">
+    <meta property="og:url" content="https://consultoriarf.net/PRODUCAO_SINTERCAN/">
+    <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V2.1</title>
+    <title>Programação de Produção - Columbia V2.2</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V2.1</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V2.2</p>
                 </div>
             </div>
 
@@ -189,7 +189,7 @@
             </div>
         </div>
 
-        <!-- BARRA NAVEGADORA DE DATA & SELETOR DE VISÃO (LOCALIZADO ACIMA DO CALENDÁRIO) -->
+        <!-- BARRA NAVEGADORA DE DATA & SELETOR DE VISÃO -->
         <div class="bg-white p-3 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-sm">
             
             <!-- Navegação de Data -->
@@ -363,7 +363,7 @@
             if (triggerRender) renderView();
         }
 
-        // NAVEGAÇÃO DE DATA (DIAS/SEMANAS/MESES DEPENDENDO DA VISÃO)
+        // NAVEGAÇÃO DE DATA
         function navigateDate(delta) {
             if (currentView === 'month') {
                 currentDate.setMonth(currentDate.getMonth() + delta);
@@ -406,7 +406,7 @@
             }
         }
 
-        // VISÃO 1: MÊS (CALENDÁRIO ENRIQUECIDO COM TOP 3 SEGMENTOS E FONTE DINÂMICA)
+        // VISÃO 1: MÊS (FILTRO INTELIGENTE: OCULTA SEMANAS PASSADAS ZERADAS)
         function renderMonthCalendar() {
             const grid = document.getElementById('calendarGrid');
             grid.innerHTML = '';
@@ -431,6 +431,52 @@
                 osByDate[dateKey].push(item);
             });
 
+            const todayStr = new Date().toISOString().substring(0, 10);
+
+            // 1. Agrupa os dias em matrizes de Semanas
+            const allWeeks = [];
+            let currentWeek = [];
+
+            // Preenche dias de preenchimento da semana anterior
+            for (let i = 0; i < startingDay; i++) {
+                currentWeek.push({ isPadding: true });
+            }
+
+            // Preenche os dias reais do mês
+            for (let day = 1; day <= daysInMonth; day++) {
+                const monthFormatted = String(month + 1).padStart(2, '0');
+                const dayFormatted = String(day).padStart(2, '0');
+                const dateKey = `${year}-${monthFormatted}-${dayFormatted}`;
+
+                currentWeek.push({
+                    isPadding: false,
+                    day: day,
+                    dateKey: dateKey,
+                    dayItems: osByDate[dateKey] || []
+                });
+
+                if (currentWeek.length === 7) {
+                    allWeeks.push(currentWeek);
+                    currentWeek = [];
+                }
+            }
+
+            // Completa a última semana com células de padding se necessário
+            if (currentWeek.length > 0) {
+                while (currentWeek.length < 7) {
+                    currentWeek.push({ isPadding: true });
+                }
+                allWeeks.push(currentWeek);
+            }
+
+            // 2. Filtro: Oculta semanas que já passaram E que não têm NENHUMA OS
+            const weeksToRender = allWeeks.filter(week => {
+                const temOSNaSemana = week.some(d => !d.isPadding && d.dayItems.length > 0);
+                const contemHojeOuFuturo = week.some(d => !d.isPadding && d.dateKey >= todayStr);
+                return temOSNaSemana || contemHojeOuFuturo;
+            });
+
+            // 3. Monta o HTML do Calendário
             let calendarHTML = `
                 <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                     <div class="grid grid-cols-7 bg-columbia-700 text-white text-center text-xs font-bold py-2 border-b border-columbia-800">
@@ -439,77 +485,66 @@
                     <div class="grid grid-cols-7 auto-rows-fr bg-slate-200 gap-px">
             `;
 
-            // Dias Vazios do mês anterior
-            for (let i = 0; i < startingDay; i++) {
-                calendarHTML += `<div class="bg-slate-50 min-h-[120px] p-1.5 opacity-40"></div>`;
-            }
+            weeksToRender.forEach(week => {
+                week.forEach(cell => {
+                    if (cell.isPadding) {
+                        calendarHTML += `<div class="bg-slate-50 min-h-[120px] p-1.5 opacity-40"></div>`;
+                    } else {
+                        const { day, dateKey, dayItems } = cell;
+                        const dayTotalVal = dayItems.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
+                        const isToday = dateKey === todayStr;
 
-            // Dias do Mês Atual
-            const todayStr = new Date().toISOString().substring(0, 10);
+                        const segmentCounts = {};
+                        dayItems.forEach(i => {
+                            const seg = (i.segmento || 'Outros').trim();
+                            segmentCounts[seg] = (segmentCounts[seg] || 0) + 1;
+                        });
 
-            for (let day = 1; day <= daysInMonth; day++) {
-                const monthFormatted = String(month + 1).padStart(2, '0');
-                const dayFormatted = String(day).padStart(2, '0');
-                const dateKey = `${year}-${monthFormatted}-${dayFormatted}`;
+                        const topSegments = Object.entries(segmentCounts)
+                            .sort((a, b) => b[1] - a[1])
+                            .slice(0, 3);
 
-                const dayItems = osByDate[dateKey] || [];
-                const dayTotalVal = dayItems.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
-                const isToday = dateKey === todayStr;
+                        const formattedValStr = formatBRL(dayTotalVal);
+                        
+                        let valFontSizeClass = "text-xs";
+                        if (formattedValStr.length > 14) {
+                            valFontSizeClass = "text-[9px]";
+                        } else if (formattedValStr.length > 10) {
+                            valFontSizeClass = "text-[10px]";
+                        }
 
-                // Apuração dos TOP 3 Segmentos por dia
-                const segmentCounts = {};
-                dayItems.forEach(i => {
-                    const seg = (i.segmento || 'Outros').trim();
-                    segmentCounts[seg] = (segmentCounts[seg] || 0) + 1;
-                });
+                        calendarHTML += `
+                            <div onclick="selectDayView('${dateKey}')" class="bg-white min-h-[125px] p-2 flex flex-col justify-between hover:bg-columbia-50/60 cursor-pointer transition">
+                                <div>
+                                    <div class="flex justify-between items-start mb-1.5">
+                                        <span class="text-xs font-extrabold rounded-full w-6 h-6 flex items-center justify-center ${isToday ? 'bg-columbia-700 text-white shadow-sm' : 'text-slate-800'}">${day}</span>
+                                        ${dayItems.length > 0 ? `<span class="bg-columbia-50 text-columbia-800 border border-columbia-200 text-[10px] font-mono font-extrabold px-1.5 py-0.5 rounded-md">OS's Totais: ${dayItems.length}</span>` : ''}
+                                    </div>
 
-                const topSegments = Object.entries(segmentCounts)
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 3);
-
-                const formattedValStr = formatBRL(dayTotalVal);
-                
-                // Cálculo de tamanho de fonte dinâmico para garantir o encaixe
-                let valFontSizeClass = "text-xs";
-                if (formattedValStr.length > 14) {
-                    valFontSizeClass = "text-[9px]";
-                } else if (formattedValStr.length > 10) {
-                    valFontSizeClass = "text-[10px]";
-                }
-
-                calendarHTML += `
-                    <div onclick="selectDayView('${dateKey}')" class="bg-white min-h-[125px] p-2 flex flex-col justify-between hover:bg-columbia-50/60 cursor-pointer transition">
-                        <div>
-                            <!-- Cabeçalho do Dia (Número + OS Totais) -->
-                            <div class="flex justify-between items-start mb-1.5">
-                                <span class="text-xs font-extrabold rounded-full w-6 h-6 flex items-center justify-center ${isToday ? 'bg-columbia-700 text-white shadow-sm' : 'text-slate-800'}">${day}</span>
-                                ${dayItems.length > 0 ? `<span class="bg-columbia-50 text-columbia-800 border border-columbia-200 text-[10px] font-mono font-extrabold px-1.5 py-0.5 rounded-md">OS's Totais: ${dayItems.length}</span>` : ''}
-                            </div>
-
-                            <!-- Lista Top 3 Segmentos por Dia -->
-                            ${topSegments.length > 0 ? `
-                                <div class="space-y-0.5 my-1">
-                                    ${topSegments.map(([segName, count]) => `
-                                        <div class="flex justify-between items-center bg-slate-50 border border-slate-100 rounded px-1.5 py-0.5 text-[9px]">
-                                            <span class="font-bold text-slate-700 truncate max-w-[70px]" title="${segName}">${segName}</span>
-                                            <span class="font-extrabold text-columbia-700">${count}</span>
+                                    ${topSegments.length > 0 ? `
+                                        <div class="space-y-0.5 my-1">
+                                            ${topSegments.map(([segName, count]) => `
+                                                <div class="flex justify-between items-center bg-slate-50 border border-slate-100 rounded px-1.5 py-0.5 text-[9px]">
+                                                    <span class="font-bold text-slate-700 truncate max-w-[70px]" title="${segName}">${segName}</span>
+                                                    <span class="font-extrabold text-columbia-700">${count}</span>
+                                                </div>
+                                            `).join('')}
                                         </div>
-                                    `).join('')}
+                                    ` : ''}
                                 </div>
-                            ` : ''}
-                        </div>
 
-                        <!-- Rodapé com Valor Dinâmico (Sem prefixo Total:) -->
-                        ${dayItems.length > 0 ? `
-                            <div class="mt-1 pt-1 border-t border-slate-100 flex items-center justify-center">
-                                <span class="${valFontSizeClass} font-extrabold text-emerald-600 tracking-tight text-center break-all leading-tight">
-                                    ${formattedValStr}
-                                </span>
+                                ${dayItems.length > 0 ? `
+                                    <div class="mt-1 pt-1 border-t border-slate-100 flex items-center justify-center">
+                                        <span class="${valFontSizeClass} font-extrabold text-emerald-600 tracking-tight text-center break-all leading-tight">
+                                            ${formattedValStr}
+                                        </span>
+                                    </div>
+                                ` : '<div class="text-[10px] text-slate-300 italic text-center">Sem entregas</div>'}
                             </div>
-                        ` : '<div class="text-[10px] text-slate-300 italic text-center">Sem entregas</div>'}
-                    </div>
-                `;
-            }
+                        `;
+                    }
+                });
+            });
 
             calendarHTML += `</div></div>`;
             grid.innerHTML = calendarHTML;
@@ -746,7 +781,7 @@
             Array.from(terceirosStatus).sort().forEach(val => terceirosSelect.appendChild(new Option(val, val)));
         }
 
-        // FUNÇÕES AUXILIARES DE RENDERIZAÇÃO DE CARTÕES
+        // RENDERIZAÇÃO DOS CARDS
         function renderItemCard(item) {
             const isAtrasada = item.atrasada === 'sim';
             const val = parseValue(item.preco_geral_a_vista || item.orcamento);
