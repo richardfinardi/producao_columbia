@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/PRODUCAO_SINTERCAN/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V2.2</title>
+    <title>Programação de Produção - Columbia V2.3</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V2.2</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V2.3</p>
                 </div>
             </div>
 
@@ -238,7 +238,7 @@
         </div>
     </footer>
 
-    <!-- MODAL CUSTOMIZADO DE SENHA -->
+    <!-- MODAL CUSTOMIZADO DE SENHA DE VALORES -->
     <div id="passwordModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200">
             <div class="bg-columbia-700 px-5 py-3.5 flex justify-between items-center text-white">
@@ -266,6 +266,76 @@
             <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end gap-2">
                 <button onclick="closePasswordModal()" class="px-3.5 py-1.5 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition">Cancelar</button>
                 <button onclick="validatePassword()" class="px-4 py-1.5 bg-columbia-700 text-white rounded-xl font-bold hover:bg-columbia-800 shadow-sm transition">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 1: SENHA PARA ALTERAÇÃO DE DATA DE RENEGOCIAÇÃO -->
+    <div id="altRenegociationPasswordModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-[60]">
+        <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200">
+            <div class="bg-purple-800 px-5 py-3.5 flex justify-between items-center text-white">
+                <div class="flex items-center gap-2 font-bold text-sm">
+                    <i data-lucide="key-round" class="w-4 h-4 text-purple-300"></i>
+                    <span>Autorização Requerida</span>
+                </div>
+                <button onclick="closeAltRenegociationPasswordModal()" class="text-purple-200 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            
+            <div class="p-5 space-y-4 text-xs">
+                <p class="text-slate-600 font-medium">Informe a senha para alterar a data renegociada desta OS:</p>
+                
+                <div class="relative">
+                    <input type="password" id="inputAltRenegociationPassword" onkeydown="checkAltRenegociationPasswordKey(event)" placeholder="Digite a senha..." 
+                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-slate-800 text-xs focus:outline-none focus:border-purple-600 font-medium">
+                    <button type="button" onclick="toggleAltRenegociationPasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                        <i data-lucide="eye" id="altRenegociationEyeIcon" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <p id="altRenegociationPasswordError" class="text-red-600 text-[11px] font-bold hidden">Senha de alteração incorreta.</p>
+            </div>
+
+            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end gap-2">
+                <button onclick="closeAltRenegociationPasswordModal()" class="px-3.5 py-1.5 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition">Cancelar</button>
+                <button onclick="validateAltRenegociationPassword()" class="px-4 py-1.5 bg-purple-700 text-white rounded-xl font-bold hover:bg-purple-800 shadow-sm transition">Validar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: FORMULÁRIO DE EDICÃO DA DATA RENEGOCIADA & JUSTIFICATIVA -->
+    <div id="altRenegociationFormModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-[70]">
+        <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+            <div class="bg-purple-800 px-5 py-3.5 flex justify-between items-center text-white">
+                <div class="flex items-center gap-2 font-bold text-sm">
+                    <i data-lucide="calendar-clock" class="w-4 h-4 text-purple-300"></i>
+                    <span id="altRenHeaderTitle">Alterar Data Renegociada</span>
+                </div>
+                <button onclick="closeAltRenegociationFormModal()" class="text-purple-200 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            
+            <div class="p-5 space-y-4 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Nova Data de Renegociação:</label>
+                    <input type="date" id="inputNewRenegociationDate" 
+                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-purple-600 font-semibold">
+                    <span class="text-[10px] text-slate-400 italic">Deixe limpo para remover a data renegociada.</span>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Justificativa da Alteração <span class="text-red-500">*</span>:</label>
+                    <textarea id="textareaJustification" rows="3" placeholder="Digite o motivo da alteração (obrigatório)..." 
+                              class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-purple-600 font-medium custom-scroll"></textarea>
+                </div>
+
+                <p id="altRenegociationFormError" class="text-red-600 text-[11px] font-bold hidden"></p>
+            </div>
+
+            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end gap-2">
+                <button onclick="closeAltRenegociationFormModal()" class="px-3.5 py-1.5 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition">Cancelar</button>
+                <button id="btnSaveRenegociation" onclick="submitAltRenegociation()" class="px-4 py-1.5 bg-purple-700 text-white rounded-xl font-bold hover:bg-purple-800 shadow-sm transition flex items-center gap-1.5">
+                    <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                    <span>Salvar Alteração</span>
+                </button>
             </div>
         </div>
     </div>
@@ -320,7 +390,13 @@
                 </div>
             </div>
 
-            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end">
+            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-between items-center gap-2">
+                <!-- Botão Alterar Data Renegociada -->
+                <button onclick="openAltRenegociationPasswordModal()" class="px-3.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
+                    <i data-lucide="calendar-cog" class="w-4 h-4"></i>
+                    <span>Alterar Dt. Renegociada</span>
+                </button>
+
                 <button onclick="closeModal()" class="px-4 py-1.5 bg-columbia-700 text-white rounded-xl font-semibold hover:bg-columbia-800 shadow-sm transition">Fechar</button>
             </div>
         </div>
@@ -330,6 +406,7 @@
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         let rawData = [];
         let currentDate = new Date();
+        let selectedItemModal = null; // Armazena o objeto OS aberto no modal
 
         // MODO DE VISÃO PADRÃO PERSISTIDO NO LOCALSTORAGE
         let currentView = localStorage.getItem('columbia_preferred_view') || 'month';
@@ -426,9 +503,11 @@
             // Mapeia OS por YYYY-MM-DD
             const osByDate = {};
             filtered.forEach(item => {
-                const dateKey = item.entrega_normalizada.substring(0, 10);
-                if (!osByDate[dateKey]) osByDate[dateKey] = [];
-                osByDate[dateKey].push(item);
+                const dateKey = item.entrega_normalizada ? item.entrega_normalizada.substring(0, 10) : '';
+                if (dateKey) {
+                    if (!osByDate[dateKey]) osByDate[dateKey] = [];
+                    osByDate[dateKey].push(item);
+                }
             });
 
             const todayStr = new Date().toISOString().substring(0, 10);
@@ -562,17 +641,19 @@
             const weeksMap = {};
 
             filtered.forEach(item => {
-                const date = new Date(item.entrega_normalizada);
-                const weekInfo = getSplitWeekDetails(date);
+                if (item.entrega_normalizada) {
+                    const date = new Date(item.entrega_normalizada);
+                    const weekInfo = getSplitWeekDetails(date);
 
-                if (!weeksMap[weekInfo.groupKey]) {
-                    weeksMap[weekInfo.groupKey] = {
-                        label: weekInfo.label,
-                        sortDate: weekInfo.sortDate,
-                        items: []
-                    };
+                    if (!weeksMap[weekInfo.groupKey]) {
+                        weeksMap[weekInfo.groupKey] = {
+                            label: weekInfo.label,
+                            sortDate: weekInfo.sortDate,
+                            items: []
+                        };
+                    }
+                    weeksMap[weekInfo.groupKey].items.push(item);
                 }
-                weeksMap[weekInfo.groupKey].items.push(item);
             });
 
             const sortedWeeks = Object.values(weeksMap).sort((a, b) => a.sortDate - b.sortDate);
@@ -624,7 +705,7 @@
             grid.innerHTML = '';
 
             const dateKey = currentDate.toISOString().substring(0, 10);
-            const filtered = getFilteredData().filter(item => item.entrega_normalizada.substring(0, 10) === dateKey);
+            const filtered = getFilteredData().filter(item => item.entrega_normalizada && item.entrega_normalizada.substring(0, 10) === dateKey);
 
             const dayTotal = filtered.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
 
@@ -825,7 +906,7 @@
             `;
         }
 
-        // SEGURANÇA E SENHA
+        // SEGURANÇA E SENHA DE EXIBIÇÃO DE VALORES
         function handleValueVisibility() {
             if (isValuesUnlocked) {
                 isValuesUnlocked = false;
@@ -896,6 +977,147 @@
                 icon.className = "w-4 h-4 text-amber-400";
             }
             lucide.createIcons();
+        }
+
+        // ==============================================================================
+        // CONTROLE DO MODAL DE SENHA E FORMULÁRIO DE ALTERAÇÃO DA DATA RENEGOCIADA
+        // ==============================================================================
+        function openAltRenegociationPasswordModal() {
+            if (!selectedItemModal) return;
+            const input = document.getElementById('inputAltRenegociationPassword');
+            input.value = '';
+            input.type = 'password';
+            document.getElementById('altRenegociationEyeIcon').setAttribute('data-lucide', 'eye');
+            document.getElementById('altRenegociationPasswordError').classList.add('hidden');
+
+            const modal = document.getElementById('altRenegociationPasswordModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => input.focus(), 100);
+            lucide.createIcons();
+        }
+
+        function closeAltRenegociationPasswordModal() {
+            const modal = document.getElementById('altRenegociationPasswordModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function toggleAltRenegociationPasswordVisibility() {
+            const input = document.getElementById('inputAltRenegociationPassword');
+            const icon = document.getElementById('altRenegociationEyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
+
+        function checkAltRenegociationPasswordKey(event) {
+            if (event.key === 'Enter') validateAltRenegociationPassword();
+        }
+
+        function validateAltRenegociationPassword() {
+            const pass = document.getElementById('inputAltRenegociationPassword').value;
+            if (pass === "Colmac@alt2026") {
+                closeAltRenegociationPasswordModal();
+                openAltRenegociationFormModal();
+            } else {
+                document.getElementById('altRenegociationPasswordError').classList.remove('hidden');
+            }
+        }
+
+        function openAltRenegociationFormModal() {
+            if (!selectedItemModal) return;
+
+            document.getElementById('altRenHeaderTitle').textContent = `Alterar Dt. Renegociada — OS #${selectedItemModal.n_os}`;
+            document.getElementById('altRenegociationFormError').classList.add('hidden');
+            document.getElementById('textareaJustification').value = '';
+
+            // Formata a data atual do campo dt_renegociada para YYYY-MM-DD
+            const inputDate = document.getElementById('inputNewRenegociationDate');
+            if (selectedItemModal.dt_renegociada && selectedItemModal.dt_renegociada !== 'NaT') {
+                const dt = new Date(selectedItemModal.dt_renegociada);
+                if (!isNaN(dt.getTime())) {
+                    inputDate.value = dt.toISOString().substring(0, 10);
+                } else {
+                    inputDate.value = '';
+                }
+            } else {
+                inputDate.value = '';
+            }
+
+            const modal = document.getElementById('altRenegociationFormModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeAltRenegociationFormModal() {
+            const modal = document.getElementById('altRenegociationFormModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function submitAltRenegociation() {
+            if (!selectedItemModal) return;
+
+            const newDateValue = document.getElementById('inputNewRenegociationDate').value;
+            const justificationValue = document.getElementById('textareaJustification').value.trim();
+            const errElem = document.getElementById('altRenegociationFormError');
+
+            // Validação local da justificativa obrigatória
+            if (!justificationValue) {
+                errElem.textContent = "A justificativa da alteração é obrigatória!";
+                errElem.classList.remove('hidden');
+                return;
+            }
+
+            errElem.classList.add('hidden');
+            const btnSave = document.getElementById('btnSaveRenegociation');
+            btnSave.disabled = true;
+            btnSave.classList.add('opacity-50');
+
+            try {
+                // Rota configurada no FastAPI backend
+                const updateUrl = `${API_URL}/${selectedItemModal.n_os}/alterar-renegociacao`;
+                
+                const response = await fetch(updateUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': '69420'
+                    },
+                    body: JSON.stringify({
+                        u_data_renegociacao: newDateValue ? newDateValue : null,
+                        U_JUST_ALT_DT_REN: justificationValue
+                    })
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.detail || `Erro na requisição (Status ${response.status})`);
+                }
+
+                // Atualização bem-sucedida!
+                closeAltRenegociationFormModal();
+                closeModal();
+                
+                // Força atualização dos dados do servidor para atualizar telas e métricas
+                await fetchData();
+                alert(`Data de renegociação da OS #${selectedItemModal.n_os} alterada com sucesso!`);
+
+            } catch (err) {
+                console.error("Erro ao salvar data de renegociação:", err);
+                errElem.textContent = `Erro ao salvar: ${err.message}`;
+                errElem.classList.remove('hidden');
+            } finally {
+                btnSave.disabled = false;
+                btnSave.classList.remove('opacity-50');
+            }
         }
 
         function clearAllFilters() {
@@ -1006,6 +1228,8 @@
         }
 
         function openModal(item) {
+            selectedItemModal = item; // Guarda o item ativo no modal
+
             document.getElementById('mOS').textContent = `OS #${item.n_os}`;
             document.getElementById('mTitulo').textContent = getFullTitle(item);
             document.getElementById('mPedido').textContent = item.n_pedido || 'Não informado';
@@ -1035,9 +1259,11 @@
             const modal = document.getElementById('osModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            lucide.createIcons();
         }
 
         function closeModal() {
+            selectedItemModal = null;
             const modal = document.getElementById('osModal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
