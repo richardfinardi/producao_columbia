@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Programação de Produção - Columbia V2.0</title>
+    <title>Programação de Produção - Columbia V2.1</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -50,41 +50,12 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V2.0</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V2.1</p>
                 </div>
             </div>
 
-            <!-- NAVEGADOR DE DATA -->
-            <div class="flex items-center bg-columbia-800/80 border border-columbia-600 rounded-2xl px-2 py-1.5 shadow-inner">
-                <button onclick="navigateDate(-1)" class="p-1.5 hover:bg-columbia-700 rounded-xl text-columbia-100 hover:text-white transition">
-                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
-                </button>
-                
-                <div class="flex items-center gap-2 px-3">
-                    <i data-lucide="calendar" class="w-5 h-5 text-columbia-100"></i>
-                    <span id="currentDateLabel" class="font-bold text-sm text-white capitalize tracking-wide min-w-[150px] text-center">
-                        Carregando...
-                    </span>
-                </div>
-
-                <button onclick="navigateDate(1)" class="p-1.5 hover:bg-columbia-700 rounded-xl text-columbia-100 hover:text-white transition">
-                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                </button>
-
-                <button onclick="resetToToday()" class="ml-2 px-3 py-1 bg-white hover:bg-slate-100 rounded-xl text-xs font-bold text-columbia-800 transition shadow-sm">
-                    Hoje
-                </button>
-            </div>
-
-            <!-- SELETOR DE VISÃO & AÇÕES -->
-            <div class="flex items-center gap-2 flex-wrap">
-                <!-- Seletor Estilo Google Calendar -->
-                <div class="bg-columbia-800 p-1 rounded-xl border border-columbia-600 flex items-center gap-1">
-                    <button id="viewBtnMonth" onclick="setViewMode('month')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition">Mês</button>
-                    <button id="viewBtnWeek" onclick="setViewMode('week')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition">Semana</button>
-                    <button id="viewBtnDay" onclick="setViewMode('day')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition">Dia</button>
-                </div>
-
+            <!-- Botões de Ação do Topo -->
+            <div class="flex items-center gap-2">
                 <!-- Botão Trava / Exibir Valores -->
                 <button id="btnToggleValues" onclick="handleValueVisibility()" class="flex items-center gap-2 px-3 py-2 bg-columbia-800 hover:bg-columbia-900 border border-columbia-600 text-white rounded-xl font-bold text-xs transition shadow">
                     <i data-lucide="eye-off" class="w-4 h-4 text-amber-400" id="iconValueVisibility"></i>
@@ -203,12 +174,37 @@
             </div>
         </div>
 
-        <!-- LEGENDAS -->
-        <div class="flex items-center gap-4 text-xs font-medium px-1 text-slate-500">
-            <span>Legendas:</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-500"></span> Atrasada</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-600"></span> No Prazo</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500"></span> Sem Orçamento</span>
+        <!-- BARRA NAVEGADORA DE DATA & SELETOR DE VISÃO (LOCALIZADO ACIMA DO CALENDÁRIO) -->
+        <div class="bg-white p-3 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+            
+            <!-- Navegação de Data -->
+            <div class="flex items-center bg-columbia-700 text-white rounded-xl px-2 py-1 shadow-sm">
+                <button onclick="navigateDate(-1)" class="p-1 hover:bg-columbia-800 rounded-lg text-columbia-100 hover:text-white transition">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
+                
+                <div class="flex items-center gap-2 px-3">
+                    <i data-lucide="calendar" class="w-4 h-4 text-columbia-100"></i>
+                    <span id="currentDateLabel" class="font-bold text-xs capitalize tracking-wide min-w-[140px] text-center">
+                        Carregando...
+                    </span>
+                </div>
+
+                <button onclick="navigateDate(1)" class="p-1 hover:bg-columbia-800 rounded-lg text-columbia-100 hover:text-white transition">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
+
+                <button onclick="resetToToday()" class="ml-2 px-2.5 py-0.5 bg-white hover:bg-slate-100 rounded-lg text-xs font-bold text-columbia-800 transition shadow-sm">
+                    Hoje
+                </button>
+            </div>
+
+            <!-- Seletor de Visão (Mês, Semana, Dia) -->
+            <div class="bg-slate-100 p-1 rounded-xl border border-slate-200 flex items-center gap-1">
+                <button id="viewBtnMonth" onclick="setViewMode('month')" class="px-3 py-1 rounded-lg text-xs font-bold transition">Mês</button>
+                <button id="viewBtnWeek" onclick="setViewMode('week')" class="px-3 py-1 rounded-lg text-xs font-bold transition">Semana</button>
+                <button id="viewBtnDay" onclick="setViewMode('day')" class="px-3 py-1 rounded-lg text-xs font-bold transition">Dia</button>
+            </div>
         </div>
 
         <!-- ÁREA PRINCIPAL DO CALENDÁRIO -->
@@ -343,11 +339,11 @@
             const btnD = document.getElementById('viewBtnDay');
 
             const activeClass = "bg-columbia-700 text-white shadow-sm";
-            const inactiveClass = "text-columbia-100 hover:text-white hover:bg-columbia-700/50";
+            const inactiveClass = "text-slate-600 hover:text-columbia-700 hover:bg-slate-200";
 
-            btnM.className = `px-2.5 py-1 rounded-lg text-xs font-bold transition ${mode === 'month' ? activeClass : inactiveClass}`;
-            btnW.className = `px-2.5 py-1 rounded-lg text-xs font-bold transition ${mode === 'week' ? activeClass : inactiveClass}`;
-            btnD.className = `px-2.5 py-1 rounded-lg text-xs font-bold transition ${mode === 'day' ? activeClass : inactiveClass}`;
+            btnM.className = `px-3 py-1 rounded-lg text-xs font-bold transition ${mode === 'month' ? activeClass : inactiveClass}`;
+            btnW.className = `px-3 py-1 rounded-lg text-xs font-bold transition ${mode === 'week' ? activeClass : inactiveClass}`;
+            btnD.className = `px-3 py-1 rounded-lg text-xs font-bold transition ${mode === 'day' ? activeClass : inactiveClass}`;
 
             if (triggerRender) renderView();
         }
@@ -369,7 +365,7 @@
             renderView();
         }
 
-        // ATUALIZAR MENSAGEM DO CABEÇALHO
+        // ATUALIZAR MENSAGEM DO CABEÇALHO DEDICADO DO CALENDÁRIO
         function updateDateLabel() {
             const label = document.getElementById('currentDateLabel');
             if (currentView === 'month') {
@@ -395,7 +391,7 @@
             }
         }
 
-        // VISÃO 1: MÊS (CALENDÁRIO GOOGLE)
+        // VISÃO 1: MÊS (CALENDÁRIO ENRIQUECIDO COM TOP 3 SEGMENTOS E FONTE DINÂMICA)
         function renderMonthCalendar() {
             const grid = document.getElementById('calendarGrid');
             grid.innerHTML = '';
@@ -410,7 +406,6 @@
             if (startingDay === -1) startingDay = 6;
 
             const daysInMonth = lastDay.getDate();
-
             const filtered = getFilteredData();
 
             // Mapeia OS por YYYY-MM-DD
@@ -431,14 +426,13 @@
 
             // Dias Vazios do mês anterior
             for (let i = 0; i < startingDay; i++) {
-                calendarHTML += `<div class="bg-slate-50 min-h-[100px] p-1.5 opacity-40"></div>`;
+                calendarHTML += `<div class="bg-slate-50 min-h-[120px] p-1.5 opacity-40"></div>`;
             }
 
             // Dias do Mês Atual
             const todayStr = new Date().toISOString().substring(0, 10);
 
             for (let day = 1; day <= daysInMonth; day++) {
-                const dateObj = new Date(year, month, day);
                 const monthFormatted = String(month + 1).padStart(2, '0');
                 const dayFormatted = String(day).padStart(2, '0');
                 const dateKey = `${year}-${monthFormatted}-${dayFormatted}`;
@@ -447,20 +441,57 @@
                 const dayTotalVal = dayItems.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
                 const isToday = dateKey === todayStr;
 
+                // Apuração dos TOP 3 Segmentos por dia
+                const segmentCounts = {};
+                dayItems.forEach(i => {
+                    const seg = (i.segmento || 'Outros').trim();
+                    segmentCounts[seg] = (segmentCounts[seg] || 0) + 1;
+                });
+
+                const topSegments = Object.entries(segmentCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3);
+
+                const formattedValStr = formatBRL(dayTotalVal);
+                
+                // Cálculo de tamanho de fonte dinâmico para garantir o encaixe
+                let valFontSizeClass = "text-xs";
+                if (formattedValStr.length > 14) {
+                    valFontSizeClass = "text-[9px]";
+                } else if (formattedValStr.length > 10) {
+                    valFontSizeClass = "text-[10px]";
+                }
+
                 calendarHTML += `
-                    <div onclick="selectDayView('${dateKey}')" class="bg-white min-h-[110px] p-2 flex flex-col justify-between hover:bg-columbia-50/60 cursor-pointer transition">
-                        <div class="flex justify-between items-start">
-                            <span class="text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center ${isToday ? 'bg-columbia-700 text-white' : 'text-slate-700'}">${day}</span>
-                            ${dayItems.length > 0 ? `<span class="bg-columbia-100 text-columbia-800 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded">${dayItems.length} OS</span>` : ''}
+                    <div onclick="selectDayView('${dateKey}')" class="bg-white min-h-[125px] p-2 flex flex-col justify-between hover:bg-columbia-50/60 cursor-pointer transition">
+                        <div>
+                            <!-- Cabeçalho do Dia (Número + OS Totais) -->
+                            <div class="flex justify-between items-start mb-1.5">
+                                <span class="text-xs font-extrabold rounded-full w-6 h-6 flex items-center justify-center ${isToday ? 'bg-columbia-700 text-white shadow-sm' : 'text-slate-800'}">${day}</span>
+                                ${dayItems.length > 0 ? `<span class="bg-columbia-50 text-columbia-800 border border-columbia-200 text-[10px] font-mono font-extrabold px-1.5 py-0.5 rounded-md">OS's Totais: ${dayItems.length}</span>` : ''}
+                            </div>
+
+                            <!-- Lista Top 3 Segmentos por Dia -->
+                            ${topSegments.length > 0 ? `
+                                <div class="space-y-0.5 my-1">
+                                    ${topSegments.map(([segName, count]) => `
+                                        <div class="flex justify-between items-center bg-slate-50 border border-slate-100 rounded px-1.5 py-0.5 text-[9px]">
+                                            <span class="font-bold text-slate-700 truncate max-w-[70px]" title="${segName}">${segName}</span>
+                                            <span class="font-extrabold text-columbia-700">${count}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
                         </div>
 
+                        <!-- Rodapé com Valor Dinâmico (Sem prefixo Total:) -->
                         ${dayItems.length > 0 ? `
-                            <div class="space-y-1 my-1">
-                                <div class="text-[10px] bg-slate-100 p-1 rounded font-semibold text-slate-700 truncate">
-                                    Total: <span class="text-emerald-600 font-bold">${formatBRL(dayTotalVal)}</span>
-                                </div>
+                            <div class="mt-1 pt-1 border-t border-slate-100 flex items-center justify-center">
+                                <span class="${valFontSizeClass} font-extrabold text-emerald-600 tracking-tight text-center break-all leading-tight">
+                                    ${formattedValStr}
+                                </span>
                             </div>
-                        ` : '<div class="text-[10px] text-slate-300 italic">Sem entregas</div>'}
+                        ` : '<div class="text-[10px] text-slate-300 italic text-center">Sem entregas</div>'}
                     </div>
                 `;
             }
@@ -475,7 +506,7 @@
             setViewMode('day');
         }
 
-        // VISÃO 2: SEMANA (GRIID ORIGINAL DE SEMANAS)
+        // VISÃO 2: SEMANA
         function renderWeekGrid() {
             const filtered = getFilteredData();
             const weeksMap = {};
@@ -640,7 +671,7 @@
             return filtered;
         }
 
-        // CARTEIRA DA API E DROPDOWNS
+        // BUSCA API E PREENCHE DROPDOWNS
         async function fetchData() {
             const icon = document.getElementById('refreshIcon');
             if(icon) icon.classList.add('animate-spin');
