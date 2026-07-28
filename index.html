@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Programação Semanal de Produção - Columbia V1.8</title>
+    <title>Programação de Produção - Columbia V2.0</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -50,24 +50,24 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle Semanal de Produção V1.8</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V2.0</p>
                 </div>
             </div>
 
-            <!-- NAVEGADOR DE MÊS -->
+            <!-- NAVEGADOR DE DATA -->
             <div class="flex items-center bg-columbia-800/80 border border-columbia-600 rounded-2xl px-2 py-1.5 shadow-inner">
-                <button onclick="changeMonth(-1)" class="p-1.5 hover:bg-columbia-700 rounded-xl text-columbia-100 hover:text-white transition">
+                <button onclick="navigateDate(-1)" class="p-1.5 hover:bg-columbia-700 rounded-xl text-columbia-100 hover:text-white transition">
                     <i data-lucide="chevron-left" class="w-5 h-5"></i>
                 </button>
                 
                 <div class="flex items-center gap-2 px-3">
                     <i data-lucide="calendar" class="w-5 h-5 text-columbia-100"></i>
-                    <span id="currentMonthYearLabel" class="font-bold text-sm text-white capitalize tracking-wide min-w-[130px] text-center">
+                    <span id="currentDateLabel" class="font-bold text-sm text-white capitalize tracking-wide min-w-[150px] text-center">
                         Carregando...
                     </span>
                 </div>
 
-                <button onclick="changeMonth(1)" class="p-1.5 hover:bg-columbia-700 rounded-xl text-columbia-100 hover:text-white transition">
+                <button onclick="navigateDate(1)" class="p-1.5 hover:bg-columbia-700 rounded-xl text-columbia-100 hover:text-white transition">
                     <i data-lucide="chevron-right" class="w-5 h-5"></i>
                 </button>
 
@@ -76,8 +76,15 @@
                 </button>
             </div>
 
-            <!-- Botões de Ação do Topo -->
-            <div class="flex items-center gap-2">
+            <!-- SELETOR DE VISÃO & AÇÕES -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- Seletor Estilo Google Calendar -->
+                <div class="bg-columbia-800 p-1 rounded-xl border border-columbia-600 flex items-center gap-1">
+                    <button id="viewBtnMonth" onclick="setViewMode('month')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition">Mês</button>
+                    <button id="viewBtnWeek" onclick="setViewMode('week')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition">Semana</button>
+                    <button id="viewBtnDay" onclick="setViewMode('day')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition">Dia</button>
+                </div>
+
                 <!-- Botão Trava / Exibir Valores -->
                 <button id="btnToggleValues" onclick="handleValueVisibility()" class="flex items-center gap-2 px-3 py-2 bg-columbia-800 hover:bg-columbia-900 border border-columbia-600 text-white rounded-xl font-bold text-xs transition shadow">
                     <i data-lucide="eye-off" class="w-4 h-4 text-amber-400" id="iconValueVisibility"></i>
@@ -87,7 +94,6 @@
                 <!-- Botão Atualizar -->
                 <button id="btnRefresh" onclick="fetchData()" class="flex items-center gap-2 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-all shadow">
                     <i data-lucide="refresh-cw" class="w-4 h-4" id="refreshIcon"></i>
-                    Atualizar Dados
                 </button>
             </div>
         </div>
@@ -123,14 +129,14 @@
             <!-- Busca Geral Universal -->
             <div class="flex items-center gap-2 flex-1 min-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
-                <input type="text" id="searchInput" oninput="renderCalendar()" placeholder="Pesquisar (OS, Título, Cliente, Origem, Cod. Interno...)" 
+                <input type="text" id="searchInput" oninput="renderView()" placeholder="Pesquisar (OS, Título, Cliente, Origem, Cod. Interno...)" 
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
             </div>
 
             <!-- Filtro por Segmento -->
             <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="layers" class="w-4 h-4 text-slate-400"></i>
-                <select id="segmentoFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
+                <select id="segmentoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
                     <option value="">Segmento (Todos)</option>
                 </select>
             </div>
@@ -138,7 +144,7 @@
             <!-- Filtro por Status Produção -->
             <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="activity" class="w-4 h-4 text-slate-400"></i>
-                <select id="producaoFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[140px] font-medium">
+                <select id="producaoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[140px] font-medium">
                     <option value="">Produção (Todos)</option>
                     <option value="finalizado">Finalizado (100%)</option>
                     <option value="nao_finalizado">Não Finalizado (&lt;100%)</option>
@@ -148,7 +154,7 @@
             <!-- Filtro por Cliente -->
             <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
-                <select id="clientFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
+                <select id="clientFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
                     <option value="">Todos os Clientes</option>
                 </select>
             </div>
@@ -156,7 +162,7 @@
             <!-- Filtro por Engenharia -->
             <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="cpu" class="w-4 h-4 text-slate-400"></i>
-                <select id="engenhariaFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
+                <select id="engenhariaFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
                     <option value="">Engenharia (Todos)</option>
                 </select>
             </div>
@@ -164,7 +170,7 @@
             <!-- Filtro por Status Compras -->
             <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="shopping-cart" class="w-4 h-4 text-slate-400"></i>
-                <select id="comprasFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
+                <select id="comprasFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
                     <option value="">Compras (Todos)</option>
                 </select>
             </div>
@@ -172,7 +178,7 @@
             <!-- Filtro por Status Terceiros -->
             <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="truck" class="w-4 h-4 text-slate-400"></i>
-                <select id="terceirosFilter" onchange="renderCalendar()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
+                <select id="terceirosFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
                     <option value="">Terceiros (Todos)</option>
                 </select>
             </div>
@@ -205,9 +211,9 @@
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500"></span> Sem Orçamento</span>
         </div>
 
-        <!-- GRID DE SEMANAS -->
-        <div id="calendarGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
-            <!-- As semanas serão geradas aqui -->
+        <!-- ÁREA PRINCIPAL DO CALENDÁRIO -->
+        <div id="calendarGrid" class="w-full">
+            <!-- Renderizado via JS conforme a visão selecionada -->
         </div>
     </main>
 
@@ -312,98 +318,329 @@
     <script>
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         let rawData = [];
-        
         let currentDate = new Date();
+
+        // MODO DE VISÃO PADRÃO PERSISTIDO NO LOCALSTORAGE
+        let currentView = localStorage.getItem('columbia_preferred_view') || 'month';
 
         let onlyCurrentMonth = true;
         let onlyWithBudget = false;
-
         let isValuesUnlocked = false;
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
+            setViewMode(currentView, false);
             fetchData();
         });
 
-        function handleValueVisibility() {
-            if (isValuesUnlocked) {
-                isValuesUnlocked = false;
-                updateValueVisibilityUI();
-                renderCalendar();
-            } else {
-                openPasswordModal();
+        // DEFINIR MODO DE VISÃO (MÊS, SEMANA, DIA)
+        function setViewMode(mode, triggerRender = true) {
+            currentView = mode;
+            localStorage.setItem('columbia_preferred_view', mode);
+
+            const btnM = document.getElementById('viewBtnMonth');
+            const btnW = document.getElementById('viewBtnWeek');
+            const btnD = document.getElementById('viewBtnDay');
+
+            const activeClass = "bg-columbia-700 text-white shadow-sm";
+            const inactiveClass = "text-columbia-100 hover:text-white hover:bg-columbia-700/50";
+
+            btnM.className = `px-2.5 py-1 rounded-lg text-xs font-bold transition ${mode === 'month' ? activeClass : inactiveClass}`;
+            btnW.className = `px-2.5 py-1 rounded-lg text-xs font-bold transition ${mode === 'week' ? activeClass : inactiveClass}`;
+            btnD.className = `px-2.5 py-1 rounded-lg text-xs font-bold transition ${mode === 'day' ? activeClass : inactiveClass}`;
+
+            if (triggerRender) renderView();
+        }
+
+        // NAVEGAÇÃO DE DATA (DIAS/SEMANAS/MESES DEPENDENDO DA VISÃO)
+        function navigateDate(delta) {
+            if (currentView === 'month') {
+                currentDate.setMonth(currentDate.getMonth() + delta);
+            } else if (currentView === 'week') {
+                currentDate.setDate(currentDate.getDate() + (delta * 7));
+            } else if (currentView === 'day') {
+                currentDate.setDate(currentDate.getDate() + delta);
+            }
+            renderView();
+        }
+
+        function resetToToday() {
+            currentDate = new Date();
+            renderView();
+        }
+
+        // ATUALIZAR MENSAGEM DO CABEÇALHO
+        function updateDateLabel() {
+            const label = document.getElementById('currentDateLabel');
+            if (currentView === 'month') {
+                const monthStr = currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                label.textContent = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
+            } else if (currentView === 'week') {
+                const weekInfo = getSplitWeekDetails(currentDate);
+                label.textContent = `Semana ${weekInfo.weekNum} de ${currentDate.getFullYear()}`;
+            } else if (currentView === 'day') {
+                label.textContent = currentDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
             }
         }
 
-        function openPasswordModal() {
-            const input = document.getElementById('inputPassword');
-            input.value = '';
-            input.type = 'password';
-            document.getElementById('eyeIcon').setAttribute('data-lucide', 'eye');
-            document.getElementById('passwordError').classList.add('hidden');
-            
-            const modal = document.getElementById('passwordModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            
-            setTimeout(() => input.focus(), 100);
+        // RENDERIZAR VISÃO
+        function renderView() {
+            updateDateLabel();
+            if (currentView === 'month') {
+                renderMonthCalendar();
+            } else if (currentView === 'week') {
+                renderWeekGrid();
+            } else if (currentView === 'day') {
+                renderDayView();
+            }
+        }
+
+        // VISÃO 1: MÊS (CALENDÁRIO GOOGLE)
+        function renderMonthCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+
+            let startingDay = firstDay.getDay() - 1; // Segunda = 0
+            if (startingDay === -1) startingDay = 6;
+
+            const daysInMonth = lastDay.getDate();
+
+            const filtered = getFilteredData();
+
+            // Mapeia OS por YYYY-MM-DD
+            const osByDate = {};
+            filtered.forEach(item => {
+                const dateKey = item.entrega_normalizada.substring(0, 10);
+                if (!osByDate[dateKey]) osByDate[dateKey] = [];
+                osByDate[dateKey].push(item);
+            });
+
+            let calendarHTML = `
+                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                    <div class="grid grid-cols-7 bg-columbia-700 text-white text-center text-xs font-bold py-2 border-b border-columbia-800">
+                        <div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div><div>Dom</div>
+                    </div>
+                    <div class="grid grid-cols-7 auto-rows-fr bg-slate-200 gap-px">
+            `;
+
+            // Dias Vazios do mês anterior
+            for (let i = 0; i < startingDay; i++) {
+                calendarHTML += `<div class="bg-slate-50 min-h-[100px] p-1.5 opacity-40"></div>`;
+            }
+
+            // Dias do Mês Atual
+            const todayStr = new Date().toISOString().substring(0, 10);
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateObj = new Date(year, month, day);
+                const monthFormatted = String(month + 1).padStart(2, '0');
+                const dayFormatted = String(day).padStart(2, '0');
+                const dateKey = `${year}-${monthFormatted}-${dayFormatted}`;
+
+                const dayItems = osByDate[dateKey] || [];
+                const dayTotalVal = dayItems.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
+                const isToday = dateKey === todayStr;
+
+                calendarHTML += `
+                    <div onclick="selectDayView('${dateKey}')" class="bg-white min-h-[110px] p-2 flex flex-col justify-between hover:bg-columbia-50/60 cursor-pointer transition">
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center ${isToday ? 'bg-columbia-700 text-white' : 'text-slate-700'}">${day}</span>
+                            ${dayItems.length > 0 ? `<span class="bg-columbia-100 text-columbia-800 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded">${dayItems.length} OS</span>` : ''}
+                        </div>
+
+                        ${dayItems.length > 0 ? `
+                            <div class="space-y-1 my-1">
+                                <div class="text-[10px] bg-slate-100 p-1 rounded font-semibold text-slate-700 truncate">
+                                    Total: <span class="text-emerald-600 font-bold">${formatBRL(dayTotalVal)}</span>
+                                </div>
+                            </div>
+                        ` : '<div class="text-[10px] text-slate-300 italic">Sem entregas</div>'}
+                    </div>
+                `;
+            }
+
+            calendarHTML += `</div></div>`;
+            grid.innerHTML = calendarHTML;
+        }
+
+        function selectDayView(dateKey) {
+            const parts = dateKey.split('-');
+            currentDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            setViewMode('day');
+        }
+
+        // VISÃO 2: SEMANA (GRIID ORIGINAL DE SEMANAS)
+        function renderWeekGrid() {
+            const filtered = getFilteredData();
+            const weeksMap = {};
+
+            filtered.forEach(item => {
+                const date = new Date(item.entrega_normalizada);
+                const weekInfo = getSplitWeekDetails(date);
+
+                if (!weeksMap[weekInfo.groupKey]) {
+                    weeksMap[weekInfo.groupKey] = {
+                        label: weekInfo.label,
+                        sortDate: weekInfo.sortDate,
+                        items: []
+                    };
+                }
+                weeksMap[weekInfo.groupKey].items.push(item);
+            });
+
+            const sortedWeeks = Object.values(weeksMap).sort((a, b) => a.sortDate - b.sortDate);
+
+            const grid = document.getElementById('calendarGrid');
+            grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start';
+            grid.innerHTML = '';
+
+            if (sortedWeeks.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-white p-8 text-center rounded-2xl border border-slate-200 text-slate-500 shadow-sm">
+                        <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-2 opacity-40 text-slate-400"></i>
+                        Nenhuma Ordem de Serviço encontrada para os filtros selecionados.
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            sortedWeeks.forEach(week => {
+                const weekTotal = week.items.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
+                
+                const col = document.createElement('div');
+                col.className = 'bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col shadow-sm hover:shadow transition-shadow';
+
+                col.innerHTML = `
+                    <div class="bg-columbia-700 text-white px-3.5 py-2 font-black text-xs flex justify-between items-center border-b border-columbia-800">
+                        <span>${week.label}</span>
+                        <span class="bg-columbia-900 text-white px-2 py-0.5 rounded-full text-[10px] font-mono font-bold">${week.items.length} OS</span>
+                    </div>
+                    <div class="bg-slate-50 px-3 py-1.5 border-b border-slate-200 flex justify-between text-[11px] font-semibold text-slate-600">
+                        <span>Previsto:</span>
+                        <span class="text-emerald-600 font-bold">${formatBRL(weekTotal)}</span>
+                    </div>
+                    <div class="p-2 space-y-2 max-h-[550px] overflow-y-auto custom-scroll flex-1">
+                        ${week.items.map(item => renderItemCard(item)).join('')}
+                    </div>
+                `;
+                grid.appendChild(col);
+            });
+
             lucide.createIcons();
         }
 
-        function closePasswordModal() {
-            const modal = document.getElementById('passwordModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
+        // VISÃO 3: DIA DETALHADO
+        function renderDayView() {
+            const grid = document.getElementById('calendarGrid');
+            grid.className = 'w-full max-w-2xl mx-auto';
+            grid.innerHTML = '';
 
-        function togglePasswordVisibility() {
-            const input = document.getElementById('inputPassword');
-            const icon = document.getElementById('eyeIcon');
+            const dateKey = currentDate.toISOString().substring(0, 10);
+            const filtered = getFilteredData().filter(item => item.entrega_normalizada.substring(0, 10) === dateKey);
 
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.setAttribute('data-lucide', 'eye-off');
+            const dayTotal = filtered.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
+
+            let dayHTML = `
+                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-md">
+                    <div class="bg-columbia-700 text-white px-5 py-3 flex justify-between items-center">
+                        <h3 class="font-extrabold text-sm uppercase">${currentDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}</h3>
+                        <span class="bg-columbia-900 text-white text-xs font-bold px-2.5 py-1 rounded-full">${filtered.length} OS</span>
+                    </div>
+                    <div class="bg-slate-50 px-5 py-2 border-b border-slate-200 flex justify-between text-xs font-semibold text-slate-600">
+                        <span>Total Previsto do Dia:</span>
+                        <span class="text-emerald-600 font-bold text-sm">${formatBRL(dayTotal)}</span>
+                    </div>
+                    <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto custom-scroll">
+            `;
+
+            if (filtered.length === 0) {
+                dayHTML += `<p class="text-center text-slate-400 py-8 italic">Nenhuma entrega programada para este dia.</p>`;
             } else {
-                input.type = 'password';
-                icon.setAttribute('data-lucide', 'eye');
+                dayHTML += filtered.map(item => renderItemCard(item)).join('');
             }
+
+            dayHTML += `</div></div>`;
+            grid.innerHTML = dayHTML;
             lucide.createIcons();
         }
 
-        function checkPasswordKey(event) {
-            if (event.key === 'Enter') {
-                validatePassword();
-            }
+        // RETORNA DADOS FILTRADOS
+        function getFilteredData() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const selectedSegmento = document.getElementById('segmentoFilter').value;
+            const selectedProducao = document.getElementById('producaoFilter').value;
+            const selectedClient = document.getElementById('clientFilter').value;
+            const selectedEngenharia = document.getElementById('engenhariaFilter').value;
+            const selectedCompras = document.getElementById('comprasFilter').value;
+            const selectedTerceiros = document.getElementById('terceirosFilter').value;
+
+            let filtered = rawData.filter(item => {
+                if (!item.entrega_normalizada) return false;
+                const date = new Date(item.entrega_normalizada);
+                if (isNaN(date)) return false;
+
+                if (onlyCurrentMonth && currentView === 'week') {
+                    if (date.getMonth() !== currentDate.getMonth() || date.getFullYear() !== currentDate.getFullYear()) {
+                        return false;
+                    }
+                }
+
+                if (onlyWithBudget) {
+                    const hasBudget = (item.possui_orcamento && item.possui_orcamento.toLowerCase() === 'sim') || (parseValue(item.preco_geral_a_vista || item.orcamento) > 0);
+                    if (!hasBudget) return false;
+                }
+
+                if (selectedSegmento && item.segmento !== selectedSegmento) return false;
+                if (selectedClient && item.cliente !== selectedClient) return false;
+                if (selectedEngenharia && item.engenharia_status !== selectedEngenharia) return false;
+                if (selectedCompras && item.status_compras !== selectedCompras) return false;
+                if (selectedTerceiros && item.status_terceiros !== selectedTerceiros) return false;
+
+                if (selectedProducao) {
+                    const prodStatus = (item.status_producao || '').trim();
+                    const isFinalizado = prodStatus === '100%' || (item.status && item.status.toUpperCase() === 'CONCLUÍDO');
+                    
+                    if (selectedProducao === 'finalizado' && !isFinalizado) return false;
+                    if (selectedProducao === 'nao_finalizado' && isFinalizado) return false;
+                }
+
+                if (search) {
+                    const allValuesText = Object.values(item)
+                        .filter(v => v !== null && v !== undefined)
+                        .join(' ')
+                        .toLowerCase();
+                    
+                    if (!allValuesText.includes(search)) return false;
+                }
+
+                return true;
+            });
+
+            // Atualiza métricas gerais da barra superior
+            let totalVal = 0, atrasadasCount = 0, semOrcCount = 0;
+            filtered.forEach(item => {
+                const val = parseValue(item.preco_geral_a_vista || item.orcamento);
+                totalVal += val;
+                if (item.atrasada === 'sim') atrasadasCount++;
+                if (item.possui_orcamento === 'não' || item.possui_orcamento === 'nao' || val === 0) semOrcCount++;
+            });
+
+            document.getElementById('metricTotalOS').textContent = filtered.length;
+            document.getElementById('metricAtrasadas').textContent = atrasadasCount;
+            document.getElementById('metricValorTotal').textContent = formatBRL(totalVal);
+            document.getElementById('metricSemOrcamento').textContent = semOrcCount;
+
+            return filtered;
         }
 
-        function validatePassword() {
-            const pass = document.getElementById('inputPassword').value;
-            if (pass === "Colmac@2026") {
-                isValuesUnlocked = true;
-                closePasswordModal();
-                updateValueVisibilityUI();
-                renderCalendar();
-            } else {
-                document.getElementById('passwordError').classList.remove('hidden');
-            }
-        }
-
-        function updateValueVisibilityUI() {
-            const btnTxt = document.getElementById('txtValueVisibility');
-            const icon = document.getElementById('iconValueVisibility');
-
-            if (isValuesUnlocked) {
-                btnTxt.textContent = "Ocultar Valores";
-                icon.setAttribute('data-lucide', 'eye');
-                icon.className = "w-4 h-4 text-emerald-400";
-            } else {
-                btnTxt.textContent = "Exibir Valores";
-                icon.setAttribute('data-lucide', 'eye-off');
-                icon.className = "w-4 h-4 text-amber-400";
-            }
-            lucide.createIcons();
-        }
-
+        // CARTEIRA DA API E DROPDOWNS
         async function fetchData() {
             const icon = document.getElementById('refreshIcon');
             if(icon) icon.classList.add('animate-spin');
@@ -420,41 +657,13 @@
                 rawData = Array.isArray(data) ? data : [data];
                 
                 populateDropdowns();
-                renderCalendar();
+                renderView();
             } catch (err) {
                 console.error("Erro ao buscar API:", err);
                 alert("Erro de conexão! Verifique se a API está ativa.");
             } finally {
                 if(icon) icon.classList.remove('animate-spin');
             }
-        }
-
-        function clearAllFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('segmentoFilter').value = '';
-            document.getElementById('producaoFilter').value = '';
-            document.getElementById('clientFilter').value = '';
-            document.getElementById('engenhariaFilter').value = '';
-            document.getElementById('comprasFilter').value = '';
-            document.getElementById('terceirosFilter').value = '';
-
-            onlyCurrentMonth = true;
-            onlyWithBudget = false;
-
-            updateFilterButtonsUI();
-            renderCalendar();
-        }
-
-        function getFullTitle(item) {
-            const titulo = item.titulo ? item.titulo.toString().trim() : 'Sem título';
-            return item.cod_interno ? `[${item.cod_interno}] ${titulo}` : titulo;
-        }
-
-        function formatDateOnly(dateStr) {
-            if (!dateStr || dateStr === 'NaT') return '-';
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return '-';
-            return d.toLocaleDateString('pt-BR');
         }
 
         function populateDropdowns() {
@@ -491,26 +700,149 @@
             Array.from(terceirosStatus).sort().forEach(val => terceirosSelect.appendChild(new Option(val, val)));
         }
 
-        function changeMonth(delta) {
-            currentDate.setMonth(currentDate.getMonth() + delta);
-            renderCalendar();
+        // FUNÇÕES AUXILIARES DE RENDERIZAÇÃO DE CARTÕES
+        function renderItemCard(item) {
+            const isAtrasada = item.atrasada === 'sim';
+            const val = parseValue(item.preco_geral_a_vista || item.orcamento);
+            
+            let statusBadge = isAtrasada 
+                ? '<span class="bg-red-500 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">Atrasado</span>'
+                : '<span class="bg-emerald-600 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">No prazo</span>';
+
+            let valColor = 'text-emerald-600 font-extrabold';
+            if (val === 0) valColor = 'text-amber-600 font-bold';
+
+            const payload = JSON.stringify(item).replace(/'/g, "&apos;");
+            const fullTitle = getFullTitle(item);
+
+            return `
+                <div onclick='openModal(${payload})' class="border border-slate-200 rounded-xl p-2.5 bg-white hover:border-columbia-500 hover:shadow-md transition cursor-pointer flex flex-col gap-1.5 text-xs">
+                    <div class="flex items-center justify-between font-mono">
+                        <span class="bg-columbia-50 text-columbia-700 px-1.5 py-0.5 rounded font-bold border border-columbia-100">OS ${item.n_os}</span>
+                        ${statusBadge}
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-1 my-0.5">
+                        ${item.segmento ? `<span class="bg-columbia-100 text-columbia-800 border border-columbia-200 text-[10px] px-2 py-0.5 rounded-md font-extrabold tracking-wide uppercase">${item.segmento}</span>` : ''}
+                        ${item.status ? `<span class="bg-slate-100 text-slate-700 border border-slate-200 text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase">${item.status}</span>` : ''}
+                    </div>
+
+                    <div class="text-[11px] text-slate-800 line-clamp-2 leading-snug font-semibold" title="${fullTitle}">${fullTitle}</div>
+
+                    <div class="grid grid-cols-1 gap-0.5 text-[10px] bg-slate-50 p-1.5 rounded-lg border border-slate-200 text-slate-600">
+                        <div class="flex items-center justify-between truncate"><span class="text-slate-500 flex items-center gap-1"><i data-lucide="cpu" class="w-3 h-3 text-slate-400"></i> Eng:</span><span class="font-semibold text-slate-800 truncate max-w-[120px]">${item.engenharia_status || '-'}</span></div>
+                        <div class="flex items-center justify-between truncate"><span class="text-slate-500 flex items-center gap-1"><i data-lucide="shopping-cart" class="w-3 h-3 text-slate-400"></i> Compras:</span><span class="font-semibold text-slate-700 truncate max-w-[120px]">${item.status_compras || '-'}</span></div>
+                        <div class="flex items-center justify-between truncate"><span class="text-slate-500 flex items-center gap-1"><i data-lucide="truck" class="w-3 h-3 text-slate-400"></i> Terceiros:</span><span class="font-semibold text-slate-700 truncate max-w-[120px]">${item.status_terceiros || '-'}</span></div>
+                        <div class="flex items-center justify-between truncate"><span class="text-slate-500 flex items-center gap-1"><i data-lucide="activity" class="w-3 h-3 text-slate-400"></i> Produção:</span><span class="font-bold text-columbia-700">${item.status_producao || '0%'}</span></div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100">
+                        <span class="truncate max-w-[100px] text-slate-500 font-medium" title="${item.cliente || 'Sem cliente'}">${item.cliente || 'Sem cliente'}</span>
+                        <span class="${valColor} text-[11px]">${formatBRL(val)}</span>
+                    </div>
+                </div>
+            `;
         }
 
-        function resetToToday() {
-            currentDate = new Date();
-            renderCalendar();
+        // SEGURANÇA E SENHA
+        function handleValueVisibility() {
+            if (isValuesUnlocked) {
+                isValuesUnlocked = false;
+                updateValueVisibilityUI();
+                renderView();
+            } else {
+                openPasswordModal();
+            }
+        }
+
+        function openPasswordModal() {
+            const input = document.getElementById('inputPassword');
+            input.value = '';
+            input.type = 'password';
+            document.getElementById('eyeIcon').setAttribute('data-lucide', 'eye');
+            document.getElementById('passwordError').classList.add('hidden');
+            
+            const modal = document.getElementById('passwordModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => input.focus(), 100);
+            lucide.createIcons();
+        }
+
+        function closePasswordModal() {
+            const modal = document.getElementById('passwordModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('inputPassword');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
+
+        function checkPasswordKey(event) { if (event.key === 'Enter') validatePassword(); }
+
+        function validatePassword() {
+            const pass = document.getElementById('inputPassword').value;
+            if (pass === "Colmac@2026") {
+                isValuesUnlocked = true;
+                closePasswordModal();
+                updateValueVisibilityUI();
+                renderView();
+            } else {
+                document.getElementById('passwordError').classList.remove('hidden');
+            }
+        }
+
+        function updateValueVisibilityUI() {
+            const btnTxt = document.getElementById('txtValueVisibility');
+            const icon = document.getElementById('iconValueVisibility');
+            if (isValuesUnlocked) {
+                btnTxt.textContent = "Ocultar Valores";
+                icon.setAttribute('data-lucide', 'eye');
+                icon.className = "w-4 h-4 text-emerald-400";
+            } else {
+                btnTxt.textContent = "Exibir Valores";
+                icon.setAttribute('data-lucide', 'eye-off');
+                icon.className = "w-4 h-4 text-amber-400";
+            }
+            lucide.createIcons();
+        }
+
+        function clearAllFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('segmentoFilter').value = '';
+            document.getElementById('producaoFilter').value = '';
+            document.getElementById('clientFilter').value = '';
+            document.getElementById('engenhariaFilter').value = '';
+            document.getElementById('comprasFilter').value = '';
+            document.getElementById('terceirosFilter').value = '';
+
+            onlyCurrentMonth = true;
+            onlyWithBudget = false;
+
+            updateFilterButtonsUI();
+            renderView();
         }
 
         function toggleMonthFilter() {
             onlyCurrentMonth = !onlyCurrentMonth;
             updateFilterButtonsUI();
-            renderCalendar();
+            renderView();
         }
 
         function toggleOrcamentoFilter() {
             onlyWithBudget = !onlyWithBudget;
             updateFilterButtonsUI();
-            renderCalendar();
+            renderView();
         }
 
         function updateFilterButtonsUI() {
@@ -534,6 +866,18 @@
                 txtO.textContent = "Exibir somente com Orçamentos";
                 btnO.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
             }
+        }
+
+        function getFullTitle(item) {
+            const titulo = item.titulo ? item.titulo.toString().trim() : 'Sem título';
+            return item.cod_interno ? `[${item.cod_interno}] ${titulo}` : titulo;
+        }
+
+        function formatDateOnly(dateStr) {
+            if (!dateStr || dateStr === 'NaT') return '-';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return '-';
+            return d.toLocaleDateString('pt-BR');
         }
 
         function parseValue(val) {
@@ -580,196 +924,6 @@
             };
         }
 
-        function renderCalendar() {
-            const monthStr = currentDate.toLocaleDateString('pt-BR', { month: 'long' });
-            const capitalizedMonth = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
-            document.getElementById('currentMonthYearLabel').textContent = `${capitalizedMonth} De ${currentDate.getFullYear()}`;
-
-            const search = document.getElementById('searchInput').value.toLowerCase().trim();
-            const selectedSegmento = document.getElementById('segmentoFilter').value;
-            const selectedProducao = document.getElementById('producaoFilter').value;
-            const selectedClient = document.getElementById('clientFilter').value;
-            const selectedEngenharia = document.getElementById('engenhariaFilter').value;
-            const selectedCompras = document.getElementById('comprasFilter').value;
-            const selectedTerceiros = document.getElementById('terceirosFilter').value;
-
-            let filtered = rawData.filter(item => {
-                if (!item.entrega_normalizada) return false;
-                const date = new Date(item.entrega_normalizada);
-                if (isNaN(date)) return false;
-
-                if (onlyCurrentMonth) {
-                    if (date.getMonth() !== currentDate.getMonth() || date.getFullYear() !== currentDate.getFullYear()) {
-                        return false;
-                    }
-                }
-
-                if (onlyWithBudget) {
-                    const hasBudget = (item.possui_orcamento && item.possui_orcamento.toLowerCase() === 'sim') || (parseValue(item.preco_geral_a_vista || item.orcamento) > 0);
-                    if (!hasBudget) return false;
-                }
-
-                if (selectedSegmento && item.segmento !== selectedSegmento) return false;
-                if (selectedClient && item.cliente !== selectedClient) return false;
-                if (selectedEngenharia && item.engenharia_status !== selectedEngenharia) return false;
-                if (selectedCompras && item.status_compras !== selectedCompras) return false;
-                if (selectedTerceiros && item.status_terceiros !== selectedTerceiros) return false;
-
-                if (selectedProducao) {
-                    const prodStatus = (item.status_producao || '').trim();
-                    const isFinalizado = prodStatus === '100%' || (item.status && item.status.toUpperCase() === 'CONCLUÍDO');
-                    
-                    if (selectedProducao === 'finalizado' && !isFinalizado) return false;
-                    if (selectedProducao === 'nao_finalizado' && isFinalizado) return false;
-                }
-
-                if (search) {
-                    const allValuesText = Object.values(item)
-                        .filter(v => v !== null && v !== undefined)
-                        .join(' ')
-                        .toLowerCase();
-                    
-                    if (!allValuesText.includes(search)) return false;
-                }
-
-                return true;
-            });
-
-            let totalVal = 0, atrasadasCount = 0, semOrcCount = 0;
-            filtered.forEach(item => {
-                const val = parseValue(item.preco_geral_a_vista || item.orcamento);
-                totalVal += val;
-                if (item.atrasada === 'sim') atrasadasCount++;
-                if (item.possui_orcamento === 'não' || item.possui_orcamento === 'nao' || val === 0) semOrcCount++;
-            });
-
-            document.getElementById('metricTotalOS').textContent = filtered.length;
-            document.getElementById('metricAtrasadas').textContent = atrasadasCount;
-            document.getElementById('metricValorTotal').textContent = formatBRL(totalVal);
-            document.getElementById('metricSemOrcamento').textContent = semOrcCount;
-
-            const weeksMap = {};
-            filtered.forEach(item => {
-                const date = new Date(item.entrega_normalizada);
-                const weekInfo = getSplitWeekDetails(date);
-
-                if (!weeksMap[weekInfo.groupKey]) {
-                    weeksMap[weekInfo.groupKey] = {
-                        label: weekInfo.label,
-                        sortDate: weekInfo.sortDate,
-                        items: []
-                    };
-                }
-                weeksMap[weekInfo.groupKey].items.push(item);
-            });
-
-            const sortedWeeks = Object.values(weeksMap).sort((a, b) => a.sortDate - b.sortDate);
-
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
-
-            if (sortedWeeks.length === 0) {
-                grid.innerHTML = `
-                    <div class="col-span-full bg-white p-8 text-center rounded-2xl border border-slate-200 text-slate-500 shadow-sm">
-                        <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-2 opacity-40 text-slate-400"></i>
-                        Nenhuma Ordem de Serviço encontrada para os filtros selecionados.
-                    </div>
-                `;
-                lucide.createIcons();
-                return;
-            }
-
-            sortedWeeks.forEach(week => {
-                const weekTotal = week.items.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
-                
-                const col = document.createElement('div');
-                col.className = 'bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col shadow-sm hover:shadow transition-shadow';
-
-                col.innerHTML = `
-                    <div class="bg-columbia-700 text-white px-3.5 py-2 font-black text-xs flex justify-between items-center border-b border-columbia-800">
-                        <span>${week.label}</span>
-                        <span class="bg-columbia-900 text-white px-2 py-0.5 rounded-full text-[10px] font-mono font-bold">${week.items.length} OS</span>
-                    </div>
-                    <div class="bg-slate-50 px-3 py-1.5 border-b border-slate-200 flex justify-between text-[11px] font-semibold text-slate-600">
-                        <span>Previsto:</span>
-                        <span class="text-emerald-600 font-bold">${formatBRL(weekTotal)}</span>
-                    </div>
-                    <div class="p-2 space-y-2 max-h-[550px] overflow-y-auto custom-scroll flex-1">
-                        ${week.items.map(item => renderItemCard(item)).join('')}
-                    </div>
-                `;
-                grid.appendChild(col);
-            });
-
-            lucide.createIcons();
-        }
-
-        function renderItemCard(item) {
-            const isAtrasada = item.atrasada === 'sim';
-            const val = parseValue(item.preco_geral_a_vista || item.orcamento);
-            
-            let statusBadge = isAtrasada 
-                ? '<span class="bg-red-500 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">Atrasado</span>'
-                : '<span class="bg-emerald-600 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">No prazo</span>';
-
-            let valColor = 'text-emerald-600 font-extrabold';
-            if (val === 0) valColor = 'text-amber-600 font-bold';
-
-            const payload = JSON.stringify(item).replace(/'/g, "&apos;");
-            const fullTitle = getFullTitle(item);
-
-            return `
-                <div onclick='openModal(${payload})' class="border border-slate-200 rounded-xl p-2.5 bg-white hover:border-columbia-500 hover:shadow-md transition cursor-pointer flex flex-col gap-1.5 text-xs">
-                    
-                    <div class="flex items-center justify-between font-mono">
-                        <span class="bg-columbia-50 text-columbia-700 px-1.5 py-0.5 rounded font-bold border border-columbia-100">OS ${item.n_os}</span>
-                        ${statusBadge}
-                    </div>
-
-                    <div class="flex flex-wrap items-center gap-1 my-0.5">
-                        ${item.segmento ? `
-                            <span class="bg-columbia-100 text-columbia-800 border border-columbia-200 text-[10px] px-2 py-0.5 rounded-md font-extrabold tracking-wide uppercase">
-                                ${item.segmento}
-                            </span>
-                        ` : ''}
-                        ${item.status ? `
-                            <span class="bg-slate-100 text-slate-700 border border-slate-200 text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase">
-                                ${item.status}
-                            </span>
-                        ` : ''}
-                    </div>
-
-                    <div class="text-[11px] text-slate-800 line-clamp-2 leading-snug font-semibold" title="${fullTitle}">
-                        ${fullTitle}
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-0.5 text-[10px] bg-slate-50 p-1.5 rounded-lg border border-slate-200 text-slate-600">
-                        <div class="flex items-center justify-between truncate">
-                            <span class="text-slate-500 flex items-center gap-1"><i data-lucide="cpu" class="w-3 h-3 text-slate-400"></i> Eng:</span>
-                            <span class="font-semibold text-slate-800 truncate max-w-[120px]">${item.engenharia_status || '-'}</span>
-                        </div>
-                        <div class="flex items-center justify-between truncate">
-                            <span class="text-slate-500 flex items-center gap-1"><i data-lucide="shopping-cart" class="w-3 h-3 text-slate-400"></i> Compras:</span>
-                            <span class="font-semibold text-slate-700 truncate max-w-[120px]">${item.status_compras || '-'}</span>
-                        </div>
-                        <div class="flex items-center justify-between truncate">
-                            <span class="text-slate-500 flex items-center gap-1"><i data-lucide="truck" class="w-3 h-3 text-slate-400"></i> Terceiros:</span>
-                            <span class="font-semibold text-slate-700 truncate max-w-[120px]">${item.status_terceiros || '-'}</span>
-                        </div>
-                        <div class="flex items-center justify-between truncate">
-                            <span class="text-slate-500 flex items-center gap-1"><i data-lucide="activity" class="w-3 h-3 text-slate-400"></i> Produção:</span>
-                            <span class="font-bold text-columbia-700">${item.status_producao || '0%'}</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100">
-                        <span class="truncate max-w-[100px] text-slate-500 font-medium" title="${item.cliente || 'Sem cliente'}">${item.cliente || 'Sem cliente'}</span>
-                        <span class="${valColor} text-[11px]">${formatBRL(val)}</span>
-                    </div>
-                </div>
-            `;
-        }
-
         function openModal(item) {
             document.getElementById('mOS').textContent = `OS #${item.n_os}`;
             document.getElementById('mTitulo').textContent = getFullTitle(item);
@@ -779,8 +933,6 @@
             document.getElementById('mCodInterno').textContent = item.cod_interno || 'Não informado';
             document.getElementById('mOrigem').textContent = item.origem || 'Não informado';
             document.getElementById('mEngenhariaStatus').textContent = item.engenharia_status || 'Não informado';
-            
-            // TROCADO DE os_filho PARA os_filhos_quais
             document.getElementById('mOsFilhosQuais').textContent = item.os_filhos_quais || 'Sem filhos';
             
             document.getElementById('mPreco').textContent = formatBRL(item.preco_geral_a_vista || item.orcamento);
