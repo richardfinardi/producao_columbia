@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V2.6</title>
+    <title>Programação de Produção - Columbia V2.7</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V2.6</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V2.7</p>
                 </div>
             </div>
 
@@ -340,10 +340,11 @@
         </div>
     </div>
 
-    <!-- MODAL DE DETALHES DA OS -->
+    <!-- MODAL DE DETALHES DA OS (CORRIGIDO: ALTURA, SCROLL INTERNO E FORMATADOR DE DATAS) -->
     <div id="osModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
-            <div class="bg-columbia-700 px-6 py-4 flex justify-between items-center text-white">
+        <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-lg w-full flex flex-col max-h-[90vh] overflow-hidden border border-slate-200">
+            <!-- CABEÇALHO DO MODAL (FIXO) -->
+            <div class="bg-columbia-700 px-6 py-3.5 flex justify-between items-center text-white shrink-0">
                 <div>
                     <span id="mOS" class="text-xs font-bold bg-columbia-900 text-white px-2 py-0.5 rounded uppercase"></span>
                     <h3 id="mTitulo" class="font-bold text-sm mt-1 text-white"></h3>
@@ -351,7 +352,8 @@
                 <button onclick="closeModal()" class="text-columbia-100 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
-            <div class="p-5 space-y-3 text-xs">
+            <!-- CORPO DO MODAL (ROLÁVEL COM SCROLLBAR CUSTOMIZADA) -->
+            <div class="p-5 space-y-3 text-xs overflow-y-auto custom-scroll flex-1">
                 <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
                     <div><span class="text-slate-500 block font-semibold">Nº Pedido</span><span id="mPedido" class="font-bold text-slate-800"></span></div>
                     <div><span class="text-slate-500 block font-semibold">Cliente</span><span id="mCliente" class="font-bold text-slate-800"></span></div>
@@ -376,7 +378,7 @@
                     </div>
                 </div>
 
-                <!-- DATAS MAPEADAS -->
+                <!-- DATAS MAPEADAS COM FORMATO LIMPO -->
                 <div class="space-y-1.5 pt-2 border-t border-slate-200">
                     <h4 class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Datas do Processo</h4>
                     <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px]">
@@ -390,7 +392,8 @@
                 </div>
             </div>
 
-            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-between items-center gap-2">
+            <!-- RODAPÉ DO MODAL (FIXO) -->
+            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-between items-center gap-2 shrink-0">
                 <!-- Botão Alterar Data Renegociada -->
                 <button onclick="openAltRenegociationPasswordModal()" class="px-3.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
                     <i data-lucide="calendar-cog" class="w-4 h-4"></i>
@@ -420,6 +423,19 @@
             setViewMode(currentView, false);
             fetchData();
         });
+
+        // HELPER FORMATADOR DE DATAS (LIMPA NaT, STAMPS ISO E RETORNA DD/MM/YYYY)
+        function formatDate(dtStr) {
+            if (!dtStr || dtStr === 'NaT' || dtStr === 'None' || dtStr === 'null') return '-';
+            const cleanStr = String(dtStr).trim();
+            if (cleanStr.length < 10) return '-';
+            const yyyyMmDd = cleanStr.substring(0, 10);
+            const parts = yyyyMmDd.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return cleanStr;
+        }
 
         // REQUISIÇÃO COM BYPASS DE CACHE E MANUTENÇÃO DE ESTADO DE FILTROS
         async function fetchData() {
@@ -1078,40 +1094,43 @@
             lucide.createIcons();
         }
 
-        // MODAL DE DETALHES DA OS
+        // MODAL DE DETALHES DA OS (ATRIBUIÇÃO DE DADOS FORMATADOS E TRATAMENTO DE NULOS)
         function openModal(n_os) {
             const item = rawData.find(i => String(i.n_os) === String(n_os));
             if (!item) return;
             selectedItemModal = item;
 
+            const safeText = (val) => (!val || val === 'NaT' || val === 'None' || val === 'null' || String(val).trim() === '') ? '-' : val;
+
             document.getElementById('mOS').textContent = `OS ${item.n_os || 'N/A'}`;
             document.getElementById('mTitulo').textContent = item.titulo || 'Sem Título';
-            document.getElementById('mPedido').textContent = item.n_pedido || 'N/A';
-            document.getElementById('mCliente').textContent = item.cliente || 'N/A';
-            document.getElementById('mSegmento').textContent = item.segmento || 'N/A';
-            document.getElementById('mCodInterno').textContent = item.cod_interno || 'N/A';
-            document.getElementById('mOrigem').textContent = item.origem || 'N/A';
-            document.getElementById('mEngenhariaStatus').textContent = item.engenharia_status || 'N/A';
-            document.getElementById('mOsFilhosQuais').textContent = item.os_filhos_quais || 'N/A';
-            document.getElementById('mPossuiOrcamento').textContent = item.possui_orcamento || 'N/A';
+            document.getElementById('mPedido').textContent = safeText(item.n_pedido);
+            document.getElementById('mCliente').textContent = safeText(item.cliente);
+            document.getElementById('mSegmento').textContent = safeText(item.segmento);
+            document.getElementById('mCodInterno').textContent = safeText(item.cod_interno);
+            document.getElementById('mOrigem').textContent = safeText(item.origem);
+            document.getElementById('mEngenhariaStatus').textContent = safeText(item.engenharia_status);
+            document.getElementById('mOsFilhosQuais').textContent = safeText(item.os_filhos_quais);
+            document.getElementById('mPossuiOrcamento').textContent = safeText(item.possui_orcamento);
             document.getElementById('mPreco').textContent = formatBRL(parseValue(item.preco_geral_a_vista || item.orcamento));
-            document.getElementById('mNumOrcamento').textContent = item.orcamento || 'N/A';
+            document.getElementById('mNumOrcamento').textContent = safeText(item.orcamento);
 
-            document.getElementById('mCompras').textContent = item.status_compras || 'N/A';
-            document.getElementById('mTerceiros').textContent = item.status_terceiros || 'N/A';
-            document.getElementById('mProducao').textContent = item.status_producao || 'N/A';
+            document.getElementById('mCompras').textContent = safeText(item.status_compras);
+            document.getElementById('mTerceiros').textContent = safeText(item.status_terceiros);
+            document.getElementById('mProducao').textContent = safeText(item.status_producao);
             
             const elAtrasada = document.getElementById('mAtrasada');
             const isAtrasada = String(item.atrasada).toLowerCase() === 'sim';
             elAtrasada.textContent = isAtrasada ? 'Sim' : 'Não';
             elAtrasada.className = `font-bold ${isAtrasada ? 'text-red-600' : 'text-emerald-600'}`;
 
-            document.getElementById('mAbertura').textContent = item.abertura_os || 'N/A';
-            document.getElementById('mDtRenegociada').textContent = item.dt_renegociada || item.u_data_renegociacao || 'N/A';
-            document.getElementById('mPrevEntregaOrcamento').textContent = item.prev_entrega_orcamento || 'N/A';
-            document.getElementById('mPrevEntregaOS').textContent = item.prev_entrega_os || 'N/A';
-            document.getElementById('mApontamento').textContent = item.ultimo_apontamento || 'N/A';
-            document.getElementById('mEntregaNorm').textContent = item.entrega_normalizada || 'N/A';
+            // ATRIBUIÇÃO DE DATAS COM FORMATADOR
+            document.getElementById('mAbertura').textContent = formatDate(item.abertura_os);
+            document.getElementById('mDtRenegociada').textContent = formatDate(item.dt_renegociada || item.u_data_renegociacao);
+            document.getElementById('mPrevEntregaOrcamento').textContent = formatDate(item.prev_entrega_orcamento);
+            document.getElementById('mPrevEntregaOS').textContent = formatDate(item.prev_entrega_os);
+            document.getElementById('mApontamento').textContent = formatDate(item.ultimo_apontamento);
+            document.getElementById('mEntregaNorm').textContent = formatDate(item.entrega_normalizada);
 
             const modal = document.getElementById('osModal');
             modal.classList.remove('hidden');
@@ -1182,7 +1201,7 @@
             
             const currentDt = selectedItemModal.dt_renegociada || selectedItemModal.u_data_renegociacao || '';
             const inputDate = document.getElementById('inputNewRenegociationDate');
-            if (currentDt && currentDt.length >= 10) {
+            if (currentDt && currentDt.length >= 10 && currentDt !== 'NaT') {
                 inputDate.value = currentDt.substring(0, 10);
             } else {
                 inputDate.value = '';
