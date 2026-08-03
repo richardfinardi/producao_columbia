@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V2.7</title>
+    <title>Programação de Produção - Columbia V2.8</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V2.7</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V2.8</p>
                 </div>
             </div>
 
@@ -340,7 +340,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE DETALHES DA OS (CORRIGIDO: ALTURA, SCROLL INTERNO E FORMATADOR DE DATAS) -->
+    <!-- MODAL DE DETALHES DA OS (ALTURA E SCROLL INTERNO AJUSTADOS) -->
     <div id="osModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-lg w-full flex flex-col max-h-[90vh] overflow-hidden border border-slate-200">
             <!-- CABEÇALHO DO MODAL (FIXO) -->
@@ -409,7 +409,7 @@
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         let rawData = [];
         let currentDate = new Date();
-        let selectedItemModal = null; // Armazena o objeto OS aberto no modal
+        let selectedItemModal = null; 
 
         // MODO DE VISÃO PADRÃO PERSISTIDO NO LOCALSTORAGE
         let currentView = localStorage.getItem('columbia_preferred_view') || 'month';
@@ -437,16 +437,23 @@
             return cleanStr;
         }
 
+        // HELPER PARA CALCULAR O NÚMERO DA SEMANA NO ANO DE UMA DATA
+        function getISOWeekNumber(d) {
+            const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            const dayNum = date.getUTCDay() || 7;
+            date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+            return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+        }
+
         // REQUISIÇÃO COM BYPASS DE CACHE E MANUTENÇÃO DE ESTADO DE FILTROS
         async function fetchData() {
             const refreshIcon = document.getElementById('refreshIcon');
             const btnRefresh = document.getElementById('btnRefresh');
             
-            // 1. Iniciar Feedback Visual de Spin
             if (refreshIcon) refreshIcon.classList.add('animate-spin');
             if (btnRefresh) btnRefresh.disabled = true;
 
-            // 2. Salvar o Estado Atual de TODOS os Filtros da Tela
             const savedFilters = {
                 search: document.getElementById('searchInput')?.value || '',
                 segmento: document.getElementById('segmentoFilter')?.value || '',
@@ -458,7 +465,6 @@
             };
 
             try {
-                // 3. Bypass de Cache na requisição Fetch (?_t=Date.now() + no-store)
                 const cacheBusterUrl = `${API_URL}?_t=${Date.now()}`;
                 const response = await fetch(cacheBusterUrl, {
                     cache: 'no-store',
@@ -475,28 +481,23 @@
 
                 rawData = await response.json();
 
-                // 4. Popula Selects com os novos dados e restaura os valores previamente salvos
                 populateSelectOptions(savedFilters);
 
-                // 5. Restaura Input de Busca
                 const searchInput = document.getElementById('searchInput');
                 if (searchInput) searchInput.value = savedFilters.search;
 
-                // 6. Renderiza a Tela com os Filtros Integros
                 renderView();
 
             } catch (error) {
                 console.error('Erro ao buscar dados da API:', error);
                 alert('Não foi possível atualizar os dados de produção. Verifique a conexão com o servidor.');
             } finally {
-                // 7. Parar Feedback Visual de Spin (Garantido em Sucesso ou Erro)
                 if (refreshIcon) refreshIcon.classList.remove('animate-spin');
                 if (btnRefresh) btnRefresh.disabled = false;
                 lucide.createIcons();
             }
         }
 
-        // POPOULAR SELECTS DE FILTROS PRESERVANDO O VALOR SELECIONADO PELO USUÁRIO
         function populateSelectOptions(savedFilters = {}) {
             const getUniqueOptions = (key) => {
                 const values = rawData
@@ -517,7 +518,6 @@
                     select.appendChild(optionEl);
                 });
 
-                // Restaura o valor anteriormente selecionado se ele ainda existir nas opções
                 if (savedValue && options.includes(savedValue)) {
                     select.value = savedValue;
                 } else if (savedValue) {
@@ -531,14 +531,12 @@
             fillSelect('comprasFilter', getUniqueOptions('status_compras'), 'Compras (Todos)', savedFilters.compras);
             fillSelect('terceirosFilter', getUniqueOptions('status_terceiros'), 'Terceiros (Todos)', savedFilters.terceiros);
 
-            // Restaura Select de Produção (que possui valores fixos no HTML)
             const producaoSelect = document.getElementById('producaoFilter');
             if (producaoSelect && savedFilters.producao) {
                 producaoSelect.value = savedFilters.producao;
             }
         }
 
-        // DEFINIR MODO DE VISÃO (MÊS, SEMANA, DIA)
         function setViewMode(mode, triggerRender = true) {
             currentView = mode;
             localStorage.setItem('columbia_preferred_view', mode);
@@ -557,7 +555,6 @@
             if (triggerRender) renderView();
         }
 
-        // NAVEGAÇÃO DE DATA (MÊS E SEMANA AVANÇAM MÊS A MÊS)
         function navigateDate(delta) {
             if (currentView === 'month' || currentView === 'week') {
                 currentDate.setMonth(currentDate.getMonth() + delta);
@@ -572,7 +569,6 @@
             renderView();
         }
 
-        // ATUALIZAR MENSAGEM DO CABEÇALHO DEDICADO DO CALENDÁRIO
         function updateDateLabel() {
             const label = document.getElementById('currentDateLabel');
             if (!label) return;
@@ -585,17 +581,6 @@
             }
         }
 
-        // HELPER PARA NÚMERO DA SEMANA NO ANO
-        function getSplitWeekDetails(d) {
-            const date = new Date(d.getTime());
-            date.setHours(0, 0, 0, 0);
-            const jan1 = new Date(date.getFullYear(), 0, 1);
-            const days = Math.floor((date - jan1) / (24 * 60 * 60 * 1000));
-            const weekNum = Math.ceil((days + jan1.getDay() + 1) / 7);
-            return { weekNum };
-        }
-
-        // TRATAMENTO DE VALORES MONETÁRIOS
         function parseValue(val) {
             if (val === null || val === undefined) return 0;
             if (typeof val === 'number') return val;
@@ -614,7 +599,6 @@
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
         }
 
-        // FILTRAGEM DOS DADOS (APLICAÇÃO DOS FILTROS DA TELA)
         function getFilteredData() {
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
             const segmento = document.getElementById('segmentoFilter')?.value || '';
@@ -625,7 +609,6 @@
             const terceiros = document.getElementById('terceirosFilter')?.value || '';
 
             return rawData.filter(item => {
-                // Filtro Geral de Texto
                 if (search) {
                     const matchOS = String(item.n_os || '').toLowerCase().includes(search);
                     const matchTitulo = String(item.titulo || '').toLowerCase().includes(search);
@@ -659,7 +642,6 @@
             });
         }
 
-        // CALCULO E ATUALIZAÇÃO DE MÉTRICAS DA BARRA SUPERIOR
         function updateMetrics(filtered) {
             const totalOS = filtered.length;
             const atrasadas = filtered.filter(i => String(i.atrasada || '').toLowerCase() === 'sim' || String(i.atrasada || '').toLowerCase() === 's').length;
@@ -676,7 +658,6 @@
             document.getElementById('metricValorTotal').textContent = formatBRL(valorTotal);
         }
 
-        // RENDERIZAR VISÃO DA TELA
         function renderView() {
             updateDateLabel();
             const filtered = getFilteredData();
@@ -692,7 +673,7 @@
             lucide.createIcons();
         }
 
-        // VISÃO 1: MÊS (FILTRO INTELIGENTE: OCULTA SEMANAS PASSADAS ZERADAS)
+        // VISÃO 1: MÊS
         function renderMonthCalendar(filtered) {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -709,7 +690,6 @@
 
             const daysInMonth = lastDay.getDate();
 
-            // Mapeia OS por YYYY-MM-DD
             const osByDate = {};
             filtered.forEach(item => {
                 const dateKey = item.entrega_normalizada ? item.entrega_normalizada.substring(0, 10) : '';
@@ -721,16 +701,13 @@
 
             const todayStr = new Date().toISOString().substring(0, 10);
 
-            // 1. Agrupa os dias em matrizes de Semanas
             const allWeeks = [];
             let currentWeek = [];
 
-            // Preenche dias de preenchimento da semana anterior
             for (let i = 0; i < startingDay; i++) {
                 currentWeek.push({ isPadding: true });
             }
 
-            // Preenche os dias reais do mês
             for (let day = 1; day <= daysInMonth; day++) {
                 const monthFormatted = String(month + 1).padStart(2, '0');
                 const dayFormatted = String(day).padStart(2, '0');
@@ -749,7 +726,6 @@
                 }
             }
 
-            // Completa a última semana com células de padding se necessário
             if (currentWeek.length > 0) {
                 while (currentWeek.length < 7) {
                     currentWeek.push({ isPadding: true });
@@ -757,14 +733,12 @@
                 allWeeks.push(currentWeek);
             }
 
-            // 2. Filtro: Oculta semanas que já passaram E que não têm NENHUMA OS (Se o filtro tiver ativo)
             const weeksToRender = onlyCurrentMonth ? allWeeks.filter(week => {
                 const temOSNaSemana = week.some(d => !d.isPadding && d.dayItems.length > 0);
                 const contemHojeOuFuturo = week.some(d => !d.isPadding && d.dateKey >= todayStr);
                 return temOSNaSemana || contemHojeOuFuturo;
             }) : allWeeks;
 
-            // 3. Monta o HTML do Calendário
             let calendarHTML = `
                 <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                     <div class="grid grid-cols-7 bg-columbia-700 text-white text-center text-xs font-bold py-2 border-b border-columbia-800">
@@ -836,7 +810,7 @@
             grid.innerHTML = calendarHTML;
         }
 
-        // VISÃO 2: SEMANA (AGRUPADO POR SEMANAS DO MÊS SELECIONADO)
+        // VISÃO 2: SEMANA (CORRIGIDA: CALCULA SEMANAS DO MÊS SEM FILTRAR OSs NULAS)
         function renderWeekGrid(filtered) {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -847,52 +821,50 @@
             const firstDayOfMonth = new Date(year, month, 1);
             const lastDayOfMonth = new Date(year, month + 1, 0);
 
-            // Mapeia o início da primeira semana (Segunda-feira)
-            let startOfWeek = new Date(firstDayOfMonth);
-            let dayOfWeek = startOfWeek.getDay() - 1; // Segunda = 0
-            if (dayOfWeek === -1) dayOfWeek = 6; // Domingo
-            startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
+            let cursor = new Date(firstDayOfMonth);
+            let dayOfWeek = cursor.getDay() - 1; 
+            if (dayOfWeek === -1) dayOfWeek = 6; 
+            cursor.setDate(cursor.getDate() - dayOfWeek); // Retrocede para a Segunda-feira da 1ª semana
 
             const weeks = [];
 
-            // Itera enquanto a semana pertencer ou intersectar o mês atual
-            while (startOfWeek <= lastDayOfMonth) {
-                const endOfWeek = new Date(startOfWeek);
-                endOfWeek.setDate(endOfWeek.getDate() + 6);
+            while (cursor <= lastDayOfMonth) {
+                const wStart = new Date(cursor);
+                const wEnd = new Date(cursor);
+                wEnd.setDate(wEnd.getDate() + 6);
 
-                const weekNum = getSplitWeekDetails(startOfWeek).weekNum;
+                const weekNum = getISOWeekNumber(wStart);
 
                 weeks.push({
                     weekNum: weekNum,
-                    startDate: new Date(startOfWeek),
-                    endDate: new Date(endOfWeek)
+                    startDate: wStart,
+                    endDate: wEnd
                 });
 
-                startOfWeek.setDate(startOfWeek.getDate() + 7);
+                cursor.setDate(cursor.getDate() + 7);
             }
 
             let html = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">`;
 
             weeks.forEach(w => {
-                const startStr = w.startDate.toISOString().substring(0, 10);
-                const endStr = w.endDate.toISOString().substring(0, 10);
-
-                // Filtra as OSs que caem na faixa de datas desta semana
-                const weekItems = filtered.filter(i => {
-                    if (!i.entrega_normalizada) return false;
-                    const dateKey = i.entrega_normalizada.substring(0, 10);
-                    return dateKey >= startStr && dateKey <= endStr;
-                });
-
                 const fmtDay = (d) => String(d.getDate()).padStart(2, '0');
                 const fmtMonth = (d) => String(d.getMonth() + 1).padStart(2, '0');
+                
+                const startStr = `${w.startDate.getFullYear()}-${fmtMonth(w.startDate)}-${fmtDay(w.startDate)}`;
+                const endStr = `${w.endDate.getFullYear()}-${fmtMonth(w.endDate)}-${fmtDay(w.endDate)}`;
+                
                 const rangeText = `${fmtDay(w.startDate)}/${fmtMonth(w.startDate)} A ${fmtDay(w.endDate)}/${fmtMonth(w.endDate)}`;
+
+                const weekItems = filtered.filter(i => {
+                    if (!i.entrega_normalizada) return false;
+                    const dateKey = String(i.entrega_normalizada).substring(0, 10);
+                    return dateKey >= startStr && dateKey <= endStr;
+                });
 
                 const weekTotalVal = weekItems.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
 
                 html += `
                     <div class="bg-slate-100/70 border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col">
-                        <!-- CABEÇALHO DA SEMANA -->
                         <div class="bg-columbia-700 text-white p-3 flex justify-between items-center shadow-xs">
                             <div>
                                 <h4 class="font-extrabold text-xs tracking-wider uppercase">SEMANA ${w.weekNum} (${rangeText})</h4>
@@ -902,13 +874,11 @@
                             </span>
                         </div>
 
-                        <!-- SUB-CABEÇALHO COM VALOR PREVISTO -->
                         <div class="bg-white px-3 py-2 border-b border-slate-200 flex justify-between items-center text-xs">
                             <span class="text-slate-500 font-bold">Previsto:</span>
                             <span class="font-extrabold text-emerald-600">${formatBRL(weekTotalVal)}</span>
                         </div>
 
-                        <!-- LISTA DE CARDS DAS OS DA SEMANA -->
                         <div class="p-2 space-y-2 flex-1 overflow-y-auto max-h-[600px] custom-scroll">
                             ${weekItems.length === 0 ? '<p class="text-[11px] text-slate-400 italic text-center py-6">Nenhuma OS nesta semana</p>' : ''}
                             ${weekItems.map(item => {
@@ -981,7 +951,6 @@
             setViewMode('day');
         }
 
-        // TOGGLES E LIMPEZA DE FILTROS
         function toggleMonthFilter() {
             onlyCurrentMonth = !onlyCurrentMonth;
             const btn = document.getElementById('btnToggleMonth');
@@ -1021,7 +990,6 @@
             renderView();
         }
 
-        // GERENCIAMENTO DE VISIBILIDADE DOS VALORES DE ORÇAMENTO
         function handleValueVisibility() {
             if (isValuesUnlocked) {
                 isValuesUnlocked = false;
@@ -1094,7 +1062,6 @@
             lucide.createIcons();
         }
 
-        // MODAL DE DETALHES DA OS (ATRIBUIÇÃO DE DADOS FORMATADOS E TRATAMENTO DE NULOS)
         function openModal(n_os) {
             const item = rawData.find(i => String(i.n_os) === String(n_os));
             if (!item) return;
@@ -1124,7 +1091,6 @@
             elAtrasada.textContent = isAtrasada ? 'Sim' : 'Não';
             elAtrasada.className = `font-bold ${isAtrasada ? 'text-red-600' : 'text-emerald-600'}`;
 
-            // ATRIBUIÇÃO DE DATAS COM FORMATADOR
             document.getElementById('mAbertura').textContent = formatDate(item.abertura_os);
             document.getElementById('mDtRenegociada').textContent = formatDate(item.dt_renegociada || item.u_data_renegociacao);
             document.getElementById('mPrevEntregaOrcamento').textContent = formatDate(item.prev_entrega_orcamento);
@@ -1145,7 +1111,6 @@
             selectedItemModal = null;
         }
 
-        // LÓGICA DO MODAL 1: SENHA DE ALTERAÇÃO DE RENEGOCIAÇÃO
         function openAltRenegociationPasswordModal() {
             const modal = document.getElementById('altRenegociationPasswordModal');
             const input = document.getElementById('inputAltRenegociationPassword');
@@ -1193,7 +1158,6 @@
             lucide.createIcons();
         }
 
-        // LÓGICA DO MODAL 2: EDICÃO E PATCH DA RENEGOCIAÇÃO
         function openAltRenegociationFormModal() {
             if (!selectedItemModal) return;
 
