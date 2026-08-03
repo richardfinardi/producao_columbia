@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V2.8</title>
+    <title>Programação de Produção - Columbia V2.9</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V2.8</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V2.9</p>
                 </div>
             </div>
 
@@ -340,7 +340,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE DETALHES DA OS (ALTURA E SCROLL INTERNO AJUSTADOS) -->
+    <!-- MODAL DE DETALHES DA OS -->
     <div id="osModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-lg w-full flex flex-col max-h-[90vh] overflow-hidden border border-slate-200">
             <!-- CABEÇALHO DO MODAL (FIXO) -->
@@ -810,7 +810,7 @@
             grid.innerHTML = calendarHTML;
         }
 
-        // VISÃO 2: SEMANA (CORRIGIDA: CALCULA SEMANAS DO MÊS SEM FILTRAR OSs NULAS)
+        // VISÃO 2: SEMANA (COM RESUMO COMPLETO DE DADOS NOS CARDS)
         function renderWeekGrid(filtered) {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -824,7 +824,7 @@
             let cursor = new Date(firstDayOfMonth);
             let dayOfWeek = cursor.getDay() - 1; 
             if (dayOfWeek === -1) dayOfWeek = 6; 
-            cursor.setDate(cursor.getDate() - dayOfWeek); // Retrocede para a Segunda-feira da 1ª semana
+            cursor.setDate(cursor.getDate() - dayOfWeek);
 
             const weeks = [];
 
@@ -879,22 +879,47 @@
                             <span class="font-extrabold text-emerald-600">${formatBRL(weekTotalVal)}</span>
                         </div>
 
-                        <div class="p-2 space-y-2 flex-1 overflow-y-auto max-h-[600px] custom-scroll">
+                        <div class="p-2 space-y-2.5 flex-1 overflow-y-auto max-h-[600px] custom-scroll">
                             ${weekItems.length === 0 ? '<p class="text-[11px] text-slate-400 italic text-center py-6">Nenhuma OS nesta semana</p>' : ''}
                             ${weekItems.map(item => {
                                 const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim';
+                                const prodStatus = item.status_producao || '0%';
+                                const clienteNome = item.cliente || 'CLIENTE NÃO INFORMADO';
+                                const itemTitulo = item.cod_interno || item.titulo || 'Item Sem Título';
+                                const segmento = item.segmento || 'GERAL';
+
+                                // Extração resumida de status operacionais
+                                const compras = item.status_compras || 'N/A';
+                                const terceiros = item.status_terceiros || 'N/A';
+                                const engenharia = item.engenharia_status || 'N/A';
+
                                 return `
-                                    <div onclick="openModal('${item.n_os}')" class="bg-white border border-slate-200 hover:border-columbia-500 p-2.5 rounded-xl cursor-pointer transition shadow-xs flex flex-col gap-1.5">
+                                    <div onclick="openModal('${item.n_os}')" class="bg-white border border-slate-200 hover:border-columbia-500 p-3 rounded-xl cursor-pointer transition shadow-xs flex flex-col gap-2">
+                                        <!-- TOPO DO CARD: NUMERO DA OS E STATUS DE ATRASO / PORCENTAGEM -->
                                         <div class="flex justify-between items-center">
                                             <span class="font-mono text-xs font-extrabold text-columbia-700">OS ${item.n_os}</span>
-                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${isAtrasado ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}">
-                                                ${isAtrasado ? 'Atrasado' : (item.status_producao || 'No prazo')}
-                                            </span>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-[10px] font-extrabold text-columbia-700 bg-columbia-50 border border-columbia-200 px-1.5 py-0.5 rounded">${prodStatus}</span>
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${isAtrasado ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}">
+                                                    ${isAtrasado ? 'Atrasado' : 'No prazo'}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <p class="text-xs font-bold text-slate-800 line-clamp-1">${item.titulo || item.cliente || 'Sem Título'}</p>
-                                        <div class="flex items-center gap-1.5 pt-1 text-[10px]">
-                                            <span class="bg-slate-100 text-slate-700 font-extrabold px-1.5 py-0.5 rounded border border-slate-200 uppercase">${item.segmento || 'GERAL'}</span>
-                                            <span class="text-slate-500 font-semibold truncate">${item.cliente || ''}</span>
+
+                                        <!-- TITULO / CODIGO INTERNO -->
+                                        <p class="text-xs font-extrabold text-slate-800 line-clamp-2 leading-tight">${itemTitulo}</p>
+
+                                        <!-- CLIENTE E SEGMENTO -->
+                                        <div class="flex items-center justify-between text-[10px] border-b border-slate-100 pb-2">
+                                            <span class="bg-slate-100 text-slate-700 font-extrabold px-1.5 py-0.5 rounded border border-slate-200 uppercase">${segmento}</span>
+                                            <span class="text-slate-500 font-bold uppercase truncate max-w-[150px]" title="${clienteNome}">${clienteNome}</span>
+                                        </div>
+
+                                        <!-- RESUMO DAS OPERAÇÕES DA OS -->
+                                        <div class="grid grid-cols-1 gap-1 text-[10px] bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                            <div class="flex justify-between items-center"><span class="text-slate-400 font-semibold">Compras:</span> <span class="font-extrabold text-slate-700 truncate max-w-[150px]">${compras}</span></div>
+                                            <div class="flex justify-between items-center"><span class="text-slate-400 font-semibold">Terceiros:</span> <span class="font-extrabold text-slate-700 truncate max-w-[150px]">${terceiros}</span></div>
+                                            <div class="flex justify-between items-center"><span class="text-slate-400 font-semibold">Engenharia:</span> <span class="font-extrabold text-slate-700 truncate max-w-[150px]">${engenharia}</span></div>
                                         </div>
                                     </div>
                                 `;
