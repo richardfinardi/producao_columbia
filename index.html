@@ -11,14 +11,14 @@
     <!-- Meta Tags para Prévia no WhatsApp / Redes Sociais (Open Graph) -->
     <meta property="og:title" content="Controle Semanal de Produção | Consultoria RF">
     <meta property="og:description" content="Dashboard de acompanhamento e controle de produção.">
-    <meta property="og:image" content="https://consultoriarf.net/PRODUCAO_SINTERCAN/LOGO MINIMALISTA.png">
+    <meta property="og:image" content="https://consultoriarf.net/producao_columbia/LOGO MINIMALISTA.png">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="500">
     <meta property="og:image:height" content="500">
-    <meta property="og:url" content="https://consultoriarf.net/PRODUCAO_SINTERCAN/">
+    <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V2.4</title>
+    <title>Programação de Produção - Columbia V2.5</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V2.4</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V2.5</p>
                 </div>
             </div>
 
@@ -505,7 +505,7 @@
                 if (savedValue && options.includes(savedValue)) {
                     select.value = savedValue;
                 } else if (savedValue) {
-                    select.value = savedValue; // Força reatribuição se aplicável
+                    select.value = savedValue;
                 }
             };
 
@@ -541,12 +541,10 @@
             if (triggerRender) renderView();
         }
 
-        // NAVEGAÇÃO DE DATA
+        // NAVEGAÇÃO DE DATA (CORRIGIDO: AVANÇA MÊS A MÊS EM MÊS E SEMANA)
         function navigateDate(delta) {
-            if (currentView === 'month') {
+            if (currentView === 'month' || currentView === 'week') {
                 currentDate.setMonth(currentDate.getMonth() + delta);
-            } else if (currentView === 'week') {
-                currentDate.setDate(currentDate.getDate() + (delta * 7));
             } else if (currentView === 'day') {
                 currentDate.setDate(currentDate.getDate() + delta);
             }
@@ -558,29 +556,17 @@
             renderView();
         }
 
-        // ATUALIZAR MENSAGEM DO CABEÇALHO DEDICADO DO CALENDÁRIO
+        // ATUALIZAR MENSAGEM DO CABEÇALHO DEDICADO DO CALENDÁRIO (CORRIGIDO)
         function updateDateLabel() {
             const label = document.getElementById('currentDateLabel');
             if (!label) return;
-            if (currentView === 'month') {
+            
+            if (currentView === 'month' || currentView === 'week') {
                 const monthStr = currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
                 label.textContent = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
-            } else if (currentView === 'week') {
-                const weekInfo = getSplitWeekDetails(currentDate);
-                label.textContent = `Semana ${weekInfo.weekNum} de ${currentDate.getFullYear()}`;
             } else if (currentView === 'day') {
                 label.textContent = currentDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
             }
-        }
-
-        // HELPER PARA DETALHES DE SEMANA
-        function getSplitWeekDetails(d) {
-            const date = new Date(d.getTime());
-            date.setHours(0, 0, 0, 0);
-            const jan1 = new Date(date.getFullYear(), 0, 1);
-            const days = Math.floor((date - jan1) / (24 * 60 * 60 * 1000));
-            const weekNum = Math.ceil((days + jan1.getDay() + 1) / 7);
-            return { weekNum };
         }
 
         // TRATAMENTO DE VALORES MONETÁRIOS
@@ -1192,7 +1178,7 @@
 
                 closeAltRenegociationFormModal();
                 closeModal();
-                fetchData(); // Recarrega os dados com as travas de cache e filtros preservados
+                fetchData();
 
             } catch (error) {
                 console.error('Erro ao salvar renegociação:', error);
