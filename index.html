@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/PRODUCAO_SINTERCAN/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V2.3</title>
+    <title>Programação de Produção - Columbia V2.4</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V2.3</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V2.4</p>
                 </div>
             </div>
 
@@ -78,7 +78,7 @@
                 </button>
 
                 <!-- Botão Atualizar -->
-                <button id="btnRefresh" onclick="fetchData()" class="flex items-center gap-2 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-all shadow">
+                <button id="btnRefresh" onclick="fetchData()" class="flex items-center gap-2 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-all shadow" title="Atualizar Dados">
                     <i data-lucide="refresh-cw" class="w-4 h-4" id="refreshIcon"></i>
                 </button>
             </div>
@@ -421,6 +421,107 @@
             fetchData();
         });
 
+        // REQUISIÇÃO COM BYPASS DE CACHE E MANUTENÇÃO DE ESTADO DE FILTROS
+        async function fetchData() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            const btnRefresh = document.getElementById('btnRefresh');
+            
+            // 1. Iniciar Feedback Visual de Spin
+            if (refreshIcon) refreshIcon.classList.add('animate-spin');
+            if (btnRefresh) btnRefresh.disabled = true;
+
+            // 2. Salvar o Estado Atual de TODOS os Filtros da Tela
+            const savedFilters = {
+                search: document.getElementById('searchInput')?.value || '',
+                segmento: document.getElementById('segmentoFilter')?.value || '',
+                producao: document.getElementById('producaoFilter')?.value || '',
+                cliente: document.getElementById('clientFilter')?.value || '',
+                engenharia: document.getElementById('engenhariaFilter')?.value || '',
+                compras: document.getElementById('comprasFilter')?.value || '',
+                terceiros: document.getElementById('terceirosFilter')?.value || ''
+            };
+
+            try {
+                // 3. Bypass de Cache na requisição Fetch (?_t=Date.now() + no-store)
+                const cacheBusterUrl = `${API_URL}?_t=${Date.now()}`;
+                const response = await fetch(cacheBusterUrl, {
+                    cache: 'no-store',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
+                }
+
+                rawData = await response.json();
+
+                // 4. Popula Selects com os novos dados e restaura os valores previamente salvos
+                populateSelectOptions(savedFilters);
+
+                // 5. Restaura Input de Busca
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) searchInput.value = savedFilters.search;
+
+                // 6. Renderiza a Tela com os Filtros Integros
+                renderView();
+
+            } catch (error) {
+                console.error('Erro ao buscar dados da API:', error);
+                alert('Não foi possível atualizar os dados de produção. Verifique a conexão com o servidor.');
+            } finally {
+                // 7. Parar Feedback Visual de Spin (Garantido em Sucesso ou Erro)
+                if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+                if (btnRefresh) btnRefresh.disabled = false;
+                lucide.createIcons();
+            }
+        }
+
+        // POPOULAR SELECTS DE FILTROS PRESERVANDO O VALOR SELECIONADO PELO USUÁRIO
+        function populateSelectOptions(savedFilters = {}) {
+            const getUniqueOptions = (key) => {
+                const values = rawData
+                    .map(item => item[key])
+                    .filter(val => val !== null && val !== undefined && String(val).trim() !== '');
+                return [...new Set(values)].sort();
+            };
+
+            const fillSelect = (elementId, options, defaultLabel, savedValue) => {
+                const select = document.getElementById(elementId);
+                if (!select) return;
+
+                select.innerHTML = `<option value="">${defaultLabel}</option>`;
+                options.forEach(opt => {
+                    const optionEl = document.createElement('option');
+                    optionEl.value = opt;
+                    optionEl.textContent = opt;
+                    select.appendChild(optionEl);
+                });
+
+                // Restaura o valor anteriormente selecionado se ele ainda existir nas opções
+                if (savedValue && options.includes(savedValue)) {
+                    select.value = savedValue;
+                } else if (savedValue) {
+                    select.value = savedValue; // Força reatribuição se aplicável
+                }
+            };
+
+            fillSelect('segmentoFilter', getUniqueOptions('segmento'), 'Segmento (Todos)', savedFilters.segmento);
+            fillSelect('clientFilter', getUniqueOptions('cliente'), 'Todos os Clientes', savedFilters.cliente);
+            fillSelect('engenhariaFilter', getUniqueOptions('engenharia_status'), 'Engenharia (Todos)', savedFilters.engenharia);
+            fillSelect('comprasFilter', getUniqueOptions('status_compras'), 'Compras (Todos)', savedFilters.compras);
+            fillSelect('terceirosFilter', getUniqueOptions('status_terceiros'), 'Terceiros (Todos)', savedFilters.terceiros);
+
+            // Restaura Select de Produção (que possui valores fixos no HTML)
+            const producaoSelect = document.getElementById('producaoFilter');
+            if (producaoSelect && savedFilters.producao) {
+                producaoSelect.value = savedFilters.producao;
+            }
+        }
+
         // DEFINIR MODO DE VISÃO (MÊS, SEMANA, DIA)
         function setViewMode(mode, triggerRender = true) {
             currentView = mode;
@@ -433,9 +534,9 @@
             const activeClass = "bg-columbia-700 text-white shadow-sm";
             const inactiveClass = "text-slate-600 hover:text-columbia-700 hover:bg-slate-200";
 
-            btnM.className = `px-3 py-1 rounded-lg text-xs font-bold transition ${mode === 'month' ? activeClass : inactiveClass}`;
-            btnW.className = `px-3 py-1 rounded-lg text-xs font-bold transition ${mode === 'week' ? activeClass : inactiveClass}`;
-            btnD.className = `px-3 py-1 rounded-lg text-xs font-bold transition ${mode === 'day' ? activeClass : inactiveClass}`;
+            if (btnM) btnM.className = `px-3 py-1 rounded-lg text-xs font-bold transition ${mode === 'month' ? activeClass : inactiveClass}`;
+            if (btnW) btnW.className = `px-3 py-1 rounded-lg text-xs font-bold transition ${mode === 'week' ? activeClass : inactiveClass}`;
+            if (btnD) btnD.className = `px-3 py-1 rounded-lg text-xs font-bold transition ${mode === 'day' ? activeClass : inactiveClass}`;
 
             if (triggerRender) renderView();
         }
@@ -460,6 +561,7 @@
         // ATUALIZAR MENSAGEM DO CABEÇALHO DEDICADO DO CALENDÁRIO
         function updateDateLabel() {
             const label = document.getElementById('currentDateLabel');
+            if (!label) return;
             if (currentView === 'month') {
                 const monthStr = currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
                 label.textContent = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
@@ -471,21 +573,117 @@
             }
         }
 
-        // RENDERIZAR VISÃO
+        // HELPER PARA DETALHES DE SEMANA
+        function getSplitWeekDetails(d) {
+            const date = new Date(d.getTime());
+            date.setHours(0, 0, 0, 0);
+            const jan1 = new Date(date.getFullYear(), 0, 1);
+            const days = Math.floor((date - jan1) / (24 * 60 * 60 * 1000));
+            const weekNum = Math.ceil((days + jan1.getDay() + 1) / 7);
+            return { weekNum };
+        }
+
+        // TRATAMENTO DE VALORES MONETÁRIOS
+        function parseValue(val) {
+            if (val === null || val === undefined) return 0;
+            if (typeof val === 'number') return val;
+            let str = String(val).trim().replace('R$', '').replace(/\s/g, '');
+            if (str.includes(',') && str.includes('.')) {
+                str = str.replace(/\./g, '').replace(',', '.');
+            } else if (str.includes(',')) {
+                str = str.replace(',', '.');
+            }
+            const parsed = parseFloat(str);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function formatBRL(value) {
+            if (!isValuesUnlocked) return 'R$ *****';
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+
+        // FILTRAGEM DOS DADOS (APLICAÇÃO DOS FILTROS DA TELA)
+        function getFilteredData() {
+            const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+            const segmento = document.getElementById('segmentoFilter')?.value || '';
+            const producao = document.getElementById('producaoFilter')?.value || '';
+            const cliente = document.getElementById('clientFilter')?.value || '';
+            const engenharia = document.getElementById('engenhariaFilter')?.value || '';
+            const compras = document.getElementById('comprasFilter')?.value || '';
+            const terceiros = document.getElementById('terceirosFilter')?.value || '';
+
+            return rawData.filter(item => {
+                // Filtro Geral de Texto
+                if (search) {
+                    const matchOS = String(item.n_os || '').toLowerCase().includes(search);
+                    const matchTitulo = String(item.titulo || '').toLowerCase().includes(search);
+                    const matchCliente = String(item.cliente || '').toLowerCase().includes(search);
+                    const matchOrigem = String(item.origem || '').toLowerCase().includes(search);
+                    const matchCod = String(item.cod_interno || '').toLowerCase().includes(search);
+                    const matchPedido = String(item.n_pedido || '').toLowerCase().includes(search);
+                    if (!matchOS && !matchTitulo && !matchCliente && !matchOrigem && !matchCod && !matchPedido) return false;
+                }
+
+                if (segmento && (item.segmento || '') !== segmento) return false;
+                if (cliente && (item.cliente || '') !== cliente) return false;
+                if (engenharia && (item.engenharia_status || '') !== engenharia) return false;
+                if (compras && (item.status_compras || '') !== compras) return false;
+                if (terceiros && (item.status_terceiros || '') !== terceiros) return false;
+
+                if (producao === 'finalizado') {
+                    const st = String(item.status_producao || '').toLowerCase();
+                    if (!st.includes('100%') && !st.includes('finalizado')) return false;
+                } else if (producao === 'nao_finalizado') {
+                    const st = String(item.status_producao || '').toLowerCase();
+                    if (st.includes('100%') || st.includes('finalizado')) return false;
+                }
+
+                if (onlyWithBudget) {
+                    const hasB = String(item.possui_orcamento || '').toLowerCase();
+                    if (hasB !== 'sim' && hasB !== 's' && hasB !== '1') return false;
+                }
+
+                return true;
+            });
+        }
+
+        // CALCULO E ATUALIZAÇÃO DE MÉTRICAS DA BARRA SUPERIOR
+        function updateMetrics(filtered) {
+            const totalOS = filtered.length;
+            const atrasadas = filtered.filter(i => String(i.atrasada || '').toLowerCase() === 'sim' || String(i.atrasada || '').toLowerCase() === 's').length;
+            const semOrcamento = filtered.filter(i => {
+                const hasB = String(i.possui_orcamento || '').toLowerCase();
+                return hasB !== 'sim' && hasB !== 's' && hasB !== '1';
+            }).length;
+
+            const valorTotal = filtered.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
+
+            document.getElementById('metricTotalOS').textContent = totalOS;
+            document.getElementById('metricAtrasadas').textContent = atrasadas;
+            document.getElementById('metricSemOrcamento').textContent = semOrcamento;
+            document.getElementById('metricValorTotal').textContent = formatBRL(valorTotal);
+        }
+
+        // RENDERIZAR VISÃO DA TELA
         function renderView() {
             updateDateLabel();
+            const filtered = getFilteredData();
+            updateMetrics(filtered);
+
             if (currentView === 'month') {
-                renderMonthCalendar();
+                renderMonthCalendar(filtered);
             } else if (currentView === 'week') {
-                renderWeekGrid();
+                renderWeekGrid(filtered);
             } else if (currentView === 'day') {
-                renderDayView();
+                renderDayView(filtered);
             }
+            lucide.createIcons();
         }
 
         // VISÃO 1: MÊS (FILTRO INTELIGENTE: OCULTA SEMANAS PASSADAS ZERADAS)
-        function renderMonthCalendar() {
+        function renderMonthCalendar(filtered) {
             const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
             grid.innerHTML = '';
 
             const year = currentDate.getFullYear();
@@ -498,7 +696,6 @@
             if (startingDay === -1) startingDay = 6;
 
             const daysInMonth = lastDay.getDate();
-            const filtered = getFilteredData();
 
             // Mapeia OS por YYYY-MM-DD
             const osByDate = {};
@@ -548,12 +745,12 @@
                 allWeeks.push(currentWeek);
             }
 
-            // 2. Filtro: Oculta semanas que já passaram E que não têm NENHUMA OS
-            const weeksToRender = allWeeks.filter(week => {
+            // 2. Filtro: Oculta semanas que já passaram E que não têm NENHUMA OS (Se o filtro tiver ativo)
+            const weeksToRender = onlyCurrentMonth ? allWeeks.filter(week => {
                 const temOSNaSemana = week.some(d => !d.isPadding && d.dayItems.length > 0);
                 const contemHojeOuFuturo = week.some(d => !d.isPadding && d.dateKey >= todayStr);
                 return temOSNaSemana || contemHojeOuFuturo;
-            });
+            }) : allWeeks;
 
             // 3. Monta o HTML do Calendário
             let calendarHTML = `
@@ -597,9 +794,8 @@
                                 <div>
                                     <div class="flex justify-between items-start mb-1.5">
                                         <span class="text-xs font-extrabold rounded-full w-6 h-6 flex items-center justify-center ${isToday ? 'bg-columbia-700 text-white shadow-sm' : 'text-slate-800'}">${day}</span>
-                                        ${dayItems.length > 0 ? `<span class="bg-columbia-50 text-columbia-800 border border-columbia-200 text-[10px] font-mono font-extrabold px-1.5 py-0.5 rounded-md">OS's Totais: ${dayItems.length}</span>` : ''}
+                                        ${dayItems.length > 0 ? `<span class="bg-columbia-50 text-columbia-800 border border-columbia-200 text-[10px] font-mono font-extrabold px-1.5 py-0.5 rounded-md">OS's: ${dayItems.length}</span>` : ''}
                                     </div>
-
                                     ${topSegments.length > 0 ? `
                                         <div class="space-y-0.5 my-1">
                                             ${topSegments.map(([segName, count]) => `
@@ -611,7 +807,6 @@
                                         </div>
                                     ` : ''}
                                 </div>
-
                                 ${dayItems.length > 0 ? `
                                     <div class="mt-1 pt-1 border-t border-slate-100 flex items-center justify-center">
                                         <span class="${valFontSizeClass} font-extrabold text-emerald-600 tracking-tight text-center break-all leading-tight">
@@ -629,495 +824,126 @@
             grid.innerHTML = calendarHTML;
         }
 
+        // VISÃO 2: SEMANA
+        function renderWeekGrid(filtered) {
+            const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
+
+            const curr = new Date(currentDate);
+            const firstDayOfWeek = new Date(curr.setDate(curr.getDate() - curr.getDay() + (curr.getDay() === 0 ? -6 : 1)));
+
+            const days = [];
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(firstDayOfWeek);
+                d.setDate(d.getDate() + i);
+                days.push(d);
+            }
+
+            let html = `<div class="grid grid-cols-1 md:grid-cols-7 gap-3">`;
+
+            days.forEach(dayDate => {
+                const dateKey = dayDate.toISOString().substring(0, 10);
+                const dayItems = filtered.filter(i => i.entrega_normalizada && i.entrega_normalizada.substring(0, 10) === dateKey);
+                const dayName = dayDate.toLocaleDateString('pt-BR', { weekday: 'short' });
+                const dayNum = dayDate.getDate();
+
+                html += `
+                    <div class="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm flex flex-col">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2">
+                            <span class="text-xs font-bold capitalize text-slate-500">${dayName}, ${dayNum}</span>
+                            <span class="text-[10px] font-extrabold bg-columbia-50 text-columbia-700 px-1.5 py-0.5 rounded-full border border-columbia-200">${dayItems.length} OS</span>
+                        </div>
+                        <div class="space-y-2 flex-1 overflow-y-auto max-h-[500px] custom-scroll">
+                            ${dayItems.length === 0 ? '<p class="text-[11px] text-slate-400 italic text-center py-4">Nenhuma OS</p>' : ''}
+                            ${dayItems.map(item => `
+                                <div onclick="openModal('${item.n_os}')" class="bg-slate-50 border border-slate-200 hover:border-columbia-500 p-2 rounded-xl cursor-pointer transition shadow-xs">
+                                    <div class="flex justify-between items-start">
+                                        <span class="font-mono text-[10px] font-extrabold text-columbia-700">OS ${item.n_os}</span>
+                                        <span class="text-[9px] font-semibold px-1 py-0.2 rounded ${String(item.atrasada).toLowerCase() === 'sim' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}">${item.status_producao || 'N/A'}</span>
+                                    </div>
+                                    <p class="text-[11px] font-bold text-slate-800 line-clamp-1 mt-1">${item.titulo || item.cliente || 'Sem Título'}</p>
+                                    <p class="text-[9px] text-slate-500 truncate">${item.cliente || ''}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            grid.innerHTML = html;
+        }
+
+        // VISÃO 3: DIA
+        function renderDayView(filtered) {
+            const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
+            const dateKey = currentDate.toISOString().substring(0, 10);
+            const dayItems = filtered.filter(i => i.entrega_normalizada && i.entrega_normalizada.substring(0, 10) === dateKey);
+
+            let html = `
+                <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                        <h3 class="font-bold text-slate-700 text-sm">Ordens de Serviço do Dia (${dayItems.length})</h3>
+                        <span class="text-xs font-extrabold text-emerald-600">${formatBRL(dayItems.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0))}</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        ${dayItems.length === 0 ? '<p class="text-xs text-slate-400 italic col-span-full text-center py-8">Nenhuma Ordem de Serviço agendada para este dia.</p>' : ''}
+                        ${dayItems.map(item => `
+                            <div onclick="openModal('${item.n_os}')" class="bg-slate-50 border border-slate-200 hover:border-columbia-500 p-3 rounded-xl cursor-pointer transition shadow-xs flex flex-col justify-between">
+                                <div>
+                                    <div class="flex justify-between items-center mb-1.5">
+                                        <span class="font-mono text-xs font-extrabold text-columbia-700">OS ${item.n_os}</span>
+                                        <span class="text-[10px] font-extrabold text-emerald-600">${formatBRL(parseValue(item.preco_geral_a_vista || item.orcamento))}</span>
+                                    </div>
+                                    <h4 class="font-bold text-xs text-slate-800 mb-1 line-clamp-2">${item.titulo || 'Sem Título'}</h4>
+                                    <p class="text-[11px] text-slate-500 mb-2">Cliente: <strong class="text-slate-700">${item.cliente || 'N/A'}</strong></p>
+                                </div>
+                                <div class="pt-2 border-t border-slate-200 flex justify-between items-center text-[10px]">
+                                    <span class="bg-columbia-100 text-columbia-800 px-1.5 py-0.5 rounded font-bold">${item.segmento || 'N/A'}</span>
+                                    <span class="font-bold ${String(item.atrasada).toLowerCase() === 'sim' ? 'text-red-600' : 'text-slate-600'}">${item.status_producao || 'Em Andamento'}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            grid.innerHTML = html;
+        }
+
         function selectDayView(dateKey) {
             const parts = dateKey.split('-');
             currentDate = new Date(parts[0], parts[1] - 1, parts[2]);
             setViewMode('day');
         }
 
-        // VISÃO 2: SEMANA
-        function renderWeekGrid() {
-            const filtered = getFilteredData();
-            const weeksMap = {};
-
-            filtered.forEach(item => {
-                if (item.entrega_normalizada) {
-                    const date = new Date(item.entrega_normalizada);
-                    const weekInfo = getSplitWeekDetails(date);
-
-                    if (!weeksMap[weekInfo.groupKey]) {
-                        weeksMap[weekInfo.groupKey] = {
-                            label: weekInfo.label,
-                            sortDate: weekInfo.sortDate,
-                            items: []
-                        };
-                    }
-                    weeksMap[weekInfo.groupKey].items.push(item);
-                }
-            });
-
-            const sortedWeeks = Object.values(weeksMap).sort((a, b) => a.sortDate - b.sortDate);
-
-            const grid = document.getElementById('calendarGrid');
-            grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start';
-            grid.innerHTML = '';
-
-            if (sortedWeeks.length === 0) {
-                grid.innerHTML = `
-                    <div class="col-span-full bg-white p-8 text-center rounded-2xl border border-slate-200 text-slate-500 shadow-sm">
-                        <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-2 opacity-40 text-slate-400"></i>
-                        Nenhuma Ordem de Serviço encontrada para os filtros selecionados.
-                    </div>
-                `;
-                lucide.createIcons();
-                return;
-            }
-
-            sortedWeeks.forEach(week => {
-                const weekTotal = week.items.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
-                
-                const col = document.createElement('div');
-                col.className = 'bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col shadow-sm hover:shadow transition-shadow';
-
-                col.innerHTML = `
-                    <div class="bg-columbia-700 text-white px-3.5 py-2 font-black text-xs flex justify-between items-center border-b border-columbia-800">
-                        <span>${week.label}</span>
-                        <span class="bg-columbia-900 text-white px-2 py-0.5 rounded-full text-[10px] font-mono font-bold">${week.items.length} OS</span>
-                    </div>
-                    <div class="bg-slate-50 px-3 py-1.5 border-b border-slate-200 flex justify-between text-[11px] font-semibold text-slate-600">
-                        <span>Previsto:</span>
-                        <span class="text-emerald-600 font-bold">${formatBRL(weekTotal)}</span>
-                    </div>
-                    <div class="p-2 space-y-2 max-h-[550px] overflow-y-auto custom-scroll flex-1">
-                        ${week.items.map(item => renderItemCard(item)).join('')}
-                    </div>
-                `;
-                grid.appendChild(col);
-            });
-
-            lucide.createIcons();
-        }
-
-        // VISÃO 3: DIA DETALHADO
-        function renderDayView() {
-            const grid = document.getElementById('calendarGrid');
-            grid.className = 'w-full max-w-2xl mx-auto';
-            grid.innerHTML = '';
-
-            const dateKey = currentDate.toISOString().substring(0, 10);
-            const filtered = getFilteredData().filter(item => item.entrega_normalizada && item.entrega_normalizada.substring(0, 10) === dateKey);
-
-            const dayTotal = filtered.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
-
-            let dayHTML = `
-                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-md">
-                    <div class="bg-columbia-700 text-white px-5 py-3 flex justify-between items-center">
-                        <h3 class="font-extrabold text-sm uppercase">${currentDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}</h3>
-                        <span class="bg-columbia-900 text-white text-xs font-bold px-2.5 py-1 rounded-full">${filtered.length} OS</span>
-                    </div>
-                    <div class="bg-slate-50 px-5 py-2 border-b border-slate-200 flex justify-between text-xs font-semibold text-slate-600">
-                        <span>Total Previsto do Dia:</span>
-                        <span class="text-emerald-600 font-bold text-sm">${formatBRL(dayTotal)}</span>
-                    </div>
-                    <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto custom-scroll">
-            `;
-
-            if (filtered.length === 0) {
-                dayHTML += `<p class="text-center text-slate-400 py-8 italic">Nenhuma entrega programada para este dia.</p>`;
+        // TOGGLES E LIMPEZA DE FILTROS
+        function toggleMonthFilter() {
+            onlyCurrentMonth = !onlyCurrentMonth;
+            const btn = document.getElementById('btnToggleMonth');
+            const txt = document.getElementById('txtToggleMonth');
+            if (onlyCurrentMonth) {
+                txt.textContent = 'Exibir todas as semanas';
+                btn.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
             } else {
-                dayHTML += filtered.map(item => renderItemCard(item)).join('');
+                txt.textContent = 'Ocultar semanas passadas';
+                btn.className = "px-3 py-2 bg-columbia-700 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm";
             }
-
-            dayHTML += `</div></div>`;
-            grid.innerHTML = dayHTML;
-            lucide.createIcons();
+            renderView();
         }
 
-        // RETORNA DADOS FILTRADOS
-        function getFilteredData() {
-            const search = document.getElementById('searchInput').value.toLowerCase().trim();
-            const selectedSegmento = document.getElementById('segmentoFilter').value;
-            const selectedProducao = document.getElementById('producaoFilter').value;
-            const selectedClient = document.getElementById('clientFilter').value;
-            const selectedEngenharia = document.getElementById('engenhariaFilter').value;
-            const selectedCompras = document.getElementById('comprasFilter').value;
-            const selectedTerceiros = document.getElementById('terceirosFilter').value;
-
-            let filtered = rawData.filter(item => {
-                if (!item.entrega_normalizada) return false;
-                const date = new Date(item.entrega_normalizada);
-                if (isNaN(date)) return false;
-
-                if (onlyCurrentMonth && currentView === 'week') {
-                    if (date.getMonth() !== currentDate.getMonth() || date.getFullYear() !== currentDate.getFullYear()) {
-                        return false;
-                    }
-                }
-
-                if (onlyWithBudget) {
-                    const hasBudget = (item.possui_orcamento && item.possui_orcamento.toLowerCase() === 'sim') || (parseValue(item.preco_geral_a_vista || item.orcamento) > 0);
-                    if (!hasBudget) return false;
-                }
-
-                if (selectedSegmento && item.segmento !== selectedSegmento) return false;
-                if (selectedClient && item.cliente !== selectedClient) return false;
-                if (selectedEngenharia && item.engenharia_status !== selectedEngenharia) return false;
-                if (selectedCompras && item.status_compras !== selectedCompras) return false;
-                if (selectedTerceiros && item.status_terceiros !== selectedTerceiros) return false;
-
-                if (selectedProducao) {
-                    const prodStatus = (item.status_producao || '').trim();
-                    const isFinalizado = prodStatus === '100%' || (item.status && item.status.toUpperCase() === 'CONCLUÍDO');
-                    
-                    if (selectedProducao === 'finalizado' && !isFinalizado) return false;
-                    if (selectedProducao === 'nao_finalizado' && isFinalizado) return false;
-                }
-
-                if (search) {
-                    const allValuesText = Object.values(item)
-                        .filter(v => v !== null && v !== undefined)
-                        .join(' ')
-                        .toLowerCase();
-                    
-                    if (!allValuesText.includes(search)) return false;
-                }
-
-                return true;
-            });
-
-            // Atualiza métricas gerais da barra superior
-            let totalVal = 0, atrasadasCount = 0, semOrcCount = 0;
-            filtered.forEach(item => {
-                const val = parseValue(item.preco_geral_a_vista || item.orcamento);
-                totalVal += val;
-                if (item.atrasada === 'sim') atrasadasCount++;
-                if (item.possui_orcamento === 'não' || item.possui_orcamento === 'nao' || val === 0) semOrcCount++;
-            });
-
-            document.getElementById('metricTotalOS').textContent = filtered.length;
-            document.getElementById('metricAtrasadas').textContent = atrasadasCount;
-            document.getElementById('metricValorTotal').textContent = formatBRL(totalVal);
-            document.getElementById('metricSemOrcamento').textContent = semOrcCount;
-
-            return filtered;
-        }
-
-        // BUSCA API E PREENCHE DROPDOWNS
-        async function fetchData() {
-            const icon = document.getElementById('refreshIcon');
-            if(icon) icon.classList.add('animate-spin');
-
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'GET',
-                    headers: { 'ngrok-skip-browser-warning': '69420' }
-                });
-
-                if (!response.ok) throw new Error(`Status HTTP: ${response.status}`);
-                
-                const data = await response.json();
-                rawData = Array.isArray(data) ? data : [data];
-                
-                populateDropdowns();
-                renderView();
-            } catch (err) {
-                console.error("Erro ao buscar API:", err);
-                alert("Erro de conexão! Verifique se a API está ativa.");
-            } finally {
-                if(icon) icon.classList.remove('animate-spin');
-            }
-        }
-
-        function populateDropdowns() {
-            const segmentoSelect = document.getElementById('segmentoFilter');
-            const clientSelect = document.getElementById('clientFilter');
-            const engenhariaSelect = document.getElementById('engenhariaFilter');
-            const comprasSelect = document.getElementById('comprasFilter');
-            const terceirosSelect = document.getElementById('terceirosFilter');
-
-            segmentoSelect.innerHTML = '<option value="">Segmento (Todos)</option>';
-            clientSelect.innerHTML = '<option value="">Todos os Clientes</option>';
-            engenhariaSelect.innerHTML = '<option value="">Engenharia (Todos)</option>';
-            comprasSelect.innerHTML = '<option value="">Compras (Todos)</option>';
-            terceirosSelect.innerHTML = '<option value="">Terceiros (Todos)</option>';
-
-            const segmentos = new Set();
-            const clients = new Set();
-            const engenhariaStatus = new Set();
-            const comprasStatus = new Set();
-            const terceirosStatus = new Set();
-
-            rawData.forEach(item => {
-                if (item.segmento && item.segmento.trim() !== "") segmentos.add(item.segmento.trim());
-                if (item.cliente && item.cliente.trim() !== "") clients.add(item.cliente.trim());
-                if (item.engenharia_status && item.engenharia_status.trim() !== "") engenhariaStatus.add(item.engenharia_status.trim());
-                if (item.status_compras && item.status_compras.trim() !== "") comprasStatus.add(item.status_compras.trim());
-                if (item.status_terceiros && item.status_terceiros.trim() !== "") terceirosStatus.add(item.status_terceiros.trim());
-            });
-
-            Array.from(segmentos).sort().forEach(val => segmentoSelect.appendChild(new Option(val, val)));
-            Array.from(clients).sort().forEach(val => clientSelect.appendChild(new Option(val, val)));
-            Array.from(engenhariaStatus).sort().forEach(val => engenhariaSelect.appendChild(new Option(val, val)));
-            Array.from(comprasStatus).sort().forEach(val => comprasSelect.appendChild(new Option(val, val)));
-            Array.from(terceirosStatus).sort().forEach(val => terceirosSelect.appendChild(new Option(val, val)));
-        }
-
-        // RENDERIZAÇÃO DOS CARDS
-        function renderItemCard(item) {
-            const isAtrasada = item.atrasada === 'sim';
-            const val = parseValue(item.preco_geral_a_vista || item.orcamento);
-            
-            let statusBadge = isAtrasada 
-                ? '<span class="bg-red-500 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">Atrasado</span>'
-                : '<span class="bg-emerald-600 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">No prazo</span>';
-
-            let valColor = 'text-emerald-600 font-extrabold';
-            if (val === 0) valColor = 'text-amber-600 font-bold';
-
-            const payload = JSON.stringify(item).replace(/'/g, "&apos;");
-            const fullTitle = getFullTitle(item);
-
-            return `
-                <div onclick='openModal(${payload})' class="border border-slate-200 rounded-xl p-2.5 bg-white hover:border-columbia-500 hover:shadow-md transition cursor-pointer flex flex-col gap-1.5 text-xs">
-                    <div class="flex items-center justify-between font-mono">
-                        <span class="bg-columbia-50 text-columbia-700 px-1.5 py-0.5 rounded font-bold border border-columbia-100">OS ${item.n_os}</span>
-                        ${statusBadge}
-                    </div>
-
-                    <div class="flex flex-wrap items-center gap-1 my-0.5">
-                        ${item.segmento ? `<span class="bg-columbia-100 text-columbia-800 border border-columbia-200 text-[10px] px-2 py-0.5 rounded-md font-extrabold tracking-wide uppercase">${item.segmento}</span>` : ''}
-                        ${item.status ? `<span class="bg-slate-100 text-slate-700 border border-slate-200 text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase">${item.status}</span>` : ''}
-                    </div>
-
-                    <div class="text-[11px] text-slate-800 line-clamp-2 leading-snug font-semibold" title="${fullTitle}">${fullTitle}</div>
-
-                    <div class="grid grid-cols-1 gap-0.5 text-[10px] bg-slate-50 p-1.5 rounded-lg border border-slate-200 text-slate-600">
-                        <div class="flex items-center justify-between truncate"><span class="text-slate-500 flex items-center gap-1"><i data-lucide="cpu" class="w-3 h-3 text-slate-400"></i> Eng:</span><span class="font-semibold text-slate-800 truncate max-w-[120px]">${item.engenharia_status || '-'}</span></div>
-                        <div class="flex items-center justify-between truncate"><span class="text-slate-500 flex items-center gap-1"><i data-lucide="shopping-cart" class="w-3 h-3 text-slate-400"></i> Compras:</span><span class="font-semibold text-slate-700 truncate max-w-[120px]">${item.status_compras || '-'}</span></div>
-                        <div class="flex items-center justify-between truncate"><span class="text-slate-500 flex items-center gap-1"><i data-lucide="truck" class="w-3 h-3 text-slate-400"></i> Terceiros:</span><span class="font-semibold text-slate-700 truncate max-w-[120px]">${item.status_terceiros || '-'}</span></div>
-                        <div class="flex items-center justify-between truncate"><span class="text-slate-500 flex items-center gap-1"><i data-lucide="activity" class="w-3 h-3 text-slate-400"></i> Produção:</span><span class="font-bold text-columbia-700">${item.status_producao || '0%'}</span></div>
-                    </div>
-
-                    <div class="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100">
-                        <span class="truncate max-w-[100px] text-slate-500 font-medium" title="${item.cliente || 'Sem cliente'}">${item.cliente || 'Sem cliente'}</span>
-                        <span class="${valColor} text-[11px]">${formatBRL(val)}</span>
-                    </div>
-                </div>
-            `;
-        }
-
-        // SEGURANÇA E SENHA DE EXIBIÇÃO DE VALORES
-        function handleValueVisibility() {
-            if (isValuesUnlocked) {
-                isValuesUnlocked = false;
-                updateValueVisibilityUI();
-                renderView();
+        function toggleOrcamentoFilter() {
+            onlyWithBudget = !onlyWithBudget;
+            const btn = document.getElementById('btnToggleOrcamento');
+            const txt = document.getElementById('txtToggleOrcamento');
+            if (!onlyWithBudget) {
+                txt.textContent = 'Exibir somente com Orçamentos';
+                btn.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
             } else {
-                openPasswordModal();
+                txt.textContent = 'Exibir todas as OS';
+                btn.className = "px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm";
             }
-        }
-
-        function openPasswordModal() {
-            const input = document.getElementById('inputPassword');
-            input.value = '';
-            input.type = 'password';
-            document.getElementById('eyeIcon').setAttribute('data-lucide', 'eye');
-            document.getElementById('passwordError').classList.add('hidden');
-            
-            const modal = document.getElementById('passwordModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => input.focus(), 100);
-            lucide.createIcons();
-        }
-
-        function closePasswordModal() {
-            const modal = document.getElementById('passwordModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function togglePasswordVisibility() {
-            const input = document.getElementById('inputPassword');
-            const icon = document.getElementById('eyeIcon');
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.setAttribute('data-lucide', 'eye-off');
-            } else {
-                input.type = 'password';
-                icon.setAttribute('data-lucide', 'eye');
-            }
-            lucide.createIcons();
-        }
-
-        function checkPasswordKey(event) { if (event.key === 'Enter') validatePassword(); }
-
-        function validatePassword() {
-            const pass = document.getElementById('inputPassword').value;
-            if (pass === "Colmac@2026") {
-                isValuesUnlocked = true;
-                closePasswordModal();
-                updateValueVisibilityUI();
-                renderView();
-            } else {
-                document.getElementById('passwordError').classList.remove('hidden');
-            }
-        }
-
-        function updateValueVisibilityUI() {
-            const btnTxt = document.getElementById('txtValueVisibility');
-            const icon = document.getElementById('iconValueVisibility');
-            if (isValuesUnlocked) {
-                btnTxt.textContent = "Ocultar Valores";
-                icon.setAttribute('data-lucide', 'eye');
-                icon.className = "w-4 h-4 text-emerald-400";
-            } else {
-                btnTxt.textContent = "Exibir Valores";
-                icon.setAttribute('data-lucide', 'eye-off');
-                icon.className = "w-4 h-4 text-amber-400";
-            }
-            lucide.createIcons();
-        }
-
-        // ==============================================================================
-        // CONTROLE DO MODAL DE SENHA E FORMULÁRIO DE ALTERAÇÃO DA DATA RENEGOCIADA
-        // ==============================================================================
-        function openAltRenegociationPasswordModal() {
-            if (!selectedItemModal) return;
-            const input = document.getElementById('inputAltRenegociationPassword');
-            input.value = '';
-            input.type = 'password';
-            document.getElementById('altRenegociationEyeIcon').setAttribute('data-lucide', 'eye');
-            document.getElementById('altRenegociationPasswordError').classList.add('hidden');
-
-            const modal = document.getElementById('altRenegociationPasswordModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => input.focus(), 100);
-            lucide.createIcons();
-        }
-
-        function closeAltRenegociationPasswordModal() {
-            const modal = document.getElementById('altRenegociationPasswordModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function toggleAltRenegociationPasswordVisibility() {
-            const input = document.getElementById('inputAltRenegociationPassword');
-            const icon = document.getElementById('altRenegociationEyeIcon');
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.setAttribute('data-lucide', 'eye-off');
-            } else {
-                input.type = 'password';
-                icon.setAttribute('data-lucide', 'eye');
-            }
-            lucide.createIcons();
-        }
-
-        function checkAltRenegociationPasswordKey(event) {
-            if (event.key === 'Enter') validateAltRenegociationPassword();
-        }
-
-        function validateAltRenegociationPassword() {
-            const pass = document.getElementById('inputAltRenegociationPassword').value;
-            if (pass === "Colmac@alt2026") {
-                closeAltRenegociationPasswordModal();
-                openAltRenegociationFormModal();
-            } else {
-                document.getElementById('altRenegociationPasswordError').classList.remove('hidden');
-            }
-        }
-
-        function openAltRenegociationFormModal() {
-            if (!selectedItemModal) return;
-
-            document.getElementById('altRenHeaderTitle').textContent = `Alterar Dt. Renegociada — OS #${selectedItemModal.n_os}`;
-            document.getElementById('altRenegociationFormError').classList.add('hidden');
-            document.getElementById('textareaJustification').value = '';
-
-            // Formata a data atual do campo dt_renegociada para YYYY-MM-DD
-            const inputDate = document.getElementById('inputNewRenegociationDate');
-            if (selectedItemModal.dt_renegociada && selectedItemModal.dt_renegociada !== 'NaT') {
-                const dt = new Date(selectedItemModal.dt_renegociada);
-                if (!isNaN(dt.getTime())) {
-                    inputDate.value = dt.toISOString().substring(0, 10);
-                } else {
-                    inputDate.value = '';
-                }
-            } else {
-                inputDate.value = '';
-            }
-
-            const modal = document.getElementById('altRenegociationFormModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            lucide.createIcons();
-        }
-
-        function closeAltRenegociationFormModal() {
-            const modal = document.getElementById('altRenegociationFormModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        async function submitAltRenegociation() {
-            if (!selectedItemModal) return;
-
-            const newDateValue = document.getElementById('inputNewRenegociationDate').value;
-            const justificationValue = document.getElementById('textareaJustification').value.trim();
-            const errElem = document.getElementById('altRenegociationFormError');
-
-            // Validação local da justificativa obrigatória
-            if (!justificationValue) {
-                errElem.textContent = "A justificativa da alteração é obrigatória!";
-                errElem.classList.remove('hidden');
-                return;
-            }
-
-            errElem.classList.add('hidden');
-            const btnSave = document.getElementById('btnSaveRenegociation');
-            btnSave.disabled = true;
-            btnSave.classList.add('opacity-50');
-
-            try {
-                // Rota configurada no FastAPI backend
-                const updateUrl = `${API_URL}/${selectedItemModal.n_os}/alterar-renegociacao`;
-                
-                const response = await fetch(updateUrl, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': '69420'
-                    },
-                    body: JSON.stringify({
-                        u_data_renegociacao: newDateValue ? newDateValue : null,
-                        U_JUST_ALT_DT_REN: justificationValue
-                    })
-                });
-
-                if (!response.ok) {
-                    const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.detail || `Erro na requisição (Status ${response.status})`);
-                }
-
-                // Atualização bem-sucedida!
-                closeAltRenegociationFormModal();
-                closeModal();
-                
-                // Força atualização dos dados do servidor para atualizar telas e métricas
-                await fetchData();
-                alert(`Data de renegociação da OS #${selectedItemModal.n_os} alterada com sucesso!`);
-
-            } catch (err) {
-                console.error("Erro ao salvar data de renegociação:", err);
-                errElem.textContent = `Erro ao salvar: ${err.message}`;
-                errElem.classList.remove('hidden');
-            } finally {
-                btnSave.disabled = false;
-                btnSave.classList.remove('opacity-50');
-            }
+            renderView();
         }
 
         function clearAllFilters() {
@@ -1128,133 +954,116 @@
             document.getElementById('engenhariaFilter').value = '';
             document.getElementById('comprasFilter').value = '';
             document.getElementById('terceirosFilter').value = '';
-
-            onlyCurrentMonth = true;
-            onlyWithBudget = false;
-
-            updateFilterButtonsUI();
             renderView();
         }
 
-        function toggleMonthFilter() {
-            onlyCurrentMonth = !onlyCurrentMonth;
-            updateFilterButtonsUI();
-            renderView();
-        }
-
-        function toggleOrcamentoFilter() {
-            onlyWithBudget = !onlyWithBudget;
-            updateFilterButtonsUI();
-            renderView();
-        }
-
-        function updateFilterButtonsUI() {
-            const btnM = document.getElementById('btnToggleMonth');
-            const txtM = document.getElementById('txtToggleMonth');
-            const btnO = document.getElementById('btnToggleOrcamento');
-            const txtO = document.getElementById('txtToggleOrcamento');
-
-            if (onlyCurrentMonth) {
-                txtM.textContent = "Exibir todas as semanas";
-                btnM.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+        // GERENCIAMENTO DE VISIBILIDADE DOS VALORES DE ORÇAMENTO
+        function handleValueVisibility() {
+            if (isValuesUnlocked) {
+                isValuesUnlocked = false;
+                updateValueVisibilityUI();
+                renderView();
             } else {
-                txtM.textContent = "Exibir apenas mês selecionado";
-                btnM.className = "px-3 py-2 bg-columbia-700 text-white border border-columbia-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
-            }
-
-            if (onlyWithBudget) {
-                txtO.textContent = "Exibir somente com Orçamentos";
-                btnO.className = "px-3 py-2 bg-emerald-600 text-white border border-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
-            } else {
-                txtO.textContent = "Exibir somente com Orçamentos";
-                btnO.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+                openPasswordModal();
             }
         }
 
-        function getFullTitle(item) {
-            const titulo = item.titulo ? item.titulo.toString().trim() : 'Sem título';
-            return item.cod_interno ? `[${item.cod_interno}] ${titulo}` : titulo;
+        function updateValueVisibilityUI() {
+            const txt = document.getElementById('txtValueVisibility');
+            const icon = document.getElementById('iconValueVisibility');
+            if (isValuesUnlocked) {
+                txt.textContent = 'Ocultar Valores';
+                icon.setAttribute('data-lucide', 'eye');
+            } else {
+                txt.textContent = 'Exibir Valores';
+                icon.setAttribute('data-lucide', 'eye-off');
+            }
+            lucide.createIcons();
         }
 
-        function formatDateOnly(dateStr) {
-            if (!dateStr || dateStr === 'NaT') return '-';
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return '-';
-            return d.toLocaleDateString('pt-BR');
+        function openPasswordModal() {
+            const modal = document.getElementById('passwordModal');
+            const input = document.getElementById('inputPassword');
+            const err = document.getElementById('passwordError');
+            if (input) input.value = '';
+            if (err) err.classList.add('hidden');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
         }
 
-        function parseValue(val) {
-            if (val === null || val === undefined || val === '') return 0;
-            if (typeof val === 'number') return val;
-            let str = val.toString().replace(/[^\d,-]/g, '').replace(',', '.');
-            return parseFloat(str) || 0;
+        function closePasswordModal() {
+            const modal = document.getElementById('passwordModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
         }
 
-        function formatBRL(val) {
-            if (!isValuesUnlocked) return "R$ *****";
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseValue(val));
+        function validatePassword() {
+            const input = document.getElementById('inputPassword').value;
+            if (input === 'Colmac@2026') {
+                isValuesUnlocked = true;
+                closePasswordModal();
+                updateValueVisibilityUI();
+                renderView();
+            } else {
+                document.getElementById('passwordError').classList.remove('hidden');
+            }
         }
 
-        function getSplitWeekDetails(itemDate) {
-            const year = itemDate.getFullYear();
-            const month = itemDate.getMonth();
+        function checkPasswordKey(e) {
+            if (e.key === 'Enter') validatePassword();
+        }
 
-            const d = new Date(Date.UTC(year, month, itemDate.getDate()));
-            const dayNum = d.getUTCDay() || 7;
-            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        function togglePasswordVisibility() {
+            const input = document.getElementById('inputPassword');
+            const eye = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                eye.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                eye.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
 
-            const monday = new Date(itemDate);
-            monday.setDate(itemDate.getDate() - (itemDate.getDay() === 0 ? 6 : itemDate.getDay() - 1));
+        // MODAL DE DETALHES DA OS
+        function openModal(n_os) {
+            const item = rawData.find(i => String(i.n_os) === String(n_os));
+            if (!item) return;
+            selectedItemModal = item;
+
+            document.getElementById('mOS').textContent = `OS ${item.n_os || 'N/A'}`;
+            document.getElementById('mTitulo').textContent = item.titulo || 'Sem Título';
+            document.getElementById('mPedido').textContent = item.n_pedido || 'N/A';
+            document.getElementById('mCliente').textContent = item.cliente || 'N/A';
+            document.getElementById('mSegmento').textContent = item.segmento || 'N/A';
+            document.getElementById('mCodInterno').textContent = item.cod_interno || 'N/A';
+            document.getElementById('mOrigem').textContent = item.origem || 'N/A';
+            document.getElementById('mEngenhariaStatus').textContent = item.engenharia_status || 'N/A';
+            document.getElementById('mOsFilhosQuais').textContent = item.os_filhos_quais || 'N/A';
+            document.getElementById('mPossuiOrcamento').textContent = item.possui_orcamento || 'N/A';
+            document.getElementById('mPreco').textContent = formatBRL(parseValue(item.preco_geral_a_vista || item.orcamento));
+            document.getElementById('mNumOrcamento').textContent = item.orcamento || 'N/A';
+
+            document.getElementById('mCompras').textContent = item.status_compras || 'N/A';
+            document.getElementById('mTerceiros').textContent = item.status_terceiros || 'N/A';
+            document.getElementById('mProducao').textContent = item.status_producao || 'N/A';
             
-            const sunday = new Date(monday);
-            sunday.setDate(monday.getDate() + 6);
+            const elAtrasada = document.getElementById('mAtrasada');
+            const isAtrasada = String(item.atrasada).toLowerCase() === 'sim';
+            elAtrasada.textContent = isAtrasada ? 'Sim' : 'Não';
+            elAtrasada.className = `font-bold ${isAtrasada ? 'text-red-600' : 'text-emerald-600'}`;
 
-            const firstDayOfMonth = new Date(year, month, 1);
-            const lastDayOfMonth = new Date(year, month + 1, 0);
-
-            const startSegment = monday < firstDayOfMonth ? firstDayOfMonth : monday;
-            const endSegment = sunday > lastDayOfMonth ? lastDayOfMonth : sunday;
-
-            const formatShort = (dt) => `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}`;
-
-            return {
-                groupKey: `${year}-${String(month + 1).padStart(2, '0')}-W${weekNo}`,
-                weekNum: weekNo,
-                sortDate: startSegment,
-                label: `SEMANA ${weekNo} (${formatShort(startSegment)} A ${formatShort(endSegment)})`
-            };
-        }
-
-        function openModal(item) {
-            selectedItemModal = item; // Guarda o item ativo no modal
-
-            document.getElementById('mOS').textContent = `OS #${item.n_os}`;
-            document.getElementById('mTitulo').textContent = getFullTitle(item);
-            document.getElementById('mPedido').textContent = item.n_pedido || 'Não informado';
-            document.getElementById('mCliente').textContent = item.cliente || 'Não informado';
-            document.getElementById('mSegmento').textContent = item.segmento || 'Não informado';
-            document.getElementById('mCodInterno').textContent = item.cod_interno || 'Não informado';
-            document.getElementById('mOrigem').textContent = item.origem || 'Não informado';
-            document.getElementById('mEngenhariaStatus').textContent = item.engenharia_status || 'Não informado';
-            document.getElementById('mOsFilhosQuais').textContent = item.os_filhos_quais || 'Sem filhos';
-            
-            document.getElementById('mPreco').textContent = formatBRL(item.preco_geral_a_vista || item.orcamento);
-            document.getElementById('mPossuiOrcamento').textContent = item.possui_orcamento || '-';
-            document.getElementById('mNumOrcamento').textContent = item.orcamento || 'Não possui';
-
-            document.getElementById('mCompras').textContent = item.status_compras || '-';
-            document.getElementById('mTerceiros').textContent = item.status_terceiros || '-';
-            document.getElementById('mProducao').textContent = item.status_producao || '-';
-            document.getElementById('mAtrasada').textContent = item.atrasada === 'sim' ? 'SIM' : 'NÃO';
-            
-            document.getElementById('mAbertura').textContent = formatDateOnly(item.abertura_os);
-            document.getElementById('mDtRenegociada').textContent = formatDateOnly(item.dt_renegociada);
-            document.getElementById('mPrevEntregaOrcamento').textContent = formatDateOnly(item.prev_entrega_orcamento);
-            document.getElementById('mPrevEntregaOS').textContent = formatDateOnly(item.prev_entrega_os);
-            document.getElementById('mApontamento').textContent = formatDateOnly(item.ultimo_apontamento);
-            document.getElementById('mEntregaNorm').textContent = formatDateOnly(item.entrega_normalizada);
+            document.getElementById('mAbertura').textContent = item.abertura_os || 'N/A';
+            document.getElementById('mDtRenegociada').textContent = item.dt_renegociada || item.u_data_renegociacao || 'N/A';
+            document.getElementById('mPrevEntregaOrcamento').textContent = item.prev_entrega_orcamento || 'N/A';
+            document.getElementById('mPrevEntregaOS').textContent = item.prev_entrega_os || 'N/A';
+            document.getElementById('mApontamento').textContent = item.ultimo_apontamento || 'N/A';
+            document.getElementById('mEntregaNorm').textContent = item.entrega_normalizada || 'N/A';
 
             const modal = document.getElementById('osModal');
             modal.classList.remove('hidden');
@@ -1263,10 +1072,136 @@
         }
 
         function closeModal() {
-            selectedItemModal = null;
             const modal = document.getElementById('osModal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+            selectedItemModal = null;
+        }
+
+        // LÓGICA DO MODAL 1: SENHA DE ALTERAÇÃO DE RENEGOCIAÇÃO
+        function openAltRenegociationPasswordModal() {
+            const modal = document.getElementById('altRenegociationPasswordModal');
+            const input = document.getElementById('inputAltRenegociationPassword');
+            const err = document.getElementById('altRenegociationPasswordError');
+            if (input) input.value = '';
+            if (err) err.classList.add('hidden');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeAltRenegociationPasswordModal() {
+            const modal = document.getElementById('altRenegociationPasswordModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function validateAltRenegociationPassword() {
+            const input = document.getElementById('inputAltRenegociationPassword').value;
+            if (input === 'Colmac@alt2026') {
+                closeAltRenegociationPasswordModal();
+                openAltRenegociationFormModal();
+            } else {
+                document.getElementById('altRenegociationPasswordError').classList.remove('hidden');
+            }
+        }
+
+        function checkAltRenegociationPasswordKey(e) {
+            if (e.key === 'Enter') validateAltRenegociationPassword();
+        }
+
+        function toggleAltRenegociationPasswordVisibility() {
+            const input = document.getElementById('inputAltRenegociationPassword');
+            const eye = document.getElementById('altRenegociationEyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                eye.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                eye.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
+
+        // LÓGICA DO MODAL 2: EDICÃO E PATCH DA RENEGOCIAÇÃO
+        function openAltRenegociationFormModal() {
+            if (!selectedItemModal) return;
+
+            document.getElementById('altRenHeaderTitle').textContent = `OS ${selectedItemModal.n_os} - Alterar Renegociação`;
+            
+            const currentDt = selectedItemModal.dt_renegociada || selectedItemModal.u_data_renegociacao || '';
+            const inputDate = document.getElementById('inputNewRenegociationDate');
+            if (currentDt && currentDt.length >= 10) {
+                inputDate.value = currentDt.substring(0, 10);
+            } else {
+                inputDate.value = '';
+            }
+
+            document.getElementById('textareaJustification').value = '';
+            document.getElementById('altRenegociationFormError').classList.add('hidden');
+
+            const modal = document.getElementById('altRenegociationFormModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeAltRenegociationFormModal() {
+            const modal = document.getElementById('altRenegociationFormModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        async function submitAltRenegociation() {
+            if (!selectedItemModal) return;
+
+            const newDate = document.getElementById('inputNewRenegociationDate').value;
+            const justification = document.getElementById('textareaJustification').value.trim();
+            const err = document.getElementById('altRenegociationFormError');
+            const btnSave = document.getElementById('btnSaveRenegociation');
+
+            if (!justification) {
+                err.textContent = 'A justificativa é obrigatória.';
+                err.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                btnSave.disabled = true;
+                btnSave.classList.add('opacity-50');
+
+                const patchUrl = `${API_URL}/${selectedItemModal.n_os}/alterar-renegociacao`;
+                const response = await fetch(patchUrl, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        u_data_renegociacao: newDate || null,
+                        U_JUST_ALT_DT_REN: justification
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Falha ao salvar a alteração no banco.');
+                }
+
+                closeAltRenegociationFormModal();
+                closeModal();
+                fetchData(); // Recarrega os dados com as travas de cache e filtros preservados
+
+            } catch (error) {
+                console.error('Erro ao salvar renegociação:', error);
+                err.textContent = error.message;
+                err.classList.remove('hidden');
+            } finally {
+                btnSave.disabled = false;
+                btnSave.classList.remove('opacity-50');
+            }
         }
     </script>
 </body>
