@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V2.9</title>
+    <title>Programação de Produção - Columbia V3.0</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V2.9</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V3.0</p>
                 </div>
             </div>
 
@@ -810,7 +810,7 @@
             grid.innerHTML = calendarHTML;
         }
 
-        // VISÃO 2: SEMANA (COM RESUMO COMPLETO DE DADOS NOS CARDS)
+        // VISÃO 2: SEMANA (CARD COM CÓDIGO INTERNO, NOME DA OS, CLIENTE, COMPRAS, TERCEIROS, ENGENHARIA E PRODUÇÃO ABAIXO DE ENGENHARIA)
         function renderWeekGrid(filtered) {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -885,34 +885,34 @@
                                 const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim';
                                 const prodStatus = item.status_producao || '0%';
                                 const clienteNome = item.cliente || 'CLIENTE NÃO INFORMADO';
-                                const itemTitulo = item.cod_interno || item.titulo || 'Item Sem Título';
+                                const codInterno = item.cod_interno || 'S/ CODIGO';
+                                const osNome = item.titulo || 'SEM NOME';
                                 const segmento = item.segmento || 'GERAL';
 
-                                // Extração resumida de status operacionais
                                 const compras = item.status_compras || 'N/A';
                                 const terceiros = item.status_terceiros || 'N/A';
                                 const engenharia = item.engenharia_status || 'N/A';
 
                                 return `
                                     <div onclick="openModal('${item.n_os}')" class="bg-white border border-slate-200 hover:border-columbia-500 p-3 rounded-xl cursor-pointer transition shadow-xs flex flex-col gap-2">
-                                        <!-- TOPO DO CARD: NUMERO DA OS E STATUS DE ATRASO / PORCENTAGEM -->
+                                        <!-- TOPO DO CARD: NUMERO DA OS E BADGE DE ATRASADO -->
                                         <div class="flex justify-between items-center">
                                             <span class="font-mono text-xs font-extrabold text-columbia-700">OS ${item.n_os}</span>
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="text-[10px] font-extrabold text-columbia-700 bg-columbia-50 border border-columbia-200 px-1.5 py-0.5 rounded">${prodStatus}</span>
-                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${isAtrasado ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}">
-                                                    ${isAtrasado ? 'Atrasado' : 'No prazo'}
-                                                </span>
-                                            </div>
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${isAtrasado ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}">
+                                                ${isAtrasado ? 'Atrasado' : 'No prazo'}
+                                            </span>
                                         </div>
 
-                                        <!-- TITULO / CODIGO INTERNO -->
-                                        <p class="text-xs font-extrabold text-slate-800 line-clamp-2 leading-tight">${itemTitulo}</p>
+                                        <!-- CODIGO INTERNO -->
+                                        <p class="text-xs font-extrabold text-slate-900 font-mono leading-tight">${codInterno}</p>
 
-                                        <!-- CLIENTE E SEGMENTO -->
+                                        <!-- NOME DA OS -->
+                                        <p class="text-[11px] font-bold text-slate-700 line-clamp-2 leading-tight">${osNome}</p>
+
+                                        <!-- SEGMENTO E CLIENTE -->
                                         <div class="flex items-center justify-between text-[10px] border-b border-slate-100 pb-2">
                                             <span class="bg-slate-100 text-slate-700 font-extrabold px-1.5 py-0.5 rounded border border-slate-200 uppercase">${segmento}</span>
-                                            <span class="text-slate-500 font-bold uppercase truncate max-w-[150px]" title="${clienteNome}">${clienteNome}</span>
+                                            <span class="text-slate-500 font-bold uppercase truncate max-w-[140px]" title="${clienteNome}">${clienteNome}</span>
                                         </div>
 
                                         <!-- RESUMO DAS OPERAÇÕES DA OS -->
@@ -920,6 +920,8 @@
                                             <div class="flex justify-between items-center"><span class="text-slate-400 font-semibold">Compras:</span> <span class="font-extrabold text-slate-700 truncate max-w-[150px]">${compras}</span></div>
                                             <div class="flex justify-between items-center"><span class="text-slate-400 font-semibold">Terceiros:</span> <span class="font-extrabold text-slate-700 truncate max-w-[150px]">${terceiros}</span></div>
                                             <div class="flex justify-between items-center"><span class="text-slate-400 font-semibold">Engenharia:</span> <span class="font-extrabold text-slate-700 truncate max-w-[150px]">${engenharia}</span></div>
+                                            <!-- PRODUÇÃO LOGO ABAIXO DE ENGENHARIA -->
+                                            <div class="flex justify-between items-center pt-0.5 border-t border-slate-200/60 mt-0.5"><span class="text-slate-400 font-semibold">Produção:</span> <span class="font-extrabold text-columbia-700 font-mono">${prodStatus}</span></div>
                                         </div>
                                     </div>
                                 `;
