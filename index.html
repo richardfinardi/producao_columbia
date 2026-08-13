@@ -507,21 +507,21 @@
         });
 
         // V4.4.3: EXIBE AS ABAS APENAS SE O USUÁRIO LOGADO TIVER PERMISSÃO
-        function configurarVisibilidadeAbas() {
-            const permFaturamento = String(localStorage.getItem('columbia_perm_faturamento')) === '1';
-            const permConferencia = String(localStorage.getItem('columbia_perm_finalizacao')) === '1' || String(localStorage.getItem('columbia_perm_fechamento')) === '1';
+function configurarVisibilidadeAbas() {
+    const permFaturamento = String(localStorage.getItem('columbia_perm_faturamento')) === '1';
+    const permConferencia = String(localStorage.getItem('columbia_perm_finalizacao')) === '1';
 
-            const btnAbaFaturamento = document.getElementById('btnAbaFaturamento');
-            const btnAbaConferencia = document.getElementById('btnAbaConferencia');
+    const btnAbaFaturamento = document.getElementById('btnAbaFaturamento');
+    const btnAbaConferencia = document.getElementById('btnAbaConferencia');
 
-            if (btnAbaFaturamento && permFaturamento) {
-                btnAbaFaturamento.classList.remove('hidden');
-            }
+    if (btnAbaFaturamento && permFaturamento) {
+        btnAbaFaturamento.classList.remove('hidden');
+    }
 
-            if (btnAbaConferencia && permConferencia) {
-                btnAbaConferencia.classList.remove('hidden');
-            }
-        }
+    if (btnAbaConferencia && permConferencia) {
+        btnAbaConferencia.classList.remove('hidden');
+    }
+}
 
         function efetuarLogout() {
             localStorage.removeItem('columbia_token');
