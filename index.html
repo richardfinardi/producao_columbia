@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V4.4.2</title>
+    <title>Programação de Produção - Columbia V4.4.3</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V4.4.2</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V4.4.3</p>
                 </div>
             </div>
 
@@ -84,6 +84,18 @@
                     <i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i>
                     <span id="userDisplayName">Usuário</span>
                 </div>
+
+                <!-- V4.4.3: ABA FATURAMENTO (EXIBIDA SE U_FATURAMENTO == 1) -->
+                <a id="btnAbaFaturamento" href="faturamento.html" class="hidden flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-xs transition shadow-md">
+                    <i data-lucide="package-check" class="w-4 h-4"></i>
+                    <span>Faturamento</span>
+                </a>
+
+                <!-- V4.4.3: ABA CONFERÊNCIA APONTAMENTOS (EXIBIDA SE U_FECHAMENTO == 1) -->
+                <a id="btnAbaConferencia" href="conferencia_apontamentos.html" class="hidden flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs transition shadow-md">
+                    <i data-lucide="clipboard-check" class="w-4 h-4"></i>
+                    <span>Conferência Apontamentos</span>
+                </a>
 
                 <!-- BOTÃO ACESSO À TELA OS'S NO LIMBO -->
                 <button id="btnVerLimbo" onclick="togglePaginaLimbo()" class="flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow-md">
@@ -442,7 +454,7 @@
                         <span>Alterar Dt. Renegociada</span>
                     </button>
 
-                    <!-- BOTÃO DINÂMICO PARA NAVEGAÇÃO DE LIMBO (ENVIAR OU RESTAURAR) -->
+                    <!-- BOTÃO DINÂMICO PARA NAVEGAÇÃO DE LIMBO -->
                     <button id="btnEnviarLimbo" onclick="executarAcaoLimbo()" class="px-3.5 py-1.5 rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
                         <i data-lucide="ghost" class="w-4 h-4"></i>
                         <span id="txtLabelBtnLimbo">Enviar para o Limbo</span>
@@ -475,26 +487,48 @@
                 if (displayEl) displayEl.textContent = nomeUser;
             }
 
+            // V4.4.3: CHECAGEM DE PERMISSÕES PARA EXIBIR ABAS DE FATURAMENTO E CONFERÊNCIA
+            configurarVisibilidadeAbas();
+
             lucide.createIcons();
             setViewMode(currentView, false);
             fetchData();
 
-            // V4.4.2: AUTO-REFRESH DE BACKGROUND A CADA 30 SEGUNDOS (POLLING SILENCIOSO)
+            // AUTO-REFRESH DE BACKGROUND A CADA 30 SEGUNDOS (POLLING SILENCIOSO)
             setInterval(() => {
-                // Só executa o refresh silencioso se o usuário NÃO estiver com nenhum modal aberto
                 const isModalOpen = !document.getElementById('osModal').classList.contains('hidden') ||
                                     !document.getElementById('altRenegociationFormModal').classList.contains('hidden') ||
                                     !document.getElementById('passwordModal').classList.contains('hidden');
                 
                 if (!isModalOpen) {
-                    fetchData(true); // true = modo silencioso (sem travar botões/interface)
+                    fetchData(true);
                 }
             }, 30000);
         });
 
+        // V4.4.3: EXIBE AS ABAS APENAS SE O USUÁRIO LOGADO TIVER PERMISSÃO
+        function configurarVisibilidadeAbas() {
+            const permFaturamento = String(localStorage.getItem('columbia_perm_faturamento')) === '1';
+            const permConferencia = String(localStorage.getItem('columbia_perm_finalizacao')) === '1' || String(localStorage.getItem('columbia_perm_fechamento')) === '1';
+
+            const btnAbaFaturamento = document.getElementById('btnAbaFaturamento');
+            const btnAbaConferencia = document.getElementById('btnAbaConferencia');
+
+            if (btnAbaFaturamento && permFaturamento) {
+                btnAbaFaturamento.classList.remove('hidden');
+            }
+
+            if (btnAbaConferencia && permConferencia) {
+                btnAbaConferencia.classList.remove('hidden');
+            }
+        }
+
         function efetuarLogout() {
             localStorage.removeItem('columbia_token');
             localStorage.removeItem('columbia_usuario_nome');
+            localStorage.removeItem('columbia_perm_faturamento');
+            localStorage.removeItem('columbia_perm_finalizacao');
+            localStorage.removeItem('columbia_perm_fechamento');
             window.location.href = 'login.html';
         }
 
@@ -566,7 +600,6 @@
             return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
         }
 
-        // V4.4.2: FETCH SUPORTA REFRESH SILENCIOSO EM BACKGROUND
         async function fetchData(isSilent = false) {
             const refreshIcon = document.getElementById('refreshIcon');
             const btnRefresh = document.getElementById('btnRefresh');
