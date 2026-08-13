@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V3.6</title>
+    <title>Programação de Produção - Columbia V3.7</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V3.6</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V3.7</p>
                 </div>
             </div>
 
@@ -117,6 +117,16 @@
                 <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
                 <input type="text" id="searchInput" oninput="renderView()" placeholder="Pesquisar (OS, Título, Cliente, Origem, Cod. Interno...)" 
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
+            </div>
+
+            <!-- FILTRO DE OS ATRASADAS (SIM / NÃO / TODAS) -->
+            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                <i data-lucide="alert-triangle" class="w-4 h-4 text-slate-400"></i>
+                <select id="atrasadaFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[140px] font-bold">
+                    <option value="">Atrasadas (Todas)</option>
+                    <option value="sim">🔴 Somente Atrasadas (Sim)</option>
+                    <option value="nao">🟢 Somente No Prazo (Não)</option>
+                </select>
             </div>
 
             <!-- FILTRO DE APONTAMENTO ABERTO -->
@@ -486,6 +496,7 @@
 
             const savedFilters = {
                 search: document.getElementById('searchInput')?.value || '',
+                atrasada: document.getElementById('atrasadaFilter')?.value || '',
                 apontamento: document.getElementById('apontamentoAbertoFilter')?.value || '',
                 segmento: document.getElementById('segmentoFilter')?.value || '',
                 producao: document.getElementById('producaoFilter')?.value || '',
@@ -571,6 +582,11 @@
             if (apontamentoSelect && savedFilters.apontamento) {
                 apontamentoSelect.value = savedFilters.apontamento;
             }
+
+            const atrasadaSelect = document.getElementById('atrasadaFilter');
+            if (atrasadaSelect && savedFilters.atrasada) {
+                atrasadaSelect.value = savedFilters.atrasada;
+            }
         }
 
         function setViewMode(mode, triggerRender = true) {
@@ -653,6 +669,7 @@
 
         function getFilteredData() {
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+            const atrasadaFiltro = document.getElementById('atrasadaFilter')?.value || '';
             const apontamentoFiltro = document.getElementById('apontamentoAbertoFilter')?.value || '';
             const segmento = document.getElementById('segmentoFilter')?.value || '';
             const producao = document.getElementById('producaoFilter')?.value || '';
@@ -672,6 +689,13 @@
                     const matchPP = String(item.pp_pendentes || '').toLowerCase().includes(search);
                     const matchApontamento = String(item.apontamentos_abertos_detalhe || '').toLowerCase().includes(search);
                     if (!matchOS && !matchTitulo && !matchCliente && !matchOrigem && !matchCod && !matchPedido && !matchPP && !matchApontamento) return false;
+                }
+
+                // FILTRO DE OS ATRASADAS (SIM / NÃO)
+                if (atrasadaFiltro) {
+                    const isAtrasada = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
+                    if (atrasadaFiltro === 'sim' && !isAtrasada) return false;
+                    if (atrasadaFiltro === 'nao' && isAtrasada) return false;
                 }
 
                 // FILTRO POR APONTAMENTO ABERTO (SIM / NÃO)
@@ -735,7 +759,7 @@
             lucide.createIcons();
         }
 
-        // COMPONENTE DE CARD DE OS REUSÁVEL (COM SEMÁFORO: VERDE PISCANDO QUANDO TEM / VERMELHO QUANDO NÃO TEM)
+        // COMPONENTE DE CARD DE OS REUSÁVEL
         function renderOSCard(item) {
             const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
             const prodStatus = item.status_producao || '0%';
@@ -749,7 +773,7 @@
             const engenharia = item.engenharia_status || 'N/A';
             const ppPendentes = item.pp_pendentes || 'Nenhum processo pendente';
 
-            // DADOS DO APONTAMENTO ABERTO (SEMÁFORO INVERTIDO: VERDE PISCANDO QUANDO TEM / VERMELHO QUANDO NÃO TEM)
+            // DADOS DO APONTAMENTO ABERTO (VERDE PISCANDO QUANDO TEM / VERMELHO QUANDO NÃO TEM)
             const temApontamentoAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
             const detalheApontamento = item.apontamentos_abertos_detalhe || 'Nenhum operador apontando no momento';
 
@@ -792,11 +816,10 @@
                             <p class="text-slate-700 font-medium line-clamp-2 leading-tight" title="${ppPendentes}">${ppPendentes}</p>
                         </div>
 
-                        <!-- SEMÁFORO DE APONTAMENTO ABERTO (INVERTIDO: VERDE PISCANDO QUANDO TEM / VERMELHO QUANDO NÃO TEM) -->
+                        <!-- SEMÁFORO DE APONTAMENTO ABERTO -->
                         <div class="${temApontamentoAberto ? 'bg-emerald-50 border-emerald-300' : 'bg-red-50 border-red-200'} border p-2 rounded-xl text-[10px] transition-all">
                             <div class="flex items-center justify-between gap-1 mb-1">
                                 <div class="flex items-center gap-1.5">
-                                    <!-- LUZ DO SEMÁFORO -->
                                     <span class="relative flex h-2.5 w-2.5">
                                         ${temApontamentoAberto ? `<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>` : ''}
                                         <span class="relative inline-flex rounded-full h-2.5 w-2.5 ${temApontamentoAberto ? 'bg-emerald-500' : 'bg-red-500'}"></span>
@@ -1090,6 +1113,7 @@
 
         function clearAllFilters() {
             document.getElementById('searchInput').value = '';
+            document.getElementById('atrasadaFilter').value = '';
             document.getElementById('apontamentoAbertoFilter').value = '';
             document.getElementById('segmentoFilter').value = '';
             document.getElementById('producaoFilter').value = '';
@@ -1197,7 +1221,7 @@
             document.getElementById('mProducao').textContent = safeText(item.status_producao);
             document.getElementById('mPpPendentes').textContent = safeText(item.pp_pendentes);
             
-            // RENDERING DO SEMÁFORO DE APONTAMENTO NO MODAL (INVERTIDO: VERDE PISCANDO QUANDO TEM / VERMELHO QUANDO NÃO TEM)
+            // RENDERING DO SEMÁFORO DE APONTAMENTO NO MODAL (VERDE PISCANDO QUANDO TEM / VERMELHO QUANDO NÃO TEM)
             const temAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
             const containerAp = document.getElementById('mApontamentoContainer');
             const titleAp = document.getElementById('mApontamentoStatusTitle');
@@ -1221,7 +1245,7 @@
             }
 
             const elAtrasada = document.getElementById('mAtrasada');
-            const isAtrasada = String(item.atrasada).toLowerCase() === 'sim';
+            const isAtrasada = String(item.atrasada).toLowerCase() === 'sim' || String(item.atrasada).toLowerCase() === 's';
             elAtrasada.textContent = isAtrasada ? 'Sim' : 'Não';
             elAtrasada.className = `font-bold ${isAtrasada ? 'text-red-600' : 'text-emerald-600'}`;
 
