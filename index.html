@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V4.3</title>
+    <title>Programação de Produção - Columbia V4.4</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V4.3</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V4.4</p>
                 </div>
             </div>
 
@@ -419,7 +419,7 @@
                     </div>
                 </div>
 
-                <!-- V4.3: CAMPO JUSTIFICATIVA EXIBIDO ABAIXO DAS DATAS NO MODAL -->
+                <!-- CAMPO JUSTIFICATIVA EXIBIDO ABAIXO DAS DATAS NO MODAL -->
                 <div class="space-y-1.5 pt-2 border-t border-slate-200">
                     <h4 class="font-bold text-purple-800 uppercase tracking-wider text-[10px]">Justificativa da Renegociação</h4>
                     <div class="bg-purple-50/70 border border-purple-200 p-2.5 rounded-xl font-mono text-[11px] text-purple-900 leading-relaxed" id="mJustificativa">
@@ -428,12 +428,20 @@
                 </div>
             </div>
 
-            <!-- RODAPÉ DO MODAL -->
-            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-between items-center gap-2 shrink-0">
-                <button onclick="openAltRenegociationFormModal()" class="px-3.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
-                    <i data-lucide="calendar-cog" class="w-4 h-4"></i>
-                    <span>Alterar Dt. Renegociada</span>
-                </button>
+            <!-- RODAPÉ DO MODAL (V4.4 PARTE 1: ADICIONADO BOTÃO "ENVIAR PARA O LIMBO") -->
+            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex flex-wrap justify-between items-center gap-2 shrink-0">
+                <div class="flex items-center gap-2">
+                    <button onclick="openAltRenegociationFormModal()" class="px-3.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
+                        <i data-lucide="calendar-cog" class="w-4 h-4"></i>
+                        <span>Alterar Dt. Renegociada</span>
+                    </button>
+
+                    <!-- BOTÃO ENVIAR PARA O LIMBO -->
+                    <button id="btnEnviarLimbo" onclick="executarEnviarParaLimbo()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-amber-400 border border-slate-700 rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
+                        <i data-lucide="ghost" class="w-4 h-4 text-amber-400"></i>
+                        <span>Enviar para o Limbo</span>
+                    </button>
+                </div>
 
                 <button onclick="closeModal()" class="px-4 py-1.5 bg-columbia-700 text-white rounded-xl font-semibold hover:bg-columbia-800 shadow-sm transition">Fechar</button>
             </div>
@@ -495,7 +503,7 @@
             }
         }
 
-        // HELPER FORMATADOR DE DATAS (LIMPA NaT, STAMPS ISO E RETORNA DD/MM/YYYY)
+        // HELPER FORMATADOR DE DATAS
         function formatDate(dtStr) {
             if (!dtStr || dtStr === 'NaT' || dtStr === 'None' || dtStr === 'null') return '-';
             const cleanStr = String(dtStr).trim();
@@ -508,7 +516,6 @@
             return cleanStr;
         }
 
-        // HELPER PARA CALCULAR O NÚMERO DA SEMANA NO ANO DE UMA DATA
         function getISOWeekNumber(d) {
             const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
             const dayNum = date.getUTCDay() || 7;
@@ -653,7 +660,6 @@
             const label = document.getElementById('currentDateLabel');
             if (!label) return;
 
-            // Se o usuário estiver pesquisando algo, avisa na label de data
             const search = (document.getElementById('searchInput')?.value || '').trim();
             if (search) {
                 label.textContent = "Busca Geral Ativa";
@@ -777,7 +783,6 @@
             document.getElementById('metricValorTotal').textContent = formatBRL(valorTotal);
         }
 
-        // V4.3: LÓGICA DE RENDERIZAÇÃO INTELIGENTE (SE ESTIVER PESQUISANDO, MOSTRA RESULTADO GLOBAL)
         function renderView() {
             updateDateLabel();
             const filtered = getFilteredData();
@@ -785,7 +790,6 @@
 
             const search = (document.getElementById('searchInput')?.value || '').trim();
 
-            // SE TIVER PESQUISA ATIVA: Renderiza todas as OSs encontradas ignorando a data
             if (search) {
                 renderSearchResultsView(filtered);
             } else {
@@ -800,12 +804,10 @@
             lucide.createIcons();
         }
 
-        // V4.3: NOVO RENDERIZADOR DE BUSCA GLOBAL (SEM RESTRIÇÃO DE DATA)
         function renderSearchResultsView(filtered) {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
 
-            // Ordena os resultados da busca por ordem crescente de data normalizada
             filtered.sort((a, b) => {
                 const dateA = a.entrega_normalizada || '';
                 const dateB = b.entrega_normalizada || '';
@@ -1461,6 +1463,54 @@
                 btnSave.disabled = false;
                 btnSave.classList.remove('opacity-50');
             }
+        }
+
+        // V4.4 PARTE 1: FUNÇÃO PARA DISPARAR O PATCH DO LIMBO VIA HTTP REST
+        async function alterarStatusLimbo(n_os, valorLimbo) {
+            const btnLimbo = document.getElementById('btnEnviarLimbo');
+            
+            if (!confirm(`Deseja realmente ${valorLimbo === 1 ? 'enviar para o limbo' : 'tirar do limbo'} a OS ${n_os}?`)) {
+                return;
+            }
+
+            try {
+                if (btnLimbo) {
+                    btnLimbo.disabled = true;
+                    btnLimbo.classList.add('opacity-50');
+                }
+
+                const limboUrl = `${API_URL}/${n_os}/limbo`;
+
+                const response = await fetch(limboUrl, {
+                    method: 'PATCH',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ u_limbo: valorLimbo })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Falha ao alterar o status de limbo da OS.');
+                }
+
+                closeModal();
+                fetchData(); // Recarrega os dados do dashboard na hora!
+
+            } catch (error) {
+                console.error('Erro ao alterar limbo:', error);
+                alert(`Erro: ${error.message}`);
+            } finally {
+                if (btnLimbo) {
+                    btnLimbo.disabled = false;
+                    btnLimbo.classList.remove('opacity-50');
+                }
+            }
+        }
+
+        function executarEnviarParaLimbo() {
+            if (!selectedItemModal) return;
+            alterarStatusLimbo(selectedItemModal.n_os, 1);
         }
     </script>
 </body>
