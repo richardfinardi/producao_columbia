@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V4.4.1</title>
+    <title>Programação de Produção - Columbia V4.4.2</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V4.4.1</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V4.4.2</p>
                 </div>
             </div>
 
@@ -85,7 +85,7 @@
                     <span id="userDisplayName">Usuário</span>
                 </div>
 
-                <!-- V4.4.1: BOTÃO ACESSO À TELA OS'S NO LIMBO -->
+                <!-- BOTÃO ACESSO À TELA OS'S NO LIMBO -->
                 <button id="btnVerLimbo" onclick="togglePaginaLimbo()" class="flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow-md">
                     <i data-lucide="ghost" class="w-4 h-4"></i>
                     <span id="txtBtnLimbo">OS's no Limbo (0)</span>
@@ -97,8 +97,8 @@
                     <span id="txtValueVisibility">Exibir Valores</span>
                 </button>
 
-                <!-- Botão Atualizar -->
-                <button id="btnRefresh" onclick="fetchData()" class="flex items-center gap-2 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-all shadow" title="Atualizar Dados">
+                <!-- Botão Atualizar Manual -->
+                <button id="btnRefresh" onclick="fetchData(false)" class="flex items-center gap-2 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-all shadow" title="Atualizar Dados">
                     <i data-lucide="refresh-cw" class="w-4 h-4" id="refreshIcon"></i>
                 </button>
 
@@ -442,7 +442,7 @@
                         <span>Alterar Dt. Renegociada</span>
                     </button>
 
-                    <!-- V4.4.1: BOTÃO DINÂMICO PARA NAVEGAÇÃO DE LIMBO (ENVIAR OU RESTAURAR) -->
+                    <!-- BOTÃO DINÂMICO PARA NAVEGAÇÃO DE LIMBO (ENVIAR OU RESTAURAR) -->
                     <button id="btnEnviarLimbo" onclick="executarAcaoLimbo()" class="px-3.5 py-1.5 rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
                         <i data-lucide="ghost" class="w-4 h-4"></i>
                         <span id="txtLabelBtnLimbo">Enviar para o Limbo</span>
@@ -462,7 +462,7 @@
         let selectedItemModal = null; 
 
         let currentView = localStorage.getItem('columbia_preferred_view') || 'week';
-        let isShowingLimboPage = false; // V4.4.1: CONTROLADOR DE ESTADO DA TELA DE LIMBO
+        let isShowingLimboPage = false; 
 
         let onlyCurrentMonth = true;
         let onlyWithBudget = false;
@@ -478,6 +478,18 @@
             lucide.createIcons();
             setViewMode(currentView, false);
             fetchData();
+
+            // V4.4.2: AUTO-REFRESH DE BACKGROUND A CADA 30 SEGUNDOS (POLLING SILENCIOSO)
+            setInterval(() => {
+                // Só executa o refresh silencioso se o usuário NÃO estiver com nenhum modal aberto
+                const isModalOpen = !document.getElementById('osModal').classList.contains('hidden') ||
+                                    !document.getElementById('altRenegociationFormModal').classList.contains('hidden') ||
+                                    !document.getElementById('passwordModal').classList.contains('hidden');
+                
+                if (!isModalOpen) {
+                    fetchData(true); // true = modo silencioso (sem travar botões/interface)
+                }
+            }, 30000);
         });
 
         function efetuarLogout() {
@@ -486,7 +498,6 @@
             window.location.href = 'login.html';
         }
 
-        // V4.4.1: T alternation DO ESTADO DO MODO LIMBO
         function togglePaginaLimbo() {
             isShowingLimboPage = !isShowingLimboPage;
             const btnLimbo = document.getElementById('btnVerLimbo');
@@ -555,12 +566,15 @@
             return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
         }
 
-        async function fetchData() {
+        // V4.4.2: FETCH SUPORTA REFRESH SILENCIOSO EM BACKGROUND
+        async function fetchData(isSilent = false) {
             const refreshIcon = document.getElementById('refreshIcon');
             const btnRefresh = document.getElementById('btnRefresh');
             
-            if (refreshIcon) refreshIcon.classList.add('animate-spin');
-            if (btnRefresh) btnRefresh.disabled = true;
+            if (!isSilent) {
+                if (refreshIcon) refreshIcon.classList.add('animate-spin');
+                if (btnRefresh) btnRefresh.disabled = true;
+            }
 
             const savedFilters = {
                 search: document.getElementById('searchInput')?.value || '',
@@ -595,10 +609,14 @@
 
             } catch (error) {
                 console.error('Erro ao buscar dados da API:', error);
-                alert('Não foi possível atualizar os dados de produção. Verifique a conexão com o servidor.');
+                if (!isSilent) {
+                    alert('Não foi possível atualizar os dados de produção. Verifique a conexão com o servidor.');
+                }
             } finally {
-                if (refreshIcon) refreshIcon.classList.remove('animate-spin');
-                if (btnRefresh) btnRefresh.disabled = false;
+                if (!isSilent) {
+                    if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+                    if (btnRefresh) btnRefresh.disabled = false;
+                }
                 lucide.createIcons();
             }
         }
@@ -737,7 +755,6 @@
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
         }
 
-        // V4.4.1: MOTOR DE FILTRO QUE DESCARTA OS'S NO LIMBO (U_LIMBO = 1) NA TELA PRINCIPAL
         function getFilteredData() {
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
             const atrasadaFiltro = document.getElementById('atrasadaFilter')?.value || '';
@@ -750,7 +767,6 @@
             const terceiros = document.getElementById('terceirosFilter')?.value || '';
 
             return rawData.filter(item => {
-                // V4.4.1: FILTRO LIMBO (NA TELA PRINCIPAL NUNCA MOSTRA U_LIMBO == 1 OU '1')
                 const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
                 if (estaNoLimbo) return false;
 
@@ -818,7 +834,6 @@
             document.getElementById('metricSemOrcamento').textContent = semOrcamento;
             document.getElementById('metricValorTotal').textContent = formatBRL(valorTotal);
 
-            // V4.4.1: ATUALIZA O CONTADOR DO BOTÃO DO LIMBO NO HEADER
             const totalLimbo = rawData.filter(i => String(i.u_limbo) === '1' || i.u_limbo === 1).length;
             const txtBtnLimbo = document.getElementById('txtBtnLimbo');
             if (txtBtnLimbo) {
@@ -826,7 +841,6 @@
             }
         }
 
-        // V4.4.1: CHAVEADOR DE RENDERIZAÇÃO ENTRE MODO NORMAL E PAINEL DE LIMBO
         function renderView() {
             if (isShowingLimboPage) {
                 renderPaginaLimboView();
@@ -854,12 +868,10 @@
             lucide.createIcons();
         }
 
-        // V4.4.1: RENDERIZADOR DEDICADO PARA A TELA "OS'S NO LIMBO"
         function renderPaginaLimboView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
 
-            // Filtra exclusivamente as OSs com u_limbo == 1
             let limboItems = rawData.filter(i => String(i.u_limbo) === '1' || i.u_limbo === 1);
 
             limboItems.sort((a, b) => {
@@ -1436,10 +1448,8 @@
             document.getElementById('mProducao').textContent = safeText(item.status_producao);
             document.getElementById('mPpPendentes').textContent = safeText(item.pp_pendentes);
             
-            // POPULA O CAMPO JUSTIFICATIVA NO MODAL
             document.getElementById('mJustificativa').textContent = safeText(item.justificativa);
 
-            // V4.4.1: CONFIGURA O BOTÃO DO LIMBO NO MODAL DEPENDENDO DO ESTADO ATUAL DA OS
             const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
             const btnLimbo = document.getElementById('btnEnviarLimbo');
             const txtLabelBtnLimbo = document.getElementById('txtLabelBtnLimbo');
@@ -1452,7 +1462,6 @@
                 txtLabelBtnLimbo.textContent = "Enviar para o Limbo";
             }
 
-            // SEMÁFORO DE APONTAMENTO ABERTO NO MODAL
             const temAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
             const containerAp = document.getElementById('mApontamentoContainer');
             const titleAp = document.getElementById('mApontamentoStatusTitle');
@@ -1581,7 +1590,6 @@
             }
         }
 
-        // V4.4.1: FUNÇÃO UNIVERSAL DE MANIPULAÇÃO DE LIMBO
         async function alterarStatusLimbo(n_os, valorLimbo) {
             const btnLimbo = document.getElementById('btnEnviarLimbo');
             const acaoTexto = valorLimbo === 1 ? 'enviar para o limbo' : 'tirar do limbo';
@@ -1612,7 +1620,7 @@
                 }
 
                 closeModal();
-                fetchData(); // Recarrega os dados do dashboard na hora!
+                fetchData();
 
             } catch (error) {
                 console.error('Erro ao alterar limbo:', error);
@@ -1625,12 +1633,9 @@
             }
         }
 
-        // V4.4.1: DECIDE AUTOMATICAMENTE SE ENVIA OU RETIRA DO LIMBO DEPENDENDO DO ESTADO ATUAL
         function executarAcaoLimbo() {
             if (!selectedItemModal) return;
             const estaNoLimbo = String(selectedItemModal.u_limbo) === '1' || selectedItemModal.u_limbo === 1;
-            
-            // Se está no limbo, envia 0 (desativa/restaura). Se não está, envia 1 (ativa).
             const novoValor = estaNoLimbo ? 0 : 1;
             alterarStatusLimbo(selectedItemModal.n_os, novoValor);
         }
