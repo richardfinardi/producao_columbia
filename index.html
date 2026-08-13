@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V4.4</title>
+    <title>Programação de Produção - Columbia V4.4.1</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,17 +73,23 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V4.4</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V4.4.1</p>
                 </div>
             </div>
 
             <!-- Botões de Ação do Topo -->
             <div class="flex items-center gap-2">
                 <!-- Identificação do Usuário Logado -->
-                <div class="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-columbia-800 border border-columbia-600 rounded-xl text-xs font-bold text-slate-200">
+                <div class="hidden md:flex items-center gap-1.5 px-3 py-2 bg-columbia-800 border border-columbia-600 rounded-xl text-xs font-bold text-slate-200">
                     <i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i>
                     <span id="userDisplayName">Usuário</span>
                 </div>
+
+                <!-- V4.4.1: BOTÃO ACESSO À TELA OS'S NO LIMBO -->
+                <button id="btnVerLimbo" onclick="togglePaginaLimbo()" class="flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow-md">
+                    <i data-lucide="ghost" class="w-4 h-4"></i>
+                    <span id="txtBtnLimbo">OS's no Limbo (0)</span>
+                </button>
 
                 <!-- Botão Trava / Exibir Valores -->
                 <button id="btnToggleValues" onclick="handleValueVisibility()" class="flex items-center gap-2 px-3 py-2 bg-columbia-800 hover:bg-columbia-900 border border-columbia-600 text-white rounded-xl font-bold text-xs transition shadow">
@@ -106,7 +112,7 @@
     </header>
 
     <!-- METRICS BAR -->
-    <div class="bg-white border-b border-slate-200 text-slate-800 shadow-sm">
+    <div id="metricsBar" class="bg-white border-b border-slate-200 text-slate-800 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 py-3 grid grid-cols-2 md:grid-cols-4 gap-3">
             <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <span class="text-[10px] text-slate-500 font-bold uppercase block">Total de OS (Filtrado)</span>
@@ -130,7 +136,7 @@
     <!-- CONTROLES E FILTROS -->
     <main class="max-w-7xl w-full mx-auto p-4 flex flex-col gap-4 flex-1">
         
-        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+        <div id="filtersBar" class="bg-white p-3.5 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-sm">
             
             <!-- Busca Geral Universal -->
             <div class="flex items-center gap-2 flex-1 min-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
@@ -139,7 +145,7 @@
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
             </div>
 
-            <!-- FILTRO DE OS ATRASADAS (SIM / NÃO / TODAS) -->
+            <!-- FILTRO DE OS ATRASADAS -->
             <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="alert-triangle" class="w-4 h-4 text-slate-400"></i>
                 <select id="atrasadaFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[140px] font-bold">
@@ -230,7 +236,7 @@
         </div>
 
         <!-- BARRA NAVEGADORA DE DATA & SELETOR DE VISÃO -->
-        <div class="bg-white p-3 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+        <div id="navigationBar" class="bg-white p-3 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-sm">
             
             <!-- Navegação de Data -->
             <div class="flex items-center bg-columbia-700 text-white rounded-xl px-2 py-1 shadow-sm">
@@ -262,7 +268,7 @@
             </div>
         </div>
 
-        <!-- ÁREA PRINCIPAL DO CALENDÁRIO OU RESULTADO DE BUSCA UNIVERSAL -->
+        <!-- ÁREA PRINCIPAL DO CALENDÁRIO OU PAINEL DE LIMBO -->
         <div id="calendarGrid" class="w-full">
             <!-- Renderizado via JS conforme a visão selecionada -->
         </div>
@@ -428,7 +434,7 @@
                 </div>
             </div>
 
-            <!-- RODAPÉ DO MODAL (V4.4 PARTE 1: ADICIONADO BOTÃO "ENVIAR PARA O LIMBO") -->
+            <!-- RODAPÉ DO MODAL -->
             <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex flex-wrap justify-between items-center gap-2 shrink-0">
                 <div class="flex items-center gap-2">
                     <button onclick="openAltRenegociationFormModal()" class="px-3.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
@@ -436,10 +442,10 @@
                         <span>Alterar Dt. Renegociada</span>
                     </button>
 
-                    <!-- BOTÃO ENVIAR PARA O LIMBO -->
-                    <button id="btnEnviarLimbo" onclick="executarEnviarParaLimbo()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-amber-400 border border-slate-700 rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
-                        <i data-lucide="ghost" class="w-4 h-4 text-amber-400"></i>
-                        <span>Enviar para o Limbo</span>
+                    <!-- V4.4.1: BOTÃO DINÂMICO PARA NAVEGAÇÃO DE LIMBO (ENVIAR OU RESTAURAR) -->
+                    <button id="btnEnviarLimbo" onclick="executarAcaoLimbo()" class="px-3.5 py-1.5 rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
+                        <i data-lucide="ghost" class="w-4 h-4"></i>
+                        <span id="txtLabelBtnLimbo">Enviar para o Limbo</span>
                     </button>
                 </div>
 
@@ -455,8 +461,8 @@
         let currentDate = new Date();
         let selectedItemModal = null; 
 
-        // VISÃO PADRÃO 'week' (SEMANAL)
         let currentView = localStorage.getItem('columbia_preferred_view') || 'week';
+        let isShowingLimboPage = false; // V4.4.1: CONTROLADOR DE ESTADO DA TELA DE LIMBO
 
         let onlyCurrentMonth = true;
         let onlyWithBudget = false;
@@ -478,6 +484,32 @@
             localStorage.removeItem('columbia_token');
             localStorage.removeItem('columbia_usuario_nome');
             window.location.href = 'login.html';
+        }
+
+        // V4.4.1: T alternation DO ESTADO DO MODO LIMBO
+        function togglePaginaLimbo() {
+            isShowingLimboPage = !isShowingLimboPage;
+            const btnLimbo = document.getElementById('btnVerLimbo');
+            const metricsBar = document.getElementById('metricsBar');
+            const filtersBar = document.getElementById('filtersBar');
+            const navigationBar = document.getElementById('navigationBar');
+
+            if (isShowingLimboPage) {
+                if (btnLimbo) {
+                    btnLimbo.className = "flex items-center gap-1.5 px-3 py-2 bg-columbia-900 border border-amber-400 text-amber-400 font-black rounded-xl text-xs transition shadow-md";
+                }
+                if (metricsBar) metricsBar.classList.add('hidden');
+                if (filtersBar) filtersBar.classList.add('hidden');
+                if (navigationBar) navigationBar.classList.add('hidden');
+            } else {
+                if (btnLimbo) {
+                    btnLimbo.className = "flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow-md";
+                }
+                if (metricsBar) metricsBar.classList.remove('hidden');
+                if (filtersBar) filtersBar.classList.remove('hidden');
+                if (navigationBar) navigationBar.classList.remove('hidden');
+            }
+            renderView();
         }
 
         function initializeCurrentDate() {
@@ -503,7 +535,6 @@
             }
         }
 
-        // HELPER FORMATADOR DE DATAS
         function formatDate(dtStr) {
             if (!dtStr || dtStr === 'NaT' || dtStr === 'None' || dtStr === 'null') return '-';
             const cleanStr = String(dtStr).trim();
@@ -706,6 +737,7 @@
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
         }
 
+        // V4.4.1: MOTOR DE FILTRO QUE DESCARTA OS'S NO LIMBO (U_LIMBO = 1) NA TELA PRINCIPAL
         function getFilteredData() {
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
             const atrasadaFiltro = document.getElementById('atrasadaFilter')?.value || '';
@@ -718,6 +750,10 @@
             const terceiros = document.getElementById('terceirosFilter')?.value || '';
 
             return rawData.filter(item => {
+                // V4.4.1: FILTRO LIMBO (NA TELA PRINCIPAL NUNCA MOSTRA U_LIMBO == 1 OU '1')
+                const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
+                if (estaNoLimbo) return false;
+
                 if (search) {
                     const matchOS = String(item.n_os || '').toLowerCase().includes(search);
                     const matchTitulo = String(item.titulo || '').toLowerCase().includes(search);
@@ -781,9 +817,23 @@
             document.getElementById('metricAtrasadas').textContent = atrasadas;
             document.getElementById('metricSemOrcamento').textContent = semOrcamento;
             document.getElementById('metricValorTotal').textContent = formatBRL(valorTotal);
+
+            // V4.4.1: ATUALIZA O CONTADOR DO BOTÃO DO LIMBO NO HEADER
+            const totalLimbo = rawData.filter(i => String(i.u_limbo) === '1' || i.u_limbo === 1).length;
+            const txtBtnLimbo = document.getElementById('txtBtnLimbo');
+            if (txtBtnLimbo) {
+                txtBtnLimbo.textContent = `OS's no Limbo (${totalLimbo})`;
+            }
         }
 
+        // V4.4.1: CHAVEADOR DE RENDERIZAÇÃO ENTRE MODO NORMAL E PAINEL DE LIMBO
         function renderView() {
+            if (isShowingLimboPage) {
+                renderPaginaLimboView();
+                lucide.createIcons();
+                return;
+            }
+
             updateDateLabel();
             const filtered = getFilteredData();
             updateMetrics(filtered);
@@ -802,6 +852,59 @@
                 }
             }
             lucide.createIcons();
+        }
+
+        // V4.4.1: RENDERIZADOR DEDICADO PARA A TELA "OS'S NO LIMBO"
+        function renderPaginaLimboView() {
+            const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
+
+            // Filtra exclusivamente as OSs com u_limbo == 1
+            let limboItems = rawData.filter(i => String(i.u_limbo) === '1' || i.u_limbo === 1);
+
+            limboItems.sort((a, b) => {
+                const dateA = a.entrega_normalizada || '';
+                const dateB = b.entrega_normalizada || '';
+                return dateA.localeCompare(dateB);
+            });
+
+            const totalValorLimbo = limboItems.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
+
+            let html = `
+                <div class="bg-white rounded-2xl border border-amber-300 p-5 shadow-md">
+                    <div class="flex flex-wrap justify-between items-center border-b border-amber-100 pb-4 mb-5 gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-amber-100 text-amber-900 rounded-xl">
+                                <i data-lucide="ghost" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-extrabold text-slate-900 text-base">Ordens de Serviço no Limbo (Arquivadas)</h3>
+                                <p class="text-xs text-slate-500 font-medium">Lista de OSs removidas temporariamente do planejamento de produção.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-black text-amber-900 bg-amber-100 border border-amber-300 px-3 py-1.5 rounded-xl">
+                                Total: ${limboItems.length} OS${limboItems.length === 1 ? '' : 's'}
+                            </span>
+                            <span class="text-xs font-extrabold text-emerald-600 font-mono bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                                ${formatBRL(totalValorLimbo)}
+                            </span>
+                        </div>
+                    </div>
+
+                    ${limboItems.length === 0 ? `
+                        <div class="flex flex-col items-center justify-center py-16 text-slate-400 gap-3">
+                            <i data-lucide="sparkles" class="w-12 h-12 stroke-1 text-amber-400"></i>
+                            <p class="text-xs font-bold text-slate-600">Nenhuma Ordem de Serviço no Limbo no momento!</p>
+                        </div>
+                    ` : `
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                            ${limboItems.map(item => renderOSCard(item)).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+            grid.innerHTML = html;
         }
 
         function renderSearchResultsView(filtered) {
@@ -1333,8 +1436,21 @@
             document.getElementById('mProducao').textContent = safeText(item.status_producao);
             document.getElementById('mPpPendentes').textContent = safeText(item.pp_pendentes);
             
-            // V4.3: POPULA O CAMPO JUSTIFICATIVA NO MODAL
+            // POPULA O CAMPO JUSTIFICATIVA NO MODAL
             document.getElementById('mJustificativa').textContent = safeText(item.justificativa);
+
+            // V4.4.1: CONFIGURA O BOTÃO DO LIMBO NO MODAL DEPENDENDO DO ESTADO ATUAL DA OS
+            const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
+            const btnLimbo = document.getElementById('btnEnviarLimbo');
+            const txtLabelBtnLimbo = document.getElementById('txtLabelBtnLimbo');
+
+            if (estaNoLimbo) {
+                btnLimbo.className = "px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5";
+                txtLabelBtnLimbo.textContent = "Tirar do Limbo 🟢";
+            } else {
+                btnLimbo.className = "px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-amber-400 border border-slate-700 rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5";
+                txtLabelBtnLimbo.textContent = "Enviar para o Limbo";
+            }
 
             // SEMÁFORO DE APONTAMENTO ABERTO NO MODAL
             const temAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
@@ -1465,11 +1581,12 @@
             }
         }
 
-        // V4.4 PARTE 1: FUNÇÃO PARA DISPARAR O PATCH DO LIMBO VIA HTTP REST
+        // V4.4.1: FUNÇÃO UNIVERSAL DE MANIPULAÇÃO DE LIMBO
         async function alterarStatusLimbo(n_os, valorLimbo) {
             const btnLimbo = document.getElementById('btnEnviarLimbo');
+            const acaoTexto = valorLimbo === 1 ? 'enviar para o limbo' : 'tirar do limbo';
             
-            if (!confirm(`Deseja realmente ${valorLimbo === 1 ? 'enviar para o limbo' : 'tirar do limbo'} a OS ${n_os}?`)) {
+            if (!confirm(`Deseja realmente ${acaoTexto} a OS ${n_os}?`)) {
                 return;
             }
 
@@ -1508,9 +1625,14 @@
             }
         }
 
-        function executarEnviarParaLimbo() {
+        // V4.4.1: DECIDE AUTOMATICAMENTE SE ENVIA OU RETIRA DO LIMBO DEPENDENDO DO ESTADO ATUAL
+        function executarAcaoLimbo() {
             if (!selectedItemModal) return;
-            alterarStatusLimbo(selectedItemModal.n_os, 1);
+            const estaNoLimbo = String(selectedItemModal.u_limbo) === '1' || selectedItemModal.u_limbo === 1;
+            
+            // Se está no limbo, envia 0 (desativa/restaura). Se não está, envia 1 (ativa).
+            const novoValor = estaNoLimbo ? 0 : 1;
+            alterarStatusLimbo(selectedItemModal.n_os, novoValor);
         }
     </script>
 </body>
