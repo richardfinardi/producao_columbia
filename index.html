@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V4.1</title>
+    <title>Programação de Produção - Columbia V4.2</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V4.1</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V4.2</p>
                 </div>
             </div>
 
@@ -310,39 +310,7 @@
         </div>
     </div>
 
-    <!-- MODAL 1: SENHA PARA ALTERAÇÃO DE DATA DE RENEGOCIAÇÃO -->
-    <div id="altRenegociationPasswordModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-[60]">
-        <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200">
-            <div class="bg-purple-800 px-5 py-3.5 flex justify-between items-center text-white">
-                <div class="flex items-center gap-2 font-bold text-sm">
-                    <i data-lucide="key-round" class="w-4 h-4 text-purple-300"></i>
-                    <span>Autorização Requerida</span>
-                </div>
-                <button onclick="closeAltRenegociationPasswordModal()" class="text-purple-200 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
-            </div>
-            
-            <div class="p-5 space-y-4 text-xs">
-                <p class="text-slate-600 font-medium">Informe a senha para alterar a data renegociada desta OS:</p>
-                
-                <div class="relative">
-                    <input type="password" id="inputAltRenegociationPassword" onkeydown="checkAltRenegociationPasswordKey(event)" placeholder="Digite a senha..." 
-                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-slate-800 text-xs focus:outline-none focus:border-purple-600 font-medium">
-                    <button type="button" onclick="toggleAltRenegociationPasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
-                        <i data-lucide="eye" id="altRenegociationEyeIcon" class="w-4 h-4"></i>
-                    </button>
-                </div>
-
-                <p id="altRenegociationPasswordError" class="text-red-600 text-[11px] font-bold hidden">Senha de alteração incorreta.</p>
-            </div>
-
-            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end gap-2">
-                <button onclick="closeAltRenegociationPasswordModal()" class="px-3.5 py-1.5 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition">Cancelar</button>
-                <button onclick="validateAltRenegociationPassword()" class="px-4 py-1.5 bg-purple-700 text-white rounded-xl font-bold hover:bg-purple-800 shadow-sm transition">Validar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL 2: FORMULÁRIO DE EDICÃO DA DATA RENEGOCIADA & JUSTIFICATIVA -->
+    <!-- MODAL FORMULÁRIO DE EDICÃO DA DATA RENEGOCIADA & JUSTIFICATIVA (SEM SENHA NA V4.2) -->
     <div id="altRenegociationFormModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-[70]">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
             <div class="bg-purple-800 px-5 py-3.5 flex justify-between items-center text-white">
@@ -452,9 +420,9 @@
                 </div>
             </div>
 
-            <!-- RODAPÉ DO MODAL -->
+            <!-- RODAPÉ DO MODAL (DIRETO PARA FORMULÁRIO NA V4.2) -->
             <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-between items-center gap-2 shrink-0">
-                <button onclick="openAltRenegociationPasswordModal()" class="px-3.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
+                <button onclick="openAltRenegociationFormModal()" class="px-3.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
                     <i data-lucide="calendar-cog" class="w-4 h-4"></i>
                     <span>Alterar Dt. Renegociada</span>
                 </button>
@@ -471,15 +439,14 @@
         let currentDate = new Date();
         let selectedItemModal = null; 
 
-        // MODO DE VISÃO PADRÃO PERSISTIDO NO LOCALSTORAGE
-        let currentView = localStorage.getItem('columbia_preferred_view') || 'month';
+        // V4.2: VISÃO PADRÃO ALTERADA PARA 'week' (SEMANAL)
+        let currentView = localStorage.getItem('columbia_preferred_view') || 'week';
 
         let onlyCurrentMonth = true;
         let onlyWithBudget = false;
         let isValuesUnlocked = false;
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Exibe o nome do usuário logado na barra do topo
             const nomeUser = localStorage.getItem('columbia_usuario_nome');
             if (nomeUser) {
                 const displayEl = document.getElementById('userDisplayName');
@@ -495,6 +462,29 @@
             localStorage.removeItem('columbia_token');
             localStorage.removeItem('columbia_usuario_nome');
             window.location.href = 'login.html';
+        }
+
+        function initializeCurrentDate() {
+            if (!rawData || rawData.length === 0) return;
+
+            const currMonthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+            const hasDataInCurrMonth = rawData.some(item => item.entrega_normalizada && String(item.entrega_normalizada).substring(0, 7) === currMonthKey);
+
+            if (!hasDataInCurrMonth) {
+                const monthCounts = {};
+                rawData.forEach(item => {
+                    if (item.entrega_normalizada && String(item.entrega_normalizada).length >= 7) {
+                        const mKey = String(item.entrega_normalizada).substring(0, 7);
+                        monthCounts[mKey] = (monthCounts[mKey] || 0) + 1;
+                    }
+                });
+
+                const sortedMonths = Object.entries(monthCounts).sort((a, b) => b[1] - a[1]);
+                if (sortedMonths.length > 0) {
+                    const [bestYear, bestMonth] = sortedMonths[0][0].split('-');
+                    currentDate = new Date(parseInt(bestYear), parseInt(bestMonth) - 1, 1);
+                }
+            }
         }
 
         // HELPER FORMATADOR DE DATAS (LIMPA NaT, STAMPS ISO E RETORNA DD/MM/YYYY)
@@ -519,7 +509,6 @@
             return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
         }
 
-        // REQUISIÇÃO COM BYPASS DE CACHE, TOKEN DE AUTENTICAÇÃO E MANUTENÇÃO DE FILTROS
         async function fetchData() {
             const refreshIcon = document.getElementById('refreshIcon');
             const btnRefresh = document.getElementById('btnRefresh');
@@ -540,29 +529,16 @@
             };
 
             try {
-                const token = localStorage.getItem('columbia_token');
                 const cacheBusterUrl = `${API_URL}?_t=${Date.now()}`;
-                
-                const response = await fetch(cacheBusterUrl, {
-                    cache: 'no-store',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    }
-                });
-
-                if (response.status === 401) {
-                    efetuarLogout();
-                    return;
-                }
+                const response = await fetch(cacheBusterUrl, { cache: 'no-store' });
 
                 if (!response.ok) {
                     throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
                 }
 
                 rawData = await response.json();
+
+                initializeCurrentDate();
 
                 populateSelectOptions(savedFilters);
 
@@ -661,6 +637,7 @@
 
         function resetToToday() {
             currentDate = new Date();
+            initializeCurrentDate();
             renderView();
         }
 
@@ -732,14 +709,12 @@
                     if (!matchOS && !matchTitulo && !matchCliente && !matchOrigem && !matchCod && !matchPedido && !matchPP && !matchApontamento) return false;
                 }
 
-                // FILTRO DE OS ATRASADAS (SIM / NÃO)
                 if (atrasadaFiltro) {
                     const isAtrasada = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
                     if (atrasadaFiltro === 'sim' && !isAtrasada) return false;
                     if (atrasadaFiltro === 'nao' && isAtrasada) return false;
                 }
 
-                // FILTRO POR APONTAMENTO ABERTO (SIM / NÃO)
                 if (apontamentoFiltro) {
                     const temAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
                     if (apontamentoFiltro === 'sim' && !temAberto) return false;
@@ -800,12 +775,12 @@
             lucide.createIcons();
         }
 
-        // COMPONENTE DE CARD DE OS REUSÁVEL
+        // COMPONENTE DE CARD DE OS REUSÁVEL V4.2 (SUBSTITUÍDO CÓDIGO INTERNO POR ORIGEM + DATAS DISCRETAS)
         function renderOSCard(item) {
             const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
             const prodStatus = item.status_producao || '0%';
             const clienteNome = item.cliente || 'CLIENTE NÃO INFORMADO';
-            const codInterno = item.cod_interno || 'S/ CÓDIGO';
+            const origem = item.origem || 'SEM ORIGEM';
             const osNome = item.titulo || 'SEM NOME';
             const segmento = item.segmento || 'GERAL';
 
@@ -814,16 +789,21 @@
             const engenharia = item.engenharia_status || 'N/A';
             const ppPendentes = item.pp_pendentes || 'Nenhum processo pendente';
 
-            // DADOS DO APONTAMENTO ABERTO (VERDE PISCANDO QUANDO TEM / VERMELHO QUANDO NÃO TEM)
             const temApontamentoAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
             const detalheApontamento = item.apontamentos_abertos_detalhe || 'Nenhum operador apontando no momento';
 
+            // Mapeamento discreto das datas
+            const dtAbertura = formatDate(item.abertura_os);
+            const dtPrevOrcamento = formatDate(item.prev_entrega_orcamento);
+            const dtRenegociada = formatDate(item.dt_renegociada || item.u_data_renegociacao);
+            const dtUltimoApontamento = formatDate(item.ultimo_apontamento);
+
             return `
-                <div onclick="openModal('${item.n_os}')" class="group bg-white border border-slate-200 hover:border-columbia-500 hover:shadow-md p-3.5 rounded-2xl cursor-pointer transition-all duration-200 flex flex-col justify-between gap-3 relative overflow-hidden">
+                <div onclick="openModal('${item.n_os}')" class="group bg-white border border-slate-200 hover:border-columbia-500 hover:shadow-md p-3.5 rounded-2xl cursor-pointer transition-all duration-200 flex flex-col justify-between gap-2.5 relative overflow-hidden">
                     <div class="absolute left-0 top-0 bottom-0 w-1.5 ${isAtrasado ? 'bg-red-500' : 'bg-emerald-500'}"></div>
 
                     <div>
-                        <div class="flex justify-between items-center mb-1.5 pl-1">
+                        <div class="flex justify-between items-center mb-1 pl-1">
                             <span class="font-mono text-xs font-extrabold text-columbia-700 bg-columbia-50 px-2 py-0.5 rounded-lg border border-columbia-100">
                                 OS ${item.n_os}
                             </span>
@@ -832,14 +812,17 @@
                             </span>
                         </div>
 
+                        <!-- V4.2: EXIBIÇÃO DA ORIGEM NO LUGAR DO CÓDIGO INTERNO -->
                         <div class="pl-1 space-y-0.5">
-                            <p class="text-xs font-black text-slate-900 font-mono tracking-tight group-hover:text-columbia-600 transition-colors">${codInterno}</p>
-                            <p class="text-[11px] font-semibold text-slate-600 line-clamp-2 leading-snug" title="${osNome}">${osNome}</p>
+                            <p class="text-xs font-black text-slate-800 tracking-tight group-hover:text-columbia-600 transition-colors uppercase">
+                                <span class="text-[9px] text-slate-400 font-normal">Origem:</span> ${origem}
+                            </p>
+                            <p class="text-[11px] font-bold text-slate-700 line-clamp-2 leading-snug" title="${osNome}">${osNome}</p>
                         </div>
                     </div>
 
                     <div class="space-y-2 pl-1">
-                        <div class="flex items-center justify-between text-[10px] pt-2 border-t border-slate-100">
+                        <div class="flex items-center justify-between text-[10px] pt-1.5 border-t border-slate-100">
                             <span class="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md border border-slate-200 uppercase">${segmento}</span>
                             <span class="text-slate-500 font-semibold uppercase truncate max-w-[130px]" title="${clienteNome}">${clienteNome}</span>
                         </div>
@@ -876,6 +859,14 @@
                             <p class="font-mono text-[9.5px] leading-tight ${temApontamentoAberto ? 'text-emerald-900 font-bold' : 'text-red-600 italic'}" title="${detalheApontamento}">
                                 ${detalheApontamento}
                             </p>
+                        </div>
+
+                        <!-- V4.2: INFORMAÇÕES DE DATAS DISCRETAS NO RODAPÉ DO CARD EXTERNO -->
+                        <div class="grid grid-cols-2 gap-1 text-[9px] text-slate-400 border-t border-slate-100 pt-1.5 font-medium leading-tight">
+                            <div><span>Abertura:</span> <strong class="text-slate-600">${dtAbertura}</strong></div>
+                            <div><span>Prev. Orç:</span> <strong class="text-slate-600">${dtPrevOrcamento}</strong></div>
+                            <div><span>Renegociada:</span> <strong class="text-purple-700 font-bold">${dtRenegociada}</strong></div>
+                            <div><span>Últ. Apont:</span> <strong class="text-slate-600">${dtUltimoApontamento}</strong></div>
                         </div>
                     </div>
                 </div>
@@ -1019,7 +1010,7 @@
             grid.innerHTML = calendarHTML;
         }
 
-        // VISÃO 2: SEMANA (1 SEMANA SELECIONADA POR VEZ)
+        // VISÃO 2: SEMANA (ORÇADO CRESCENTE PELA DATA NORMALIZADA DA MAIS ANTIGA PARA A MAIS NOVA)
         function renderWeekGrid(filtered) {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1047,6 +1038,13 @@
                 if (!i.entrega_normalizada) return false;
                 const dateKey = String(i.entrega_normalizada).substring(0, 10);
                 return dateKey >= startStr && dateKey <= endStr;
+            });
+
+            // V4.2: ORDENAÇÃO POR DATA NORMALIZADA CRESCENTE (MAIS ANTIGA PRIMEIRO)
+            weekItems.sort((a, b) => {
+                const dateA = a.entrega_normalizada || '';
+                const dateB = b.entrega_normalizada || '';
+                return dateA.localeCompare(dateB);
             });
 
             const weekTotalVal = weekItems.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
@@ -1093,12 +1091,19 @@
             grid.innerHTML = html;
         }
 
-        // VISÃO 3: DIA
+        // VISÃO 3: DIA (ORDENADO CRESCENTE POR DATA NORMALIZADA)
         function renderDayView(filtered) {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
             const dateKey = currentDate.toISOString().substring(0, 10);
             const dayItems = filtered.filter(i => i.entrega_normalizada && String(i.entrega_normalizada).substring(0, 10) === dateKey);
+
+            // V4.2: ORDENAÇÃO POR DATA NORMALIZADA CRESCENTE
+            dayItems.sort((a, b) => {
+                const dateA = a.entrega_normalizada || '';
+                const dateB = b.entrega_normalizada || '';
+                return dateA.localeCompare(dateB);
+            });
 
             let html = `
                 <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
@@ -1310,53 +1315,7 @@
             selectedItemModal = null;
         }
 
-        function openAltRenegociationPasswordModal() {
-            const modal = document.getElementById('altRenegociationPasswordModal');
-            const input = document.getElementById('inputAltRenegociationPassword');
-            const err = document.getElementById('altRenegociationPasswordError');
-            if (input) input.value = '';
-            if (err) err.classList.add('hidden');
-            if (modal) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            }
-        }
-
-        function closeAltRenegociationPasswordModal() {
-            const modal = document.getElementById('altRenegociationPasswordModal');
-            if (modal) {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }
-        }
-
-        function validateAltRenegociationPassword() {
-            const input = document.getElementById('inputAltRenegociationPassword').value;
-            if (input === 'Colmac@alt2026') {
-                closeAltRenegociationPasswordModal();
-                openAltRenegociationFormModal();
-            } else {
-                document.getElementById('altRenegociationPasswordError').classList.remove('hidden');
-            }
-        }
-
-        function checkAltRenegociationPasswordKey(e) {
-            if (e.key === 'Enter') validateAltRenegociationPassword();
-        }
-
-        function toggleAltRenegociationPasswordVisibility() {
-            const input = document.getElementById('inputAltRenegociationPassword');
-            const eye = document.getElementById('altRenegociationEyeIcon');
-            if (input.type === 'password') {
-                input.type = 'text';
-                eye.setAttribute('data-lucide', 'eye-off');
-            } else {
-                input.type = 'password';
-                eye.setAttribute('data-lucide', 'eye');
-            }
-            lucide.createIcons();
-        }
-
+        // V4.2: REMOVIDA A EXIGÊNCIA DE SENHA PARA ALTERAÇÃO DE DATA DE RENEGOCIAÇÃO
         function openAltRenegociationFormModal() {
             if (!selectedItemModal) return;
 
@@ -1387,43 +1346,40 @@
             }
         }
 
+        // V4.2: SUBMIT QUE ENVIARÁ O USUÁRIO LOGADO CONCATENADO AUTOMATICAMENTE NA JUSTIFICATIVA
         async function submitAltRenegociation() {
             if (!selectedItemModal) return;
 
             const newDate = document.getElementById('inputNewRenegociationDate').value;
-            const justification = document.getElementById('textareaJustification').value.trim();
+            const userTexto = document.getElementById('textareaJustification').value.trim();
             const err = document.getElementById('altRenegociationFormError');
             const btnSave = document.getElementById('btnSaveRenegociation');
 
-            if (!justification) {
+            if (!userTexto) {
                 err.textContent = 'A justificativa é obrigatória.';
                 err.classList.remove('hidden');
                 return;
             }
+
+            // Pega o nome do usuário logado do localStorage
+            const usuarioLogado = localStorage.getItem('columbia_usuario_nome') || 'SISTEMA';
+            // Concatena no formato: [USUARIO] Justificativa digitada
+            const justificativaComUsuario = `[${usuarioLogado.toUpperCase()}] ${userTexto}`;
 
             try {
                 btnSave.disabled = true;
                 btnSave.classList.add('opacity-50');
 
                 const patchUrl = `${API_URL}/${selectedItemModal.n_os}/alterar-renegociacao`;
-                const token = localStorage.getItem('columbia_token');
 
                 const response = await fetch(patchUrl, {
                     method: 'PATCH',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         u_data_renegociacao: newDate || null,
-                        U_JUST_ALT_DT_REN: justification
+                        U_JUST_ALT_DT_REN: justificativaComUsuario
                     })
                 });
-
-                if (response.status === 401) {
-                    efetuarLogout();
-                    return;
-                }
 
                 if (!response.ok) {
                     const errorData = await response.json();
