@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V4.2</title>
+    <title>Programação de Produção - Columbia V4.3</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V4.2</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V4.3</p>
                 </div>
             </div>
 
@@ -262,7 +262,7 @@
             </div>
         </div>
 
-        <!-- ÁREA PRINCIPAL DO CALENDÁRIO -->
+        <!-- ÁREA PRINCIPAL DO CALENDÁRIO OU RESULTADO DE BUSCA UNIVERSAL -->
         <div id="calendarGrid" class="w-full">
             <!-- Renderizado via JS conforme a visão selecionada -->
         </div>
@@ -310,7 +310,7 @@
         </div>
     </div>
 
-    <!-- MODAL FORMULÁRIO DE EDICÃO DA DATA RENEGOCIADA & JUSTIFICATIVA (SEM SENHA NA V4.2) -->
+    <!-- MODAL FORMULÁRIO DE EDICÃO DA DATA RENEGOCIADA & JUSTIFICATIVA -->
     <div id="altRenegociationFormModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-[70]">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
             <div class="bg-purple-800 px-5 py-3.5 flex justify-between items-center text-white">
@@ -418,9 +418,17 @@
                         <div><span class="text-slate-500 block">Entrega Normalizada:</span> <span id="mEntregaNorm" class="font-bold text-amber-600"></span></div>
                     </div>
                 </div>
+
+                <!-- V4.3: CAMPO JUSTIFICATIVA EXIBIDO ABAIXO DAS DATAS NO MODAL -->
+                <div class="space-y-1.5 pt-2 border-t border-slate-200">
+                    <h4 class="font-bold text-purple-800 uppercase tracking-wider text-[10px]">Justificativa da Renegociação</h4>
+                    <div class="bg-purple-50/70 border border-purple-200 p-2.5 rounded-xl font-mono text-[11px] text-purple-900 leading-relaxed" id="mJustificativa">
+                        -
+                    </div>
+                </div>
             </div>
 
-            <!-- RODAPÉ DO MODAL (DIRETO PARA FORMULÁRIO NA V4.2) -->
+            <!-- RODAPÉ DO MODAL -->
             <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-between items-center gap-2 shrink-0">
                 <button onclick="openAltRenegociationFormModal()" class="px-3.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
                     <i data-lucide="calendar-cog" class="w-4 h-4"></i>
@@ -439,7 +447,7 @@
         let currentDate = new Date();
         let selectedItemModal = null; 
 
-        // V4.2: VISÃO PADRÃO ALTERADA PARA 'week' (SEMANAL)
+        // VISÃO PADRÃO 'week' (SEMANAL)
         let currentView = localStorage.getItem('columbia_preferred_view') || 'week';
 
         let onlyCurrentMonth = true;
@@ -644,6 +652,13 @@
         function updateDateLabel() {
             const label = document.getElementById('currentDateLabel');
             if (!label) return;
+
+            // Se o usuário estiver pesquisando algo, avisa na label de data
+            const search = (document.getElementById('searchInput')?.value || '').trim();
+            if (search) {
+                label.textContent = "Busca Geral Ativa";
+                return;
+            }
             
             if (currentView === 'month') {
                 const monthStr = currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
@@ -706,7 +721,9 @@
                     const matchPedido = String(item.n_pedido || '').toLowerCase().includes(search);
                     const matchPP = String(item.pp_pendentes || '').toLowerCase().includes(search);
                     const matchApontamento = String(item.apontamentos_abertos_detalhe || '').toLowerCase().includes(search);
-                    if (!matchOS && !matchTitulo && !matchCliente && !matchOrigem && !matchCod && !matchPedido && !matchPP && !matchApontamento) return false;
+                    const matchJustificativa = String(item.justificativa || '').toLowerCase().includes(search);
+                    
+                    if (!matchOS && !matchTitulo && !matchCliente && !matchOrigem && !matchCod && !matchPedido && !matchPP && !matchApontamento && !matchJustificativa) return false;
                 }
 
                 if (atrasadaFiltro) {
@@ -760,22 +777,73 @@
             document.getElementById('metricValorTotal').textContent = formatBRL(valorTotal);
         }
 
+        // V4.3: LÓGICA DE RENDERIZAÇÃO INTELIGENTE (SE ESTIVER PESQUISANDO, MOSTRA RESULTADO GLOBAL)
         function renderView() {
             updateDateLabel();
             const filtered = getFilteredData();
             updateMetrics(filtered);
 
-            if (currentView === 'month') {
-                renderMonthCalendar(filtered);
-            } else if (currentView === 'week') {
-                renderWeekGrid(filtered);
-            } else if (currentView === 'day') {
-                renderDayView(filtered);
+            const search = (document.getElementById('searchInput')?.value || '').trim();
+
+            // SE TIVER PESQUISA ATIVA: Renderiza todas as OSs encontradas ignorando a data
+            if (search) {
+                renderSearchResultsView(filtered);
+            } else {
+                if (currentView === 'month') {
+                    renderMonthCalendar(filtered);
+                } else if (currentView === 'week') {
+                    renderWeekGrid(filtered);
+                } else if (currentView === 'day') {
+                    renderDayView(filtered);
+                }
             }
             lucide.createIcons();
         }
 
-        // COMPONENTE DE CARD DE OS REUSÁVEL V4.2 (SUBSTITUÍDO CÓDIGO INTERNO POR ORIGEM + DATAS DISCRETAS)
+        // V4.3: NOVO RENDERIZADOR DE BUSCA GLOBAL (SEM RESTRIÇÃO DE DATA)
+        function renderSearchResultsView(filtered) {
+            const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
+
+            // Ordena os resultados da busca por ordem crescente de data normalizada
+            filtered.sort((a, b) => {
+                const dateA = a.entrega_normalizada || '';
+                const dateB = b.entrega_normalizada || '';
+                return dateA.localeCompare(dateB);
+            });
+
+            const totalValorBusca = filtered.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
+
+            let html = `
+                <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+                    <div class="flex flex-wrap justify-between items-center border-b border-slate-100 pb-3 mb-4 gap-2">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="search-check" class="w-5 h-5 text-columbia-700"></i>
+                            <h3 class="font-extrabold text-slate-800 text-sm">
+                                Resultado da Busca Global (${filtered.length} OS${filtered.length === 1 ? '' : 's'} Encontradas)
+                            </h3>
+                        </div>
+                        <span class="text-xs font-extrabold text-emerald-600 font-mono">
+                            Total: ${formatBRL(totalValorBusca)}
+                        </span>
+                    </div>
+
+                    ${filtered.length === 0 ? `
+                        <div class="flex flex-col items-center justify-center py-12 text-slate-400 gap-2">
+                            <i data-lucide="file-x" class="w-10 h-10 stroke-1 text-slate-300"></i>
+                            <p class="text-xs font-semibold">Nenhuma Ordem de Serviço encontrada para o termo pesquisado.</p>
+                        </div>
+                    ` : `
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                            ${filtered.map(item => renderOSCard(item)).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+            grid.innerHTML = html;
+        }
+
+        // COMPONENTE DE CARD DE OS REUSÁVEL
         function renderOSCard(item) {
             const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
             const prodStatus = item.status_producao || '0%';
@@ -792,7 +860,6 @@
             const temApontamentoAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
             const detalheApontamento = item.apontamentos_abertos_detalhe || 'Nenhum operador apontando no momento';
 
-            // Mapeamento discreto das datas
             const dtAbertura = formatDate(item.abertura_os);
             const dtPrevOrcamento = formatDate(item.prev_entrega_orcamento);
             const dtRenegociada = formatDate(item.dt_renegociada || item.u_data_renegociacao);
@@ -812,7 +879,6 @@
                             </span>
                         </div>
 
-                        <!-- V4.2: EXIBIÇÃO DA ORIGEM NO LUGAR DO CÓDIGO INTERNO -->
                         <div class="pl-1 space-y-0.5">
                             <p class="text-xs font-black text-slate-800 tracking-tight group-hover:text-columbia-600 transition-colors uppercase">
                                 <span class="text-[9px] text-slate-400 font-normal">Origem:</span> ${origem}
@@ -861,7 +927,7 @@
                             </p>
                         </div>
 
-                        <!-- V4.2: INFORMAÇÕES DE DATAS DISCRETAS NO RODAPÉ DO CARD EXTERNO -->
+                        <!-- DATAS DISCRETAS NO RODAPÉ DO CARD EXTERNO -->
                         <div class="grid grid-cols-2 gap-1 text-[9px] text-slate-400 border-t border-slate-100 pt-1.5 font-medium leading-tight">
                             <div><span>Abertura:</span> <strong class="text-slate-600">${dtAbertura}</strong></div>
                             <div><span>Prev. Orç:</span> <strong class="text-slate-600">${dtPrevOrcamento}</strong></div>
@@ -1010,7 +1076,7 @@
             grid.innerHTML = calendarHTML;
         }
 
-        // VISÃO 2: SEMANA (ORÇADO CRESCENTE PELA DATA NORMALIZADA DA MAIS ANTIGA PARA A MAIS NOVA)
+        // VISÃO 2: SEMANA
         function renderWeekGrid(filtered) {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1040,7 +1106,6 @@
                 return dateKey >= startStr && dateKey <= endStr;
             });
 
-            // V4.2: ORDENAÇÃO POR DATA NORMALIZADA CRESCENTE (MAIS ANTIGA PRIMEIRO)
             weekItems.sort((a, b) => {
                 const dateA = a.entrega_normalizada || '';
                 const dateB = b.entrega_normalizada || '';
@@ -1091,14 +1156,13 @@
             grid.innerHTML = html;
         }
 
-        // VISÃO 3: DIA (ORDENADO CRESCENTE POR DATA NORMALIZADA)
+        // VISÃO 3: DIA
         function renderDayView(filtered) {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
             const dateKey = currentDate.toISOString().substring(0, 10);
             const dayItems = filtered.filter(i => i.entrega_normalizada && String(i.entrega_normalizada).substring(0, 10) === dateKey);
 
-            // V4.2: ORDENAÇÃO POR DATA NORMALIZADA CRESCENTE
             dayItems.sort((a, b) => {
                 const dateA = a.entrega_normalizada || '';
                 const dateB = b.entrega_normalizada || '';
@@ -1267,7 +1331,10 @@
             document.getElementById('mProducao').textContent = safeText(item.status_producao);
             document.getElementById('mPpPendentes').textContent = safeText(item.pp_pendentes);
             
-            // RENDERING DO SEMÁFORO DE APONTAMENTO NO MODAL (VERDE PISCANDO QUANDO TEM / VERMELHO QUANDO NÃO TEM)
+            // V4.3: POPULA O CAMPO JUSTIFICATIVA NO MODAL
+            document.getElementById('mJustificativa').textContent = safeText(item.justificativa);
+
+            // SEMÁFORO DE APONTAMENTO ABERTO NO MODAL
             const temAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
             const containerAp = document.getElementById('mApontamentoContainer');
             const titleAp = document.getElementById('mApontamentoStatusTitle');
@@ -1315,7 +1382,6 @@
             selectedItemModal = null;
         }
 
-        // V4.2: REMOVIDA A EXIGÊNCIA DE SENHA PARA ALTERAÇÃO DE DATA DE RENEGOCIAÇÃO
         function openAltRenegociationFormModal() {
             if (!selectedItemModal) return;
 
@@ -1346,7 +1412,6 @@
             }
         }
 
-        // V4.2: SUBMIT QUE ENVIARÁ O USUÁRIO LOGADO CONCATENADO AUTOMATICAMENTE NA JUSTIFICATIVA
         async function submitAltRenegociation() {
             if (!selectedItemModal) return;
 
@@ -1361,9 +1426,7 @@
                 return;
             }
 
-            // Pega o nome do usuário logado do localStorage
             const usuarioLogado = localStorage.getItem('columbia_usuario_nome') || 'SISTEMA';
-            // Concatena no formato: [USUARIO] Justificativa digitada
             const justificativaComUsuario = `[${usuarioLogado.toUpperCase()}] ${userTexto}`;
 
             try {
