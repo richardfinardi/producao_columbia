@@ -32,14 +32,12 @@
         <form id="loginForm" onsubmit="handleLogin(event)" class="p-6 space-y-4 text-xs">
             <div>
                 <label class="block font-bold text-slate-700 mb-1">Usuário:</label>
-                <!-- Força visualmente em maiúsculo -->
                 <input type="text" id="inputUsuario" required placeholder="Digite seu usuário GRV..." 
                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-800 text-xs focus:outline-none focus:border-columbia-700 font-bold uppercase">
             </div>
 
             <div>
                 <label class="block font-bold text-slate-700 mb-1">Senha:</label>
-                <!-- Senha aceita maiúsculas, minúsculas e símbolos sem alterar -->
                 <input type="password" id="inputSenha" required placeholder="Digite sua senha GRV..." 
                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-800 text-xs focus:outline-none focus:border-columbia-700 font-medium">
             </div>
@@ -55,9 +53,7 @@
     <script>
         async function handleLogin(e) {
             e.preventDefault();
-            // USUÁRIO: Força UPPERCASE
             const usuario = document.getElementById('inputUsuario').value.trim().toUpperCase();
-            // SENHA: Pura como foi digitada
             const senha = document.getElementById('inputSenha').value;
             
             const msgError = document.getElementById('msgError');
@@ -80,13 +76,12 @@
                     throw new Error(data.detail || 'Usuário ou senha inválidos.');
                 }
 
-                // Salva Token, Nome do Usuário e Permissões das Páginas no localStorage
+                // Salva Token, Nome do Usuário e Permissões U_FATURAMENTO / U_FINALIZACAO no localStorage
                 localStorage.setItem('columbia_token', data.access_token);
                 localStorage.setItem('columbia_usuario_nome', data.usuario);
                 localStorage.setItem('columbia_perm_faturamento', data.u_faturamento ?? 0);
                 localStorage.setItem('columbia_perm_finalizacao', data.u_finalizacao ?? 0);
 
-                // Redireciona para o Dashboard Principal
                 window.location.href = 'index.html';
 
             } catch (error) {
