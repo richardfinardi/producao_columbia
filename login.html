@@ -33,7 +33,7 @@
             <div>
                 <label class="block font-bold text-slate-700 mb-1">Usuário:</label>
                 <!-- Força visualmente em maiúsculo -->
-                <input type="text" id="inputUsuario" required placeholder="Digite seu usúario GRV..." 
+                <input type="text" id="inputUsuario" required placeholder="Digite seu usuário GRV..." 
                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-800 text-xs focus:outline-none focus:border-columbia-700 font-bold uppercase">
             </div>
 
@@ -80,9 +80,13 @@
                     throw new Error(data.detail || 'Usuário ou senha inválidos.');
                 }
 
+                // Salva Token, Nome do Usuário e Permissões das Páginas no localStorage
                 localStorage.setItem('columbia_token', data.access_token);
                 localStorage.setItem('columbia_usuario_nome', data.usuario);
+                localStorage.setItem('columbia_perm_faturamento', data.u_faturamento ?? 0);
+                localStorage.setItem('columbia_perm_finalizacao', data.u_finalizacao ?? 0);
 
+                // Redireciona para o Dashboard Principal
                 window.location.href = 'index.html';
 
             } catch (error) {
