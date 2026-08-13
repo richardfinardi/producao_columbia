@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V3.4</title>
+    <title>Programação de Produção - Columbia V3.5</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V3.4</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V3.5</p>
                 </div>
             </div>
 
@@ -117,6 +117,16 @@
                 <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
                 <input type="text" id="searchInput" oninput="renderView()" placeholder="Pesquisar (OS, Título, Cliente, Origem, Cod. Interno...)" 
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
+            </div>
+
+            <!-- Filtro por Prazo / Atraso -->
+            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
+                <select id="atrasoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[140px] font-medium">
+                    <option value="">Prazo (Todos)</option>
+                    <option value="atrasado">Somente Atrasados</option>
+                    <option value="no_prazo">Somente No Prazo</option>
+                </select>
             </div>
 
             <!-- Filtro por Segmento -->
@@ -464,6 +474,7 @@
 
             const savedFilters = {
                 search: document.getElementById('searchInput')?.value || '',
+                atraso: document.getElementById('atrasoFilter')?.value || '',
                 segmento: document.getElementById('segmentoFilter')?.value || '',
                 producao: document.getElementById('producaoFilter')?.value || '',
                 cliente: document.getElementById('clientFilter')?.value || '',
@@ -542,6 +553,11 @@
             const producaoSelect = document.getElementById('producaoFilter');
             if (producaoSelect && savedFilters.producao) {
                 producaoSelect.value = savedFilters.producao;
+            }
+
+            const atrasoSelect = document.getElementById('atrasoFilter');
+            if (atrasoSelect && savedFilters.atraso) {
+                atrasoSelect.value = savedFilters.atraso;
             }
         }
 
@@ -625,6 +641,7 @@
 
         function getFilteredData() {
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+            const atraso = document.getElementById('atrasoFilter')?.value || '';
             const segmento = document.getElementById('segmentoFilter')?.value || '';
             const producao = document.getElementById('producaoFilter')?.value || '';
             const cliente = document.getElementById('clientFilter')?.value || '';
@@ -642,6 +659,13 @@
                     const matchPedido = String(item.n_pedido || '').toLowerCase().includes(search);
                     const matchPP = String(item.pp_pendentes || '').toLowerCase().includes(search);
                     if (!matchOS && !matchTitulo && !matchCliente && !matchOrigem && !matchCod && !matchPedido && !matchPP) return false;
+                }
+
+                // FILTRO DE PRAZO / ATRASO
+                if (atraso) {
+                    const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
+                    if (atraso === 'atrasado' && !isAtrasado) return false;
+                    if (atraso === 'no_prazo' && isAtrasado) return false;
                 }
 
                 if (segmento && (item.segmento || '') !== segmento) return false;
@@ -698,7 +722,7 @@
             lucide.createIcons();
         }
 
-        // COMPONENTE DE CARD DE OS REUSÁVEL (RECEPTOR DO CAMPO PP_PENDENTES)
+        // COMPONENTE DE CARD DE OS REUSÁVEL
         function renderOSCard(item) {
             const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
             const prodStatus = item.status_producao || '0%';
@@ -1026,6 +1050,7 @@
 
         function clearAllFilters() {
             document.getElementById('searchInput').value = '';
+            document.getElementById('atrasoFilter').value = '';
             document.getElementById('segmentoFilter').value = '';
             document.getElementById('producaoFilter').value = '';
             document.getElementById('clientFilter').value = '';
