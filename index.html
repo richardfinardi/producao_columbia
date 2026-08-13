@@ -7,7 +7,7 @@
     <!-- Favicon (Ícone da Aba do Navegador) -->
     <link rel="icon" type="image/png" href="LOGO MINIMALISTA.png">
     <link rel="apple-touch-icon" href="LOGO MINIMALISTA.png">
-<!-- TESTE -->
+
     <!-- Meta Tags para Prévia no WhatsApp / Redes Sociais (Open Graph) -->
     <meta property="og:title" content="Controle Semanal de Produção | Consultoria RF">
     <meta property="og:description" content="Dashboard de acompanhamento e controle de produção.">
@@ -18,7 +18,15 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V4.0</title>
+    <title>Programação de Produção - Columbia V4.1</title>
+
+    <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
+    <script>
+        if (!localStorage.getItem('columbia_token')) {
+            window.location.href = 'login.html';
+        }
+    </script>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -65,12 +73,18 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V4.0</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V4.1</p>
                 </div>
             </div>
 
             <!-- Botões de Ação do Topo -->
             <div class="flex items-center gap-2">
+                <!-- Identificação do Usuário Logado -->
+                <div class="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-columbia-800 border border-columbia-600 rounded-xl text-xs font-bold text-slate-200">
+                    <i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i>
+                    <span id="userDisplayName">Usuário</span>
+                </div>
+
                 <!-- Botão Trava / Exibir Valores -->
                 <button id="btnToggleValues" onclick="handleValueVisibility()" class="flex items-center gap-2 px-3 py-2 bg-columbia-800 hover:bg-columbia-900 border border-columbia-600 text-white rounded-xl font-bold text-xs transition shadow">
                     <i data-lucide="eye-off" class="w-4 h-4 text-amber-400" id="iconValueVisibility"></i>
@@ -80,6 +94,12 @@
                 <!-- Botão Atualizar -->
                 <button id="btnRefresh" onclick="fetchData()" class="flex items-center gap-2 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-all shadow" title="Atualizar Dados">
                     <i data-lucide="refresh-cw" class="w-4 h-4" id="refreshIcon"></i>
+                </button>
+
+                <!-- Botão Sair / Logout -->
+                <button onclick="efetuarLogout()" class="flex items-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs transition shadow" title="Sair do Sistema">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Sair</span>
                 </button>
             </div>
         </div>
@@ -459,10 +479,23 @@
         let isValuesUnlocked = false;
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Exibe o nome do usuário logado na barra do topo
+            const nomeUser = localStorage.getItem('columbia_usuario_nome');
+            if (nomeUser) {
+                const displayEl = document.getElementById('userDisplayName');
+                if (displayEl) displayEl.textContent = nomeUser;
+            }
+
             lucide.createIcons();
             setViewMode(currentView, false);
             fetchData();
         });
+
+        function efetuarLogout() {
+            localStorage.removeItem('columbia_token');
+            localStorage.removeItem('columbia_usuario_nome');
+            window.location.href = 'login.html';
+        }
 
         // HELPER FORMATADOR DE DATAS (LIMPA NaT, STAMPS ISO E RETORNA DD/MM/YYYY)
         function formatDate(dtStr) {
@@ -486,7 +519,7 @@
             return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
         }
 
-        // REQUISIÇÃO COM BYPASS DE CACHE E MANUTENÇÃO DE ESTADO DE FILTROS
+        // REQUISIÇÃO COM BYPASS DE CACHE, TOKEN DE AUTENTICAÇÃO E MANUTENÇÃO DE FILTROS
         async function fetchData() {
             const refreshIcon = document.getElementById('refreshIcon');
             const btnRefresh = document.getElementById('btnRefresh');
@@ -507,15 +540,23 @@
             };
 
             try {
+                const token = localStorage.getItem('columbia_token');
                 const cacheBusterUrl = `${API_URL}?_t=${Date.now()}`;
+                
                 const response = await fetch(cacheBusterUrl, {
                     cache: 'no-store',
                     headers: {
+                        'Authorization': `Bearer ${token}`,
                         'Cache-Control': 'no-cache, no-store, must-revalidate',
                         'Pragma': 'no-cache',
                         'Expires': '0'
                     }
                 });
+
+                if (response.status === 401) {
+                    efetuarLogout();
+                    return;
+                }
 
                 if (!response.ok) {
                     throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
@@ -1365,14 +1406,24 @@
                 btnSave.classList.add('opacity-50');
 
                 const patchUrl = `${API_URL}/${selectedItemModal.n_os}/alterar-renegociacao`;
+                const token = localStorage.getItem('columbia_token');
+
                 const response = await fetch(patchUrl, {
                     method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({
                         u_data_renegociacao: newDate || null,
                         U_JUST_ALT_DT_REN: justification
                     })
                 });
+
+                if (response.status === 401) {
+                    efetuarLogout();
+                    return;
+                }
 
                 if (!response.ok) {
                     const errorData = await response.json();
