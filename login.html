@@ -26,19 +26,21 @@
                 <img src="./logo.png" alt="Columbia Machine" class="h-10 object-contain bg-white p-1 rounded-xl shadow-xs" onerror="this.style.display='none'">
             </div>
             <h1 class="text-xl font-extrabold tracking-wide">Columbia Machine Brasil</h1>
-            <p class="text-xs text-slate-200 mt-1">Acesso ao Controle de Produção</p>
+            <p class="text-xs text-columbia-100 mt-1">Acesso ao Controle de Produção</p>
         </div>
 
         <form id="loginForm" onsubmit="handleLogin(event)" class="p-6 space-y-4 text-xs">
             <div>
-                <label class="block font-bold text-slate-700 mb-1">Usuário (Mesmo do GRV):</label>
-                <input type="text" id="inputUsuario" required placeholder="Digite seu usuário..." 
+                <label class="block font-bold text-slate-700 mb-1">Usuário:</label>
+                <!-- Força visualmente em maiúsculo -->
+                <input type="text" id="inputUsuario" required placeholder="Digite seu usúario GRV..." 
                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-800 text-xs focus:outline-none focus:border-columbia-700 font-bold uppercase">
             </div>
 
             <div>
-                <label class="block font-bold text-slate-700 mb-1">Senha: (mesma do GRV)</label>
-                <input type="password" id="inputSenha" required placeholder="Digite sua senha..." 
+                <label class="block font-bold text-slate-700 mb-1">Senha:</label>
+                <!-- Senha aceita maiúsculas, minúsculas e símbolos sem alterar -->
+                <input type="password" id="inputSenha" required placeholder="Digite sua senha GRV..." 
                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-800 text-xs focus:outline-none focus:border-columbia-700 font-medium">
             </div>
 
@@ -53,8 +55,11 @@
     <script>
         async function handleLogin(e) {
             e.preventDefault();
-            const usuario = document.getElementById('inputUsuario').value.trim();
-            const senha = document.getElementById('inputSenha').value.trim();
+            // USUÁRIO: Força UPPERCASE
+            const usuario = document.getElementById('inputUsuario').value.trim().toUpperCase();
+            // SENHA: Pura como foi digitada
+            const senha = document.getElementById('inputSenha').value;
+            
             const msgError = document.getElementById('msgError');
             const btnLogin = document.getElementById('btnLogin');
 
@@ -75,11 +80,9 @@
                     throw new Error(data.detail || 'Usuário ou senha inválidos.');
                 }
 
-                // Salva o Token JWT no navegador
                 localStorage.setItem('columbia_token', data.access_token);
                 localStorage.setItem('columbia_usuario_nome', data.usuario);
 
-                // Redireciona para o Dashboard
                 window.location.href = 'index.html';
 
             } catch (error) {
