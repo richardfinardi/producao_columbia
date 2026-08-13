@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V3.1</title>
+    <title>Programação de Produção - Columbia V3.2</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V3.1</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V3.2</p>
                 </div>
             </div>
 
@@ -200,7 +200,7 @@
                 
                 <div class="flex items-center gap-2 px-3">
                     <i data-lucide="calendar" class="w-4 h-4 text-columbia-100"></i>
-                    <span id="currentDateLabel" class="font-bold text-xs capitalize tracking-wide min-w-[140px] text-center">
+                    <span id="currentDateLabel" class="font-bold text-xs capitalize tracking-wide min-w-[160px] text-center">
                         Carregando...
                     </span>
                 </div>
@@ -352,7 +352,7 @@
                 <button onclick="closeModal()" class="text-columbia-100 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
-            <!-- CORPO DO MODAL (ROLÁVEL COM SCROLLBAR CUSTOMIZADA) -->
+            <!-- CORPO DO MODAL -->
             <div class="p-5 space-y-3 text-xs overflow-y-auto custom-scroll flex-1">
                 <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
                     <div><span class="text-slate-500 block font-semibold">Nº Pedido</span><span id="mPedido" class="font-bold text-slate-800"></span></div>
@@ -392,9 +392,8 @@
                 </div>
             </div>
 
-            <!-- RODAPÉ DO MODAL (FIXO) -->
+            <!-- RODAPÉ DO MODAL -->
             <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-between items-center gap-2 shrink-0">
-                <!-- Botão Alterar Data Renegociada -->
                 <button onclick="openAltRenegociationPasswordModal()" class="px-3.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
                     <i data-lucide="calendar-cog" class="w-4 h-4"></i>
                     <span>Alterar Dt. Renegociada</span>
@@ -405,6 +404,7 @@
         </div>
     </div>
 
+    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO -->
     <script>
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         let rawData = [];
@@ -556,8 +556,10 @@
         }
 
         function navigateDate(delta) {
-            if (currentView === 'month' || currentView === 'week') {
+            if (currentView === 'month') {
                 currentDate.setMonth(currentDate.getMonth() + delta);
+            } else if (currentView === 'week') {
+                currentDate.setDate(currentDate.getDate() + (delta * 7));
             } else if (currentView === 'day') {
                 currentDate.setDate(currentDate.getDate() + delta);
             }
@@ -573,11 +575,25 @@
             const label = document.getElementById('currentDateLabel');
             if (!label) return;
             
-            if (currentView === 'month' || currentView === 'week') {
+            if (currentView === 'month') {
                 const monthStr = currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
                 label.textContent = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
+            } else if (currentView === 'week') {
+                const targetDate = new Date(currentDate);
+                let dayOfWeek = targetDate.getDay() - 1;
+                if (dayOfWeek === -1) dayOfWeek = 6;
+                const wStart = new Date(targetDate);
+                wStart.setDate(wStart.getDate() - dayOfWeek);
+                const wEnd = new Date(wStart);
+                wEnd.setDate(wEnd.getDate() + 6);
+
+                const weekNum = getISOWeekNumber(wStart);
+                const fmtDay = (d) => String(d.getDate()).padStart(2, '0');
+                const fmtMonth = (d) => String(d.getMonth() + 1).padStart(2, '0');
+
+                label.textContent = `Semana ${weekNum} (${fmtDay(wStart)}/${fmtMonth(wStart)} - ${fmtDay(wEnd)}/${fmtMonth(wEnd)})`;
             } else if (currentView === 'day') {
-                label.textContent = currentDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
+                label.textContent = currentDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
             }
         }
 
@@ -635,7 +651,7 @@
 
                 if (onlyWithBudget) {
                     const hasB = String(item.possui_orcamento || '').toLowerCase();
-                    if (hasB !== 'sim' && hasB !== 's' && hasB !== '1');
+                    if (hasB !== 'sim' && hasB !== 's' && hasB !== '1') return false;
                 }
 
                 return true;
@@ -673,7 +689,57 @@
             lucide.createIcons();
         }
 
-        // VISÃO 1: MÊS
+        // COMPONENTE DE CARD DE OS REUSÁVEL
+        function renderOSCard(item) {
+            const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
+            const prodStatus = item.status_producao || '0%';
+            const clienteNome = item.cliente || 'CLIENTE NÃO INFORMADO';
+            const codInterno = item.cod_interno || 'S/ CÓDIGO';
+            const osNome = item.titulo || 'SEM NOME';
+            const segmento = item.segmento || 'GERAL';
+
+            const compras = item.status_compras || 'N/A';
+            const terceiros = item.status_terceiros || 'N/A';
+            const engenharia = item.engenharia_status || 'N/A';
+
+            return `
+                <div onclick="openModal('${item.n_os}')" class="group bg-white border border-slate-200 hover:border-columbia-500 hover:shadow-md p-3.5 rounded-2xl cursor-pointer transition-all duration-200 flex flex-col justify-between gap-3 relative overflow-hidden">
+                    <div class="absolute left-0 top-0 bottom-0 w-1.5 ${isAtrasado ? 'bg-red-500' : 'bg-emerald-500'}"></div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5 pl-1">
+                            <span class="font-mono text-xs font-extrabold text-columbia-700 bg-columbia-50 px-2 py-0.5 rounded-lg border border-columbia-100">
+                                OS ${item.n_os}
+                            </span>
+                            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full ${isAtrasado ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}">
+                                ${isAtrasado ? 'Atrasado' : 'No prazo'}
+                            </span>
+                        </div>
+
+                        <div class="pl-1 space-y-0.5">
+                            <p class="text-xs font-black text-slate-900 font-mono tracking-tight group-hover:text-columbia-600 transition-colors">${codInterno}</p>
+                            <p class="text-[11px] font-semibold text-slate-600 line-clamp-2 leading-snug" title="${osNome}">${osNome}</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pl-1">
+                        <div class="flex items-center justify-between text-[10px] pt-2 border-t border-slate-100">
+                            <span class="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md border border-slate-200 uppercase">${segmento}</span>
+                            <span class="text-slate-500 font-semibold uppercase truncate max-w-[130px]" title="${clienteNome}">${clienteNome}</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-1 text-[10px] bg-slate-50/80 p-2.5 rounded-xl border border-slate-100 font-medium">
+                            <div class="flex justify-between items-center"><span class="text-slate-400 font-bold">Compras:</span> <span class="font-bold text-slate-700 truncate max-w-[140px]">${compras}</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-400 font-bold">Terceiros:</span> <span class="font-bold text-slate-700 truncate max-w-[140px]">${terceiros}</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-400 font-bold">Engenharia:</span> <span class="font-bold text-slate-700 truncate max-w-[140px]">${engenharia}</span></div>
+                            <div class="flex justify-between items-center pt-1 border-t border-slate-200/60 mt-0.5"><span class="text-slate-500 font-extrabold">Produção:</span> <span class="font-black text-columbia-700 font-mono text-xs">${prodStatus}</span></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // VISÃO 1: MÊS (SEM SEMANAS PASSADAS ZERADAS)
         function renderMonthCalendar(filtered) {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -733,6 +799,7 @@
                 allWeeks.push(currentWeek);
             }
 
+            // Oculta semanas vazias passadas se onlyCurrentMonth estiver ativo
             const weeksToRender = onlyCurrentMonth ? allWeeks.filter(week => {
                 const temOSNaSemana = week.some(d => !d.isPadding && d.dayItems.length > 0);
                 const contemHojeOuFuturo = week.some(d => !d.isPadding && d.dateKey >= todayStr);
@@ -810,125 +877,81 @@
             grid.innerHTML = calendarHTML;
         }
 
-        // VISÃO 2: SEMANA
+        // VISÃO 2: SEMANA (1 SEMANA POR VEZ)
         function renderWeekGrid(filtered) {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
 
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
+            const targetDate = new Date(currentDate);
+            let dayOfWeek = targetDate.getDay() - 1; 
+            if (dayOfWeek === -1) dayOfWeek = 6;
 
-            const firstDayOfMonth = new Date(year, month, 1);
-            const lastDayOfMonth = new Date(year, month + 1, 0);
+            const wStart = new Date(targetDate);
+            wStart.setDate(wStart.getDate() - dayOfWeek);
 
-            let cursor = new Date(firstDayOfMonth);
-            let dayOfWeek = cursor.getDay() - 1; 
-            if (dayOfWeek === -1) dayOfWeek = 6; 
-            cursor.setDate(cursor.getDate() - dayOfWeek);
+            const wEnd = new Date(wStart);
+            wEnd.setDate(wEnd.getDate() + 6);
 
-            const weeks = [];
+            const weekNum = getISOWeekNumber(wStart);
 
-            while (cursor <= lastDayOfMonth) {
-                const wStart = new Date(cursor);
-                const wEnd = new Date(cursor);
-                wEnd.setDate(wEnd.getDate() + 6);
+            const fmtDay = (d) => String(d.getDate()).padStart(2, '0');
+            const fmtMonth = (d) => String(d.getMonth() + 1).padStart(2, '0');
+            
+            const startStr = `${wStart.getFullYear()}-${fmtMonth(wStart)}-${fmtDay(wStart)}`;
+            const endStr = `${wEnd.getFullYear()}-${fmtMonth(wEnd)}-${fmtDay(wEnd)}`;
+            const rangeText = `${fmtDay(wStart)}/${fmtMonth(wStart)} a ${fmtDay(wEnd)}/${fmtMonth(wEnd)}/${wStart.getFullYear()}`;
 
-                const weekNum = getISOWeekNumber(wStart);
-
-                weeks.push({
-                    weekNum: weekNum,
-                    startDate: wStart,
-                    endDate: wEnd
-                });
-
-                cursor.setDate(cursor.getDate() + 7);
-            }
-
-            let html = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">`;
-
-            weeks.forEach(w => {
-                const fmtDay = (d) => String(d.getDate()).padStart(2, '0');
-                const fmtMonth = (d) => String(d.getMonth() + 1).padStart(2, '0');
-                
-                const startStr = `${w.startDate.getFullYear()}-${fmtMonth(w.startDate)}-${fmtDay(w.startDate)}`;
-                const endStr = `${w.endDate.getFullYear()}-${fmtMonth(w.endDate)}-${fmtDay(w.endDate)}`;
-                
-                const rangeText = `${fmtDay(w.startDate)}/${fmtMonth(w.startDate)} A ${fmtDay(w.endDate)}/${fmtMonth(w.endDate)}`;
-
-                const weekItems = filtered.filter(i => {
-                    if (!i.entrega_normalizada) return false;
-                    const dateKey = String(i.entrega_normalizada).substring(0, 10);
-                    return dateKey >= startStr && dateKey <= endStr;
-                });
-
-                const weekTotalVal = weekItems.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
-
-                html += `
-                    <div class="bg-slate-100/70 border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col">
-                        <div class="bg-columbia-700 text-white p-3 flex justify-between items-center shadow-xs">
-                            <div>
-                                <h4 class="font-extrabold text-xs tracking-wider uppercase">SEMANA ${w.weekNum} (${rangeText})</h4>
-                            </div>
-                            <span class="bg-columbia-900 text-white text-[10px] font-mono font-extrabold px-2 py-0.5 rounded-full border border-columbia-600">
-                                ${weekItems.length} OS
-                            </span>
-                        </div>
-
-                        <div class="bg-white px-3 py-2 border-b border-slate-200 flex justify-between items-center text-xs">
-                            <span class="text-slate-500 font-bold">Previsto:</span>
-                            <span class="font-extrabold text-emerald-600">${formatBRL(weekTotalVal)}</span>
-                        </div>
-
-                        <div class="p-2 space-y-2.5 flex-1 overflow-y-auto max-h-[600px] custom-scroll">
-                            ${weekItems.length === 0 ? '<p class="text-[11px] text-slate-400 italic text-center py-6">Nenhuma OS nesta semana</p>' : ''}
-                            ${weekItems.map(item => {
-                                const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim';
-                                const prodStatus = item.status_producao || '0%';
-                                const clienteNome = item.cliente || 'CLIENTE NÃO INFORMADO';
-                                const codInterno = item.cod_interno || 'S/ CODIGO';
-                                const osNome = item.titulo || 'SEM NOME';
-                                const segmento = item.segmento || 'GERAL';
-
-                                const compras = item.status_compras || 'N/A';
-                                const terceiros = item.status_terceiros || 'N/A';
-                                const engenharia = item.engenharia_status || 'N/A';
-
-                                return `
-                                    <div onclick="openModal('${item.n_os}')" class="bg-white border border-slate-200 hover:border-columbia-500 p-3 rounded-xl cursor-pointer transition shadow-xs flex flex-col gap-2">
-                                        <div class="flex justify-between items-center">
-                                            <span class="font-mono text-xs font-extrabold text-columbia-700">OS ${item.n_os}</span>
-                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${isAtrasado ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}">
-                                                ${isAtrasado ? 'Atrasado' : 'No prazo'}
-                                            </span>
-                                        </div>
-
-                                        <p class="text-xs font-extrabold text-slate-900 font-mono leading-tight">${codInterno}</p>
-                                        <p class="text-[11px] font-bold text-slate-700 line-clamp-2 leading-tight">${osNome}</p>
-
-                                        <div class="flex items-center justify-between text-[10px] border-b border-slate-100 pb-2">
-                                            <span class="bg-slate-100 text-slate-700 font-extrabold px-1.5 py-0.5 rounded border border-slate-200 uppercase">${segmento}</span>
-                                            <span class="text-slate-500 font-bold uppercase truncate max-w-[140px]" title="${clienteNome}">${clienteNome}</span>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 gap-1 text-[10px] bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                            <div class="flex justify-between items-center"><span class="text-slate-400 font-semibold">Compras:</span> <span class="font-extrabold text-slate-700 truncate max-w-[150px]">${compras}</span></div>
-                                            <div class="flex justify-between items-center"><span class="text-slate-400 font-semibold">Terceiros:</span> <span class="font-extrabold text-slate-700 truncate max-w-[150px]">${terceiros}</span></div>
-                                            <div class="flex justify-between items-center"><span class="text-slate-400 font-semibold">Engenharia:</span> <span class="font-extrabold text-slate-700 truncate max-w-[150px]">${engenharia}</span></div>
-                                            <div class="flex justify-between items-center pt-0.5 border-t border-slate-200/60 mt-0.5"><span class="text-slate-400 font-semibold">Produção:</span> <span class="font-extrabold text-columbia-700 font-mono">${prodStatus}</span></div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                `;
+            const weekItems = filtered.filter(i => {
+                if (!i.entrega_normalizada) return false;
+                const dateKey = String(i.entrega_normalizada).substring(0, 10);
+                return dateKey >= startStr && dateKey <= endStr;
             });
 
-            html += `</div>`;
+            const weekTotalVal = weekItems.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
+
+            let html = `
+                <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-md flex flex-col">
+                    <div class="bg-columbia-700 text-white p-4 flex flex-wrap justify-between items-center gap-3">
+                        <div class="flex items-center gap-3">
+                            <span class="bg-columbia-900 border border-columbia-500 text-white font-extrabold text-sm px-3 py-1 rounded-xl shadow-xs">
+                                Semana ${weekNum}
+                            </span>
+                            <div>
+                                <h4 class="font-extrabold text-sm tracking-wide">Programação Semanal</h4>
+                                <p class="text-xs text-columbia-100 font-medium">${rangeText}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <span class="text-[10px] uppercase font-bold text-columbia-200 block">Total Previsto na Semana</span>
+                                <span class="text-base font-extrabold text-emerald-300 font-mono">${formatBRL(weekTotalVal)}</span>
+                            </div>
+                            <span class="bg-columbia-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl border border-columbia-600">
+                                ${weekItems.length} OS${weekItems.length === 1 ? '' : 's'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-50/50">
+                        ${weekItems.length === 0 ? `
+                            <div class="flex flex-col items-center justify-center py-16 text-slate-400 gap-2">
+                                <i data-lucide="calendar-x" class="w-10 h-10 stroke-1 text-slate-300"></i>
+                                <p class="text-xs font-semibold">Nenhuma Ordem de Serviço agendada para esta semana.</p>
+                            </div>
+                        ` : `
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                                ${weekItems.map(item => renderOSCard(item)).join('')}
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+
             grid.innerHTML = html;
         }
 
-        // VISÃO 3: DIA (ATUALIZADA PARA FICAR IDENTICA À VISÃO DE SEMANA)
+        // VISÃO 3: DIA
         function renderDayView(filtered) {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -938,57 +961,16 @@
             let html = `
                 <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
                     <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-                        <h3 class="font-bold text-slate-700 text-sm">Ordens de Serviço do Dia (${dayItems.length})</h3>
-                        <span class="text-xs font-extrabold text-emerald-600">${formatBRL(dayItems.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0))}</span>
+                        <h3 class="font-extrabold text-slate-800 text-sm">Ordens de Serviço do Dia (${dayItems.length})</h3>
+                        <span class="text-xs font-extrabold text-emerald-600 font-mono">${formatBRL(dayItems.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0))}</span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                        ${dayItems.length === 0 ? '<p class="text-xs text-slate-400 italic col-span-full text-center py-8">Nenhuma Ordem de Serviço agendada para este dia.</p>' : ''}
-                        ${dayItems.map(item => {
-                            const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim';
-                            const prodStatus = item.status_producao || '0%';
-                            const clienteNome = item.cliente || 'CLIENTE NÃO INFORMADO';
-                            const codInterno = item.cod_interno || 'S/ CODIGO';
-                            const osNome = item.titulo || 'SEM NOME';
-                            const segmento = item.segmento || 'GERAL';
-
-                            const compras = item.status_compras || 'N/A';
-                            const terceiros = item.status_terceiros || 'N/A';
-                            const engenharia = item.engenharia_status || 'N/A';
-
-                            return `
-                                <div onclick="openModal('${item.n_os}')" class="bg-white border border-slate-200 hover:border-columbia-500 p-3 rounded-xl cursor-pointer transition shadow-xs flex flex-col gap-2">
-                                    <!-- TOPO DO CARD: NUMERO DA OS E BADGE DE ATRASADO -->
-                                    <div class="flex justify-between items-center">
-                                        <span class="font-mono text-xs font-extrabold text-columbia-700">OS ${item.n_os}</span>
-                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${isAtrasado ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}">
-                                            ${isAtrasado ? 'Atrasado' : 'No prazo'}
-                                        </span>
-                                    </div>
-
-                                    <!-- CODIGO INTERNO -->
-                                    <p class="text-xs font-extrabold text-slate-900 font-mono leading-tight">${codInterno}</p>
-
-                                    <!-- NOME DA OS -->
-                                    <p class="text-[11px] font-bold text-slate-700 line-clamp-2 leading-tight">${osNome}</p>
-
-                                    <!-- SEGMENTO E CLIENTE -->
-                                    <div class="flex items-center justify-between text-[10px] border-b border-slate-100 pb-2">
-                                        <span class="bg-slate-100 text-slate-700 font-extrabold px-1.5 py-0.5 rounded border border-slate-200 uppercase">${segmento}</span>
-                                        <span class="text-slate-500 font-bold uppercase truncate max-w-[140px]" title="${clienteNome}">${clienteNome}</span>
-                                    </div>
-
-                                    <!-- RESUMO DAS OPERAÇÕES DA OS -->
-                                    <div class="grid grid-cols-1 gap-1 text-[10px] bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                        <div class="flex justify-between items-center"><span class="text-slate-400 font-semibold">Compras:</span> <span class="font-extrabold text-slate-700 truncate max-w-[150px]">${compras}</span></div>
-                                        <div class="flex justify-between items-center"><span class="text-slate-400 font-semibold">Terceiros:</span> <span class="font-extrabold text-slate-700 truncate max-w-[150px]">${terceiros}</span></div>
-                                        <div class="flex justify-between items-center"><span class="text-slate-400 font-semibold">Engenharia:</span> <span class="font-extrabold text-slate-700 truncate max-w-[150px]">${engenharia}</span></div>
-                                        <!-- PRODUÇÃO LOGO ABAIXO DE ENGENHARIA -->
-                                        <div class="flex justify-between items-center pt-0.5 border-t border-slate-200/60 mt-0.5"><span class="text-slate-400 font-semibold">Produção:</span> <span class="font-extrabold text-columbia-700 font-mono">${prodStatus}</span></div>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
+                    ${dayItems.length === 0 ? `
+                        <p class="text-xs text-slate-400 italic text-center py-12">Nenhuma Ordem de Serviço agendada para este dia.</p>
+                    ` : `
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                            ${dayItems.map(item => renderOSCard(item)).join('')}
+                        </div>
+                    `}
                 </div>
             `;
             grid.innerHTML = html;
