@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V3.5</title>
+    <title>Programação de Produção - Columbia V3.6</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V3.5</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V3.6</p>
                 </div>
             </div>
 
@@ -119,13 +119,13 @@
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
             </div>
 
-            <!-- Filtro por Prazo / Atraso -->
+            <!-- FILTRO DE APONTAMENTO ABERTO -->
             <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
-                <select id="atrasoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[140px] font-medium">
-                    <option value="">Prazo (Todos)</option>
-                    <option value="atrasado">Somente Atrasados</option>
-                    <option value="no_prazo">Somente No Prazo</option>
+                <i data-lucide="cog" class="w-4 h-4 text-slate-400"></i>
+                <select id="apontamentoAbertoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[170px] font-bold">
+                    <option value="">Apontamento Aberto (Todos)</option>
+                    <option value="sim">🟢 Com Apontamento Aberto</option>
+                    <option value="nao">🔴 Sem Apontamento Aberto</option>
                 </select>
             </div>
 
@@ -396,6 +396,18 @@
                     </div>
                 </div>
 
+                <!-- SEMÁFORO E DETALHES DE APONTAMENTO ABERTO NO MODAL -->
+                <div class="space-y-1.5 pt-1">
+                    <h4 class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Apontamento em Andamento</h4>
+                    <div id="mApontamentoContainer" class="p-3 rounded-xl border flex flex-col gap-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-xs" id="mApontamentoStatusTitle">Status</span>
+                            <span id="mApontamentoBadge"></span>
+                        </div>
+                        <p class="text-[11px] font-mono leading-relaxed" id="mApontamentoDetalheText">-</p>
+                    </div>
+                </div>
+
                 <!-- DATAS MAPEADAS COM FORMATO LIMPO -->
                 <div class="space-y-1.5 pt-2 border-t border-slate-200">
                     <h4 class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Datas do Processo</h4>
@@ -474,7 +486,7 @@
 
             const savedFilters = {
                 search: document.getElementById('searchInput')?.value || '',
-                atraso: document.getElementById('atrasoFilter')?.value || '',
+                apontamento: document.getElementById('apontamentoAbertoFilter')?.value || '',
                 segmento: document.getElementById('segmentoFilter')?.value || '',
                 producao: document.getElementById('producaoFilter')?.value || '',
                 cliente: document.getElementById('clientFilter')?.value || '',
@@ -555,9 +567,9 @@
                 producaoSelect.value = savedFilters.producao;
             }
 
-            const atrasoSelect = document.getElementById('atrasoFilter');
-            if (atrasoSelect && savedFilters.atraso) {
-                atrasoSelect.value = savedFilters.atraso;
+            const apontamentoSelect = document.getElementById('apontamentoAbertoFilter');
+            if (apontamentoSelect && savedFilters.apontamento) {
+                apontamentoSelect.value = savedFilters.apontamento;
             }
         }
 
@@ -641,7 +653,7 @@
 
         function getFilteredData() {
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
-            const atraso = document.getElementById('atrasoFilter')?.value || '';
+            const apontamentoFiltro = document.getElementById('apontamentoAbertoFilter')?.value || '';
             const segmento = document.getElementById('segmentoFilter')?.value || '';
             const producao = document.getElementById('producaoFilter')?.value || '';
             const cliente = document.getElementById('clientFilter')?.value || '';
@@ -658,14 +670,15 @@
                     const matchCod = String(item.cod_interno || '').toLowerCase().includes(search);
                     const matchPedido = String(item.n_pedido || '').toLowerCase().includes(search);
                     const matchPP = String(item.pp_pendentes || '').toLowerCase().includes(search);
-                    if (!matchOS && !matchTitulo && !matchCliente && !matchOrigem && !matchCod && !matchPedido && !matchPP) return false;
+                    const matchApontamento = String(item.apontamentos_abertos_detalhe || '').toLowerCase().includes(search);
+                    if (!matchOS && !matchTitulo && !matchCliente && !matchOrigem && !matchCod && !matchPedido && !matchPP && !matchApontamento) return false;
                 }
 
-                // FILTRO DE PRAZO / ATRASO
-                if (atraso) {
-                    const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
-                    if (atraso === 'atrasado' && !isAtrasado) return false;
-                    if (atraso === 'no_prazo' && isAtrasado) return false;
+                // FILTRO POR APONTAMENTO ABERTO (SIM / NÃO)
+                if (apontamentoFiltro) {
+                    const temAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
+                    if (apontamentoFiltro === 'sim' && !temAberto) return false;
+                    if (apontamentoFiltro === 'nao' && temAberto) return false;
                 }
 
                 if (segmento && (item.segmento || '') !== segmento) return false;
@@ -722,7 +735,7 @@
             lucide.createIcons();
         }
 
-        // COMPONENTE DE CARD DE OS REUSÁVEL
+        // COMPONENTE DE CARD DE OS REUSÁVEL (COM SEMÁFORO: VERDE PISCANDO QUANDO TEM / VERMELHO QUANDO NÃO TEM)
         function renderOSCard(item) {
             const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
             const prodStatus = item.status_producao || '0%';
@@ -735,6 +748,10 @@
             const terceiros = item.status_terceiros || 'N/A';
             const engenharia = item.engenharia_status || 'N/A';
             const ppPendentes = item.pp_pendentes || 'Nenhum processo pendente';
+
+            // DADOS DO APONTAMENTO ABERTO (SEMÁFORO INVERTIDO: VERDE PISCANDO QUANDO TEM / VERMELHO QUANDO NÃO TEM)
+            const temApontamentoAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
+            const detalheApontamento = item.apontamentos_abertos_detalhe || 'Nenhum operador apontando no momento';
 
             return `
                 <div onclick="openModal('${item.n_os}')" class="group bg-white border border-slate-200 hover:border-columbia-500 hover:shadow-md p-3.5 rounded-2xl cursor-pointer transition-all duration-200 flex flex-col justify-between gap-3 relative overflow-hidden">
@@ -769,9 +786,32 @@
                             <div class="flex justify-between items-center pt-1 border-t border-slate-200/60 mt-0.5"><span class="text-slate-500 font-extrabold">Produção:</span> <span class="font-black text-columbia-700 font-mono text-xs">${prodStatus}</span></div>
                         </div>
 
+                        <!-- EXIBIÇÃO DE PP PENDENTES -->
                         <div class="bg-amber-50/70 border border-amber-200/70 p-2 rounded-xl text-[10px]">
                             <span class="font-extrabold text-amber-800 uppercase block text-[9px] mb-0.5">PP Pendentes:</span>
                             <p class="text-slate-700 font-medium line-clamp-2 leading-tight" title="${ppPendentes}">${ppPendentes}</p>
+                        </div>
+
+                        <!-- SEMÁFORO DE APONTAMENTO ABERTO (INVERTIDO: VERDE PISCANDO QUANDO TEM / VERMELHO QUANDO NÃO TEM) -->
+                        <div class="${temApontamentoAberto ? 'bg-emerald-50 border-emerald-300' : 'bg-red-50 border-red-200'} border p-2 rounded-xl text-[10px] transition-all">
+                            <div class="flex items-center justify-between gap-1 mb-1">
+                                <div class="flex items-center gap-1.5">
+                                    <!-- LUZ DO SEMÁFORO -->
+                                    <span class="relative flex h-2.5 w-2.5">
+                                        ${temApontamentoAberto ? `<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>` : ''}
+                                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 ${temApontamentoAberto ? 'bg-emerald-500' : 'bg-red-500'}"></span>
+                                    </span>
+                                    <span class="font-extrabold uppercase text-[9px] ${temApontamentoAberto ? 'text-emerald-800' : 'text-red-800'}">
+                                        Apontamento
+                                    </span>
+                                </div>
+                                <span class="text-[9px] font-black uppercase px-1.5 py-0.2 rounded ${temApontamentoAberto ? 'bg-emerald-200 text-emerald-900 animate-pulse' : 'bg-red-200 text-red-800'}">
+                                    ${temApontamentoAberto ? 'Em Andamento ⚙️' : 'Parado'}
+                                </span>
+                            </div>
+                            <p class="font-mono text-[9.5px] leading-tight ${temApontamentoAberto ? 'text-emerald-900 font-bold' : 'text-red-600 italic'}" title="${detalheApontamento}">
+                                ${detalheApontamento}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -1050,7 +1090,7 @@
 
         function clearAllFilters() {
             document.getElementById('searchInput').value = '';
-            document.getElementById('atrasoFilter').value = '';
+            document.getElementById('apontamentoAbertoFilter').value = '';
             document.getElementById('segmentoFilter').value = '';
             document.getElementById('producaoFilter').value = '';
             document.getElementById('clientFilter').value = '';
@@ -1157,6 +1197,29 @@
             document.getElementById('mProducao').textContent = safeText(item.status_producao);
             document.getElementById('mPpPendentes').textContent = safeText(item.pp_pendentes);
             
+            // RENDERING DO SEMÁFORO DE APONTAMENTO NO MODAL (INVERTIDO: VERDE PISCANDO QUANDO TEM / VERMELHO QUANDO NÃO TEM)
+            const temAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
+            const containerAp = document.getElementById('mApontamentoContainer');
+            const titleAp = document.getElementById('mApontamentoStatusTitle');
+            const badgeAp = document.getElementById('mApontamentoBadge');
+            const textAp = document.getElementById('mApontamentoDetalheText');
+
+            if (temAberto) {
+                containerAp.className = "p-3 rounded-xl border border-emerald-300 bg-emerald-50/80 flex flex-col gap-1.5";
+                titleAp.textContent = "Apontamento Aberto no Momento";
+                titleAp.className = "font-extrabold text-xs text-emerald-900";
+                badgeAp.innerHTML = `<span class="bg-emerald-200 text-emerald-900 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-md animate-pulse">EM ANDAMENTO ⚙️</span>`;
+                textAp.textContent = safeText(item.apontamentos_abertos_detalhe);
+                textAp.className = "text-[11px] font-mono leading-relaxed text-emerald-900 font-bold";
+            } else {
+                containerAp.className = "p-3 rounded-xl border border-red-200 bg-red-50/60 flex flex-col gap-1.5";
+                titleAp.textContent = "Sem Apontamentos em Andamento";
+                titleAp.className = "font-bold text-xs text-red-800";
+                badgeAp.innerHTML = `<span class="bg-red-200 text-red-800 border border-red-300 text-[10px] font-bold px-2 py-0.5 rounded-md">PARADO</span>`;
+                textAp.textContent = "Nenhum operador realizando apontamento nesta OS atualmente.";
+                textAp.className = "text-[11px] font-mono leading-relaxed text-red-600 italic";
+            }
+
             const elAtrasada = document.getElementById('mAtrasada');
             const isAtrasada = String(item.atrasada).toLowerCase() === 'sim';
             elAtrasada.textContent = isAtrasada ? 'Sim' : 'Não';
