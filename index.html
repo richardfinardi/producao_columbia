@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V4.4.3</title>
+    <title>Programação de Produção - Columbia V4.4.4</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -65,7 +65,7 @@
             
             <!-- Título & Logo Columbia -->
             <div class="flex items-center gap-4">
-                <div class="flex items-center justify-center p-1.5 bg-white rounded-xl shadow-sm">
+                <div class="flex items-center justify-center p-1.5 bg-white rounded-xl shadow-sm cursor-pointer" onclick="setAbaAtiva('dashboard')">
                     <img src="./logo.png" alt="Columbia Machine" class="h-9 max-h-10 w-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="hidden p-1.5 bg-columbia-700 rounded-lg text-white font-bold items-center justify-center">
                         <i data-lucide="factory" class="w-6 h-6"></i>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V4.4.3</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V4.4.4</p>
                 </div>
             </div>
 
@@ -85,20 +85,26 @@
                     <span id="userDisplayName">Usuário</span>
                 </div>
 
-<!-- ABA FATURAMENTO -->
-<a id="btnAbaFaturamento" href="faturamento.html" class="hidden flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-xs transition shadow-md">
-    <i data-lucide="package-check" class="w-4 h-4"></i>
-    <span>Faturamento</span>
-</a>
+                <!-- V4.4.4: ABAS DE NAVEGAÇÃO INTERNA NO HEADER (SISTEMA DE ABAS SPA) -->
+                <button id="btnAbaDashboard" onclick="setAbaAtiva('dashboard')" class="flex items-center gap-1.5 px-3 py-2 bg-columbia-900 text-white font-extrabold rounded-xl text-xs transition shadow-md border border-columbia-500">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>Produção</span>
+                </button>
 
-<!-- ABA CONFERÊNCIA APONTAMENTOS -->
-<a id="btnAbaConferencia" href="conferencia_apontamentos.html" class="hidden flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs transition shadow-md">
-    <i data-lucide="clipboard-check" class="w-4 h-4"></i>
-    <span>Conferência Apontamentos</span>
-</a>
+                <!-- ABA FATURAMENTO (EXIBIDA SE U_FATURAMENTO == 1) -->
+                <button id="btnAbaFaturamento" onclick="setAbaAtiva('faturamento')" class="hidden flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-xs transition shadow-md">
+                    <i data-lucide="package-check" class="w-4 h-4"></i>
+                    <span>Faturamento</span>
+                </button>
 
-                <!-- BOTÃO ACESSO À TELA OS'S NO LIMBO -->
-                <button id="btnVerLimbo" onclick="togglePaginaLimbo()" class="flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow-md">
+                <!-- ABA CONFERÊNCIA APONTAMENTOS (EXIBIDA SE U_FINALIZACAO == 1) -->
+                <button id="btnAbaConferencia" onclick="setAbaAtiva('conferencia')" class="hidden flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs transition shadow-md">
+                    <i data-lucide="clipboard-check" class="w-4 h-4"></i>
+                    <span>Conferência Apontamentos</span>
+                </button>
+
+                <!-- BOTÃO OS'S NO LIMBO -->
+                <button id="btnVerLimbo" onclick="setAbaAtiva('limbo')" class="flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow-md">
                     <i data-lucide="ghost" class="w-4 h-4"></i>
                     <span id="txtBtnLimbo">OS's no Limbo (0)</span>
                 </button>
@@ -280,9 +286,9 @@
             </div>
         </div>
 
-        <!-- ÁREA PRINCIPAL DO CALENDÁRIO OU PAINEL DE LIMBO -->
+        <!-- ÁREA PRINCIPAL DO CALENDÁRIO / PAINEL DA ABA SELECIONADA -->
         <div id="calendarGrid" class="w-full">
-            <!-- Renderizado via JS conforme a visão selecionada -->
+            <!-- Renderizado via JS conforme a aba selecionada -->
         </div>
     </main>
 
@@ -474,7 +480,9 @@
         let selectedItemModal = null; 
 
         let currentView = localStorage.getItem('columbia_preferred_view') || 'week';
-        let isShowingLimboPage = false; 
+        
+        // V4.4.4: GERENCIADOR DE ABA ATIVA DO SISTEMA ('dashboard', 'faturamento', 'conferencia', 'limbo')
+        let abaAtiva = 'dashboard';
 
         let onlyCurrentMonth = true;
         let onlyWithBudget = false;
@@ -487,14 +495,13 @@
                 if (displayEl) displayEl.textContent = nomeUser;
             }
 
-            // V4.4.3: CHECAGEM DE PERMISSÕES PARA EXIBIR ABAS DE FATURAMENTO E CONFERÊNCIA
             configurarVisibilidadeAbas();
 
             lucide.createIcons();
             setViewMode(currentView, false);
             fetchData();
 
-            // AUTO-REFRESH DE BACKGROUND A CADA 30 SEGUNDOS (POLLING SILENCIOSO)
+            // AUTO-REFRESH DE BACKGROUND A CADA 30 SEGUNDOS
             setInterval(() => {
                 const isModalOpen = !document.getElementById('osModal').classList.contains('hidden') ||
                                     !document.getElementById('altRenegociationFormModal').classList.contains('hidden') ||
@@ -506,55 +513,71 @@
             }, 30000);
         });
 
-        // V4.4.3: EXIBE AS ABAS APENAS SE O USUÁRIO LOGADO TIVER PERMISSÃO
-function configurarVisibilidadeAbas() {
-    const permFaturamento = String(localStorage.getItem('columbia_perm_faturamento')) === '1';
-    const permConferencia = String(localStorage.getItem('columbia_perm_finalizacao')) === '1';
+        // V4.4.4: VALIDA AS PERMISSÕES DE U_FATURAMENTO E U_FINALIZACAO
+        function configurarVisibilidadeAbas() {
+            const permFaturamento = String(localStorage.getItem('columbia_perm_faturamento')) === '1';
+            const permFinalizacao = String(localStorage.getItem('columbia_perm_finalizacao')) === '1';
 
-    const btnAbaFaturamento = document.getElementById('btnAbaFaturamento');
-    const btnAbaConferencia = document.getElementById('btnAbaConferencia');
+            const btnAbaFaturamento = document.getElementById('btnAbaFaturamento');
+            const btnAbaConferencia = document.getElementById('btnAbaConferencia');
 
-    if (btnAbaFaturamento && permFaturamento) {
-        btnAbaFaturamento.classList.remove('hidden');
-    }
+            if (btnAbaFaturamento && permFaturamento) {
+                btnAbaFaturamento.classList.remove('hidden');
+            }
 
-    if (btnAbaConferencia && permConferencia) {
-        btnAbaConferencia.classList.remove('hidden');
-    }
-}
+            if (btnAbaConferencia && permFinalizacao) {
+                btnAbaConferencia.classList.remove('hidden');
+            }
+        }
+
+        // V4.4.4: TROCA O ESTADO DA ABA ATIVA SEM RECARREGAR A PÁGINA
+        function setAbaAtiva(novaAba) {
+            abaAtiva = novaAba;
+
+            const metricsBar = document.getElementById('metricsBar');
+            const filtersBar = document.getElementById('filtersBar');
+            const navigationBar = document.getElementById('navigationBar');
+
+            const btnDashboard = document.getElementById('btnAbaDashboard');
+            const btnFaturamento = document.getElementById('btnAbaFaturamento');
+            const btnConferencia = document.getElementById('btnAbaConferencia');
+            const btnLimbo = document.getElementById('btnVerLimbo');
+
+            // Reset estilos dos botões
+            if (btnDashboard) btnDashboard.className = "flex items-center gap-1.5 px-3 py-2 bg-columbia-800 hover:bg-columbia-900 text-white font-extrabold rounded-xl text-xs transition shadow-md";
+            if (btnFaturamento) btnFaturamento.className = "flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-xs transition shadow-md";
+            if (btnConferencia) btnConferencia.className = "flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs transition shadow-md";
+            if (btnLimbo) btnLimbo.className = "flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow-md";
+
+            if (abaAtiva === 'dashboard') {
+                if (btnDashboard) btnDashboard.className = "flex items-center gap-1.5 px-3 py-2 bg-columbia-900 border border-emerald-400 text-white font-black rounded-xl text-xs transition shadow-md";
+                if (metricsBar) metricsBar.classList.remove('hidden');
+                if (filtersBar) filtersBar.classList.remove('hidden');
+                if (navigationBar) navigationBar.classList.remove('hidden');
+            } else {
+                // Se não for o dashboard, esconde as barras de filtro do calendário
+                if (metricsBar) metricsBar.classList.add('hidden');
+                if (filtersBar) filtersBar.classList.add('hidden');
+                if (navigationBar) navigationBar.classList.add('hidden');
+
+                if (abaAtiva === 'faturamento' && btnFaturamento) {
+                    btnFaturamento.className = "flex items-center gap-1.5 px-3 py-2 bg-blue-900 border border-blue-400 text-white font-black rounded-xl text-xs transition shadow-md";
+                } else if (abaAtiva === 'conferencia' && btnConferencia) {
+                    btnConferencia.className = "flex items-center gap-1.5 px-3 py-2 bg-indigo-900 border border-indigo-400 text-white font-black rounded-xl text-xs transition shadow-md";
+                } else if (abaAtiva === 'limbo' && btnLimbo) {
+                    btnLimbo.className = "flex items-center gap-1.5 px-3 py-2 bg-columbia-900 border border-amber-400 text-amber-400 font-black rounded-xl text-xs transition shadow-md";
+                }
+            }
+
+            renderView();
+        }
 
         function efetuarLogout() {
             localStorage.removeItem('columbia_token');
             localStorage.removeItem('columbia_usuario_nome');
             localStorage.removeItem('columbia_perm_faturamento');
             localStorage.removeItem('columbia_perm_finalizacao');
-            localStorage.removeItem('columbia_perm_fechamento');
             window.location.href = 'login.html';
-        }
-
-        function togglePaginaLimbo() {
-            isShowingLimboPage = !isShowingLimboPage;
-            const btnLimbo = document.getElementById('btnVerLimbo');
-            const metricsBar = document.getElementById('metricsBar');
-            const filtersBar = document.getElementById('filtersBar');
-            const navigationBar = document.getElementById('navigationBar');
-
-            if (isShowingLimboPage) {
-                if (btnLimbo) {
-                    btnLimbo.className = "flex items-center gap-1.5 px-3 py-2 bg-columbia-900 border border-amber-400 text-amber-400 font-black rounded-xl text-xs transition shadow-md";
-                }
-                if (metricsBar) metricsBar.classList.add('hidden');
-                if (filtersBar) filtersBar.classList.add('hidden');
-                if (navigationBar) navigationBar.classList.add('hidden');
-            } else {
-                if (btnLimbo) {
-                    btnLimbo.className = "flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow-md";
-                }
-                if (metricsBar) metricsBar.classList.remove('hidden');
-                if (filtersBar) filtersBar.classList.remove('hidden');
-                if (navigationBar) navigationBar.classList.remove('hidden');
-            }
-            renderView();
         }
 
         function initializeCurrentDate() {
@@ -874,13 +897,27 @@ function configurarVisibilidadeAbas() {
             }
         }
 
+        // V4.4.4: GERENCIADOR DE RENDERIZAÇÃO DAS ABAS
         function renderView() {
-            if (isShowingLimboPage) {
+            if (abaAtiva === 'limbo') {
                 renderPaginaLimboView();
                 lucide.createIcons();
                 return;
             }
 
+            if (abaAtiva === 'faturamento') {
+                renderPaginaFaturamentoView();
+                lucide.createIcons();
+                return;
+            }
+
+            if (abaAtiva === 'conferencia') {
+                renderPaginaConferenciaView();
+                lucide.createIcons();
+                return;
+            }
+
+            // PADRÃO: ABA DASHBOARD / PRODUÇÃO
             updateDateLabel();
             const filtered = getFilteredData();
             updateMetrics(filtered);
@@ -899,6 +936,68 @@ function configurarVisibilidadeAbas() {
                 }
             }
             lucide.createIcons();
+        }
+
+        // V4.4.4: CONTEÚDO DA ABA FATURAMENTO (SPA)
+        function renderPaginaFaturamentoView() {
+            const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
+
+            let html = `
+                <div class="bg-white rounded-2xl border border-blue-200 p-6 shadow-md space-y-4">
+                    <div class="flex items-center justify-between border-b border-blue-100 pb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-blue-100 text-blue-800 rounded-xl">
+                                <i data-lucide="package-check" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-extrabold text-slate-900 text-base">Módulo de Faturamento & Expedição</h3>
+                                <p class="text-xs text-slate-500 font-medium">Liberação e conferência de volumes, peso líquido, peso bruto e ordens de faturamento.</p>
+                            </div>
+                        </div>
+                        <button onclick="fetchData(false)" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            <span>Atualizar Faturamento</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-blue-50/60 border border-blue-200 p-4 rounded-xl text-xs text-blue-900 font-medium leading-relaxed">
+                        💡 Este módulo permite consultar e atualizar peso bruto, peso líquido e volumes liberados para faturamento da Columbia Machine.
+                    </div>
+                </div>
+            `;
+            grid.innerHTML = html;
+        }
+
+        // V4.4.4: CONTEÚDO DA ABA CONFERÊNCIA APONTAMENTOS (SPA)
+        function renderPaginaConferenciaView() {
+            const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
+
+            let html = `
+                <div class="bg-white rounded-2xl border border-indigo-200 p-6 shadow-md space-y-4">
+                    <div class="flex items-center justify-between border-b border-indigo-100 pb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-indigo-100 text-indigo-800 rounded-xl">
+                                <i data-lucide="clipboard-check" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-extrabold text-slate-900 text-base">Conferência de Apontamentos de Produção</h3>
+                                <p class="text-xs text-slate-500 font-medium">Painel de fechamento, auditoria e validação de horas apontadas pelos operadores.</p>
+                            </div>
+                        </div>
+                        <button onclick="fetchData(false)" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            <span>Atualizar Apontamentos</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-indigo-50/60 border border-indigo-200 p-4 rounded-xl text-xs text-indigo-900 font-medium leading-relaxed">
+                        📋 Módulo de fechamento para conferência de apontamentos abertos e histórico de usinagem/produção.
+                    </div>
+                </div>
+            `;
+            grid.innerHTML = html;
         }
 
         function renderPaginaLimboView() {
