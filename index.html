@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V5.1</title>
+    <title>Programação de Produção - Columbia V5.2</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V5.1</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V5.2</p>
                 </div>
             </div>
 
@@ -484,7 +484,7 @@
 
         let currentView = localStorage.getItem('columbia_preferred_view') || 'week';
         
-        // V5.0: GERENCIADOR DE ABA ATIVA DO SISTEMA ('dashboard', 'faturamento', 'conferencia', 'limbo')
+        // V5.2: GERENCIADOR DE ABA ATIVA DO SISTEMA ('dashboard', 'faturamento', 'conferencia', 'limbo')
         let abaAtiva = 'dashboard';
 
         let onlyCurrentMonth = true;
@@ -519,7 +519,7 @@
             }, 30000);
         });
 
-        // V5.0: VALIDA AS PERMISSÕES DE U_FATURAMENTO E U_FINALIZACAO COM TRAVA ESTRITA DE SEGURANÇA
+        // V5.2: VALIDA AS PERMISSÕES COM OCULTAÇÃO ESTRITA CASO NÃO SEJA IGUAL A 1
         function configurarVisibilidadeAbas() {
             const permFaturamento = String(localStorage.getItem('columbia_perm_faturamento')) === '1';
             const permFinalizacao = String(localStorage.getItem('columbia_perm_finalizacao')) === '1' || String(localStorage.getItem('columbia_perm_fechamento')) === '1';
@@ -544,7 +544,7 @@
             }
         }
 
-        // V5.0: TROCA O ESTADO DA ABA ATIVA SEM RECARREGAR A PÁGINA (SPA)
+        // V5.2: TROCA O ESTADO DA ABA ATIVA RE-EVALUANDO AS TRAVAS
         function setAbaAtiva(novaAba) {
             abaAtiva = novaAba;
 
@@ -563,7 +563,7 @@
             if (btnConferencia) btnConferencia.className = "flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs transition shadow-md";
             if (btnLimbo) btnLimbo.className = "flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow-md";
 
-            // Re-avalia rigorosamente a visibilidade dos botões de autorização
+            // Garante visibilidade rigorosa conforme permissões salvas
             configurarVisibilidadeAbas();
 
             if (abaAtiva === 'dashboard') {
@@ -575,7 +575,7 @@
                 if (btnConferencia) btnConferencia.className = "flex items-center gap-1.5 px-3 py-2 bg-indigo-900 border border-indigo-400 text-white font-black rounded-xl text-xs transition shadow-md";
                 if (metricsBar) metricsBar.classList.add('hidden');
                 if (filtersBar) filtersBar.classList.add('hidden');
-                if (navigationBar) navigationBar.classList.remove('hidden'); // Exibe navegação de data na conferência
+                if (navigationBar) navigationBar.classList.remove('hidden'); 
                 fetchConferenciaData();
             } else {
                 if (metricsBar) metricsBar.classList.add('hidden');
@@ -703,7 +703,6 @@
             }
         }
 
-        // V5.0: FETCH DEDICADO PARA A API HR-A-MAIS
         async function fetchConferenciaData(isSilent = false) {
             try {
                 const cacheBusterUrl = `${API_HR_A_MAIS}?_t=${Date.now()}`;
@@ -936,7 +935,7 @@
             }
         }
 
-        // V5.0: GERENCIADOR DE RENDERIZAÇÃO DAS ABAS
+        // GERENCIADOR DE RENDERIZAÇÃO DAS ABAS
         function renderView() {
             if (abaAtiva === 'limbo') {
                 renderPaginaLimboView();
@@ -977,7 +976,7 @@
             lucide.createIcons();
         }
 
-        // V5.0: CONTEÚDO COMPLETO DA ABA CONFERÊNCIA APONTAMENTOS (HORAS A MAIS)
+        // CONTEÚDO COMPLETO DA ABA CONFERÊNCIA APONTAMENTOS (HORAS A MAIS)
         function renderPaginaConferenciaView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
