@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V5.3</title>
+    <title>Programação de Produção - Columbia V5.3.1</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V5.3</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V5.3.1</p>
                 </div>
             </div>
 
@@ -484,7 +484,7 @@
 
         let currentView = localStorage.getItem('columbia_preferred_view') || 'week';
         
-        // V5.3: GERENCIADOR DE ABA ATIVA DO SISTEMA ('dashboard', 'faturamento', 'conferencia', 'limbo')
+        // GERENCIADOR DE ABA ATIVA DO SISTEMA ('dashboard', 'faturamento', 'conferencia', 'limbo')
         let abaAtiva = 'dashboard';
 
         let onlyCurrentMonth = true;
@@ -519,7 +519,7 @@
             }, 30000);
         });
 
-        // V5.3: VALIDA AS PERMISSÕES COM TRAVA ESTRITA (OCULTA OBRIGATORIAMENTE CASO NÃO SEJA "1")
+        // V5.2: VALIDA AS PERMISSÕES COM TRAVA ESTRITA (OCULTA OBRIGATORIAMENTE CASO NÃO SEJA "1")
         function configurarVisibilidadeAbas() {
             const valFaturamento = localStorage.getItem('columbia_perm_faturamento');
             const valFinalizacao = localStorage.getItem('columbia_perm_finalizacao');
@@ -547,7 +547,7 @@
             }
         }
 
-        // V5.3: TROCA O ESTADO DA ABA ATIVA RE-EVALUANDO AS TRAVAS
+        // V5.2: TROCA O ESTADO DA ABA ATIVA RE-EVALUANDO AS TRAVAS
         function setAbaAtiva(novaAba) {
             abaAtiva = novaAba;
 
@@ -652,13 +652,16 @@
             return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
         }
 
+        // V5.2.1: CORRIGIDO PARA CONTROLAR RIGOROSAMENTE A ANIMAÇÃO DO BOTAO REFRESH
         async function fetchData(isSilent = false) {
             const refreshIcon = document.getElementById('refreshIcon');
             const btnRefresh = document.getElementById('btnRefresh');
             
-            if (!isSilent) {
-                if (refreshIcon) refreshIcon.classList.add('animate-spin');
-                if (btnRefresh) btnRefresh.disabled = true;
+            if (!isSilent && refreshIcon) {
+                refreshIcon.classList.add('animate-spin');
+            }
+            if (!isSilent && btnRefresh) {
+                btnRefresh.disabled = true;
             }
 
             const savedFilters = {
@@ -698,9 +701,12 @@
                     alert('Não foi possível atualizar os dados de produção. Verifique a conexão com o servidor.');
                 }
             } finally {
-                if (!isSilent) {
-                    if (refreshIcon) refreshIcon.classList.remove('animate-spin');
-                    if (btnRefresh) btnRefresh.disabled = false;
+                // PARO A ANIMAÇÃO DE GIRAR OBRIGATORIAMENTE AQUI
+                if (refreshIcon) {
+                    refreshIcon.classList.remove('animate-spin');
+                }
+                if (btnRefresh) {
+                    btnRefresh.disabled = false;
                 }
                 lucide.createIcons();
             }
