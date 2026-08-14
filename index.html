@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V5.2</title>
+    <title>Programação de Produção - Columbia V5.3</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V5.2</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V5.3</p>
                 </div>
             </div>
 
@@ -85,7 +85,7 @@
                     <span id="userDisplayName">Usuário</span>
                 </div>
 
-                <!-- ABAS DE NAVEGAÇÃO INTERNA NO HEADER (SPA) -->
+                <!-- ABAS DE NAVEGAÇÃO INTERNA NO HEADER (SISTEMA DE ABAS SPA) -->
                 <button id="btnAbaDashboard" onclick="setAbaAtiva('dashboard')" class="flex items-center gap-1.5 px-3 py-2 bg-columbia-900 text-white font-extrabold rounded-xl text-xs transition shadow-md border border-columbia-500">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
                     <span>Produção</span>
@@ -484,7 +484,7 @@
 
         let currentView = localStorage.getItem('columbia_preferred_view') || 'week';
         
-        // V5.2: GERENCIADOR DE ABA ATIVA DO SISTEMA ('dashboard', 'faturamento', 'conferencia', 'limbo')
+        // V5.3: GERENCIADOR DE ABA ATIVA DO SISTEMA ('dashboard', 'faturamento', 'conferencia', 'limbo')
         let abaAtiva = 'dashboard';
 
         let onlyCurrentMonth = true;
@@ -519,10 +519,13 @@
             }, 30000);
         });
 
-        // V5.2: VALIDA AS PERMISSÕES COM OCULTAÇÃO ESTRITA CASO NÃO SEJA IGUAL A 1
+        // V5.3: VALIDA AS PERMISSÕES COM TRAVA ESTRITA (OCULTA OBRIGATORIAMENTE CASO NÃO SEJA "1")
         function configurarVisibilidadeAbas() {
-            const permFaturamento = String(localStorage.getItem('columbia_perm_faturamento')) === '1';
-            const permFinalizacao = String(localStorage.getItem('columbia_perm_finalizacao')) === '1' || String(localStorage.getItem('columbia_perm_fechamento')) === '1';
+            const valFaturamento = localStorage.getItem('columbia_perm_faturamento');
+            const valFinalizacao = localStorage.getItem('columbia_perm_finalizacao');
+
+            const permFaturamento = valFaturamento !== null && String(valFaturamento).trim() === '1';
+            const permFinalizacao = valFinalizacao !== null && String(valFinalizacao).trim() === '1';
 
             const btnAbaFaturamento = document.getElementById('btnAbaFaturamento');
             const btnAbaConferencia = document.getElementById('btnAbaConferencia');
@@ -544,7 +547,7 @@
             }
         }
 
-        // V5.2: TROCA O ESTADO DA ABA ATIVA RE-EVALUANDO AS TRAVAS
+        // V5.3: TROCA O ESTADO DA ABA ATIVA RE-EVALUANDO AS TRAVAS
         function setAbaAtiva(novaAba) {
             abaAtiva = novaAba;
 
@@ -563,7 +566,7 @@
             if (btnConferencia) btnConferencia.className = "flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs transition shadow-md";
             if (btnLimbo) btnLimbo.className = "flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow-md";
 
-            // Garante visibilidade rigorosa conforme permissões salvas
+            // Re-avalia rigorosamente a visibilidade dos botões de autorização
             configurarVisibilidadeAbas();
 
             if (abaAtiva === 'dashboard') {
