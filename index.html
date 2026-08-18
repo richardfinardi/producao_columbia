@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V5.5.0</title>
+    <title>Programação de Produção - Columbia V5.6.0</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V5.5.0</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V5.6.0</p>
                 </div>
             </div>
 
@@ -85,19 +85,19 @@
                     <span id="userDisplayName">Usuário</span>
                 </div>
 
-                <!-- ABAS DE NAVEGAÇÃO INTERNA NO HEADER (SISTEMA DE ABAS SPA) -->
+                <!-- ABAS DE NAVEGAÇÃO INTERNA NO HEADER -->
                 <button id="btnAbaDashboard" onclick="setAbaAtiva('dashboard')" class="flex items-center gap-1.5 px-3 py-2 bg-columbia-900 text-white font-extrabold rounded-xl text-xs transition shadow-md border border-columbia-500">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
                     <span>Produção</span>
                 </button>
 
-                <!-- ABA FATURAMENTO (EXIBIDA SE U_FATURAMENTO == 1) -->
+                <!-- ABA FATURAMENTO -->
                 <button id="btnAbaFaturamento" onclick="setAbaAtiva('faturamento')" class="hidden flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-xs transition shadow-md">
                     <i data-lucide="package-check" class="w-4 h-4"></i>
                     <span>Faturamento</span>
                 </button>
 
-                <!-- ABA CONFERÊNCIA APONTAMENTOS (EXIBIDA SE U_FINALIZACAO == 1) -->
+                <!-- ABA CONFERÊNCIA APONTAMENTOS -->
                 <button id="btnAbaConferencia" onclick="setAbaAtiva('conferencia')" class="hidden flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs transition shadow-md">
                     <i data-lucide="clipboard-check" class="w-4 h-4"></i>
                     <span>Conferência Apontamentos</span>
@@ -164,7 +164,7 @@
             </div>
 
             <!-- FILTRO DE OS ATRASADAS -->
-            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+            <div id="atrasadaContainer" class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="alert-triangle" class="w-4 h-4 text-slate-400"></i>
                 <select id="atrasadaFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[140px] font-bold">
                     <option value="">Atrasadas (Todas)</option>
@@ -174,7 +174,7 @@
             </div>
 
             <!-- FILTRO DE APONTAMENTO ABERTO -->
-            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+            <div id="apontamentoContainer" class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="cog" class="w-4 h-4 text-slate-400"></i>
                 <select id="apontamentoAbertoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[170px] font-bold">
                     <option value="">Apontamento Aberto (Todos)</option>
@@ -192,7 +192,7 @@
             </div>
 
             <!-- Filtro por Status Produção -->
-            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+            <div id="producaoContainer" class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="activity" class="w-4 h-4 text-slate-400"></i>
                 <select id="producaoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[140px] font-medium">
                     <option value="">Produção (Todos)</option>
@@ -210,7 +210,7 @@
             </div>
 
             <!-- Filtro por Engenharia -->
-            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+            <div id="engenhariaContainer" class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="cpu" class="w-4 h-4 text-slate-400"></i>
                 <select id="engenhariaFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
                     <option value="">Engenharia (Todos)</option>
@@ -218,7 +218,7 @@
             </div>
 
             <!-- Filtro por Status Compras -->
-            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+            <div id="comprasContainer" class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="shopping-cart" class="w-4 h-4 text-slate-400"></i>
                 <select id="comprasFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
                     <option value="">Compras (Todos)</option>
@@ -226,7 +226,7 @@
             </div>
 
             <!-- Filtro por Status Terceiros -->
-            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+            <div id="terceirosContainer" class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="truck" class="w-4 h-4 text-slate-400"></i>
                 <select id="terceirosFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer max-w-[130px] font-medium">
                     <option value="">Terceiros (Todos)</option>
@@ -234,7 +234,7 @@
             </div>
 
             <!-- BOTÕES DE FILTRO SEPARADOS -->
-            <div class="flex items-center gap-2">
+            <div id="extraButtonsContainer" class="flex items-center gap-2">
                 <button id="btnToggleMonth" onclick="toggleMonthFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-columbia-600"></i>
                     <span id="txtToggleMonth">Exibir todas as semanas</span>
@@ -279,7 +279,7 @@
             </div>
 
             <!-- Seletor de Visão (Mês, Semana, Dia) -->
-            <div class="bg-slate-100 p-1 rounded-xl border border-slate-200 flex items-center gap-1">
+            <div id="viewModeContainer" class="bg-slate-100 p-1 rounded-xl border border-slate-200 flex items-center gap-1">
                 <button id="viewBtnMonth" onclick="setViewMode('month')" class="px-3 py-1 rounded-lg text-xs font-bold transition">Mês</button>
                 <button id="viewBtnWeek" onclick="setViewMode('week')" class="px-3 py-1 rounded-lg text-xs font-bold transition">Semana</button>
                 <button id="viewBtnDay" onclick="setViewMode('day')" class="px-3 py-1 rounded-lg text-xs font-bold transition">Dia</button>
@@ -551,7 +551,7 @@
             }
         }
 
-        // TROCA O ESTADO DA ABA ATIVA RE-EVALUANDO AS TRAVAS
+        // V5.6.0: TROCA O ESTADO DA ABA ATIVA E AJUSTA FILTROS DA TELA
         function setAbaAtiva(novaAba) {
             abaAtiva = novaAba;
 
@@ -564,13 +564,22 @@
             const btnConferencia = document.getElementById('btnAbaConferencia');
             const btnLimbo = document.getElementById('btnVerLimbo');
 
+            // Elementos de filtros específicos
+            const atrasadaContainer = document.getElementById('atrasadaContainer');
+            const apontamentoContainer = document.getElementById('apontamentoContainer');
+            const producaoContainer = document.getElementById('producaoContainer');
+            const engenhariaContainer = document.getElementById('engenhariaContainer');
+            const comprasContainer = document.getElementById('comprasContainer');
+            const terceirosContainer = document.getElementById('terceirosContainer');
+            const extraButtonsContainer = document.getElementById('extraButtonsContainer');
+            const viewModeContainer = document.getElementById('viewModeContainer');
+
             // Reset estilos dos botões
             if (btnDashboard) btnDashboard.className = "flex items-center gap-1.5 px-3 py-2 bg-columbia-800 hover:bg-columbia-900 text-white font-extrabold rounded-xl text-xs transition shadow-md";
             if (btnFaturamento) btnFaturamento.className = "flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-xs transition shadow-md";
             if (btnConferencia) btnConferencia.className = "flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs transition shadow-md";
             if (btnLimbo) btnLimbo.className = "flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow-md";
 
-            // Re-avalia rigorosamente a visibilidade dos botões de autorização
             configurarVisibilidadeAbas();
 
             if (abaAtiva === 'dashboard') {
@@ -578,18 +587,42 @@
                 if (metricsBar) metricsBar.classList.remove('hidden');
                 if (filtersBar) filtersBar.classList.remove('hidden');
                 if (navigationBar) navigationBar.classList.remove('hidden');
+
+                if (atrasadaContainer) atrasadaContainer.classList.remove('hidden');
+                if (apontamentoContainer) apontamentoContainer.classList.remove('hidden');
+                if (producaoContainer) producaoContainer.classList.remove('hidden');
+                if (engenhariaContainer) engenhariaContainer.classList.remove('hidden');
+                if (comprasContainer) comprasContainer.classList.remove('hidden');
+                if (terceirosContainer) terceirosContainer.classList.remove('hidden');
+                if (extraButtonsContainer) extraButtonsContainer.classList.remove('hidden');
+                if (viewModeContainer) viewModeContainer.classList.remove('hidden');
+
+            } else if (abaAtiva === 'faturamento') {
+                if (btnFaturamento) btnFaturamento.className = "flex items-center gap-1.5 px-3 py-2 bg-blue-900 border border-blue-400 text-white font-black rounded-xl text-xs transition shadow-md";
+                if (metricsBar) metricsBar.classList.add('hidden');
+                if (filtersBar) filtersBar.classList.remove('hidden');
+                if (navigationBar) navigationBar.classList.remove('hidden');
+
+                // V5.6.0: No Faturamento mantemos Busca, Segmento e Cliente. Esconde o resto.
+                if (atrasadaContainer) atrasadaContainer.classList.add('hidden');
+                if (apontamentoContainer) apontamentoContainer.classList.add('hidden');
+                if (producaoContainer) producaoContainer.classList.add('hidden');
+                if (engenhariaContainer) engenhariaContainer.classList.add('hidden');
+                if (comprasContainer) comprasContainer.classList.add('hidden');
+                if (terceirosContainer) terceirosContainer.classList.add('hidden');
+                if (extraButtonsContainer) extraButtonsContainer.classList.add('hidden');
+                if (viewModeContainer) viewModeContainer.classList.add('hidden'); // Faturamento é exclusivo MÊS
+
+                currentView = 'month'; // Fixa visão mensal no Faturamento
+                fetchFaturamentoData();
+
             } else if (abaAtiva === 'conferencia') {
                 if (btnConferencia) btnConferencia.className = "flex items-center gap-1.5 px-3 py-2 bg-indigo-900 border border-indigo-400 text-white font-black rounded-xl text-xs transition shadow-md";
                 if (metricsBar) metricsBar.classList.add('hidden');
                 if (filtersBar) filtersBar.classList.add('hidden');
                 if (navigationBar) navigationBar.classList.remove('hidden'); 
+                if (viewModeContainer) viewModeContainer.classList.remove('hidden');
                 fetchConferenciaData();
-            } else if (abaAtiva === 'faturamento') {
-                if (btnFaturamento) btnFaturamento.className = "flex items-center gap-1.5 px-3 py-2 bg-blue-900 border border-blue-400 text-white font-black rounded-xl text-xs transition shadow-md";
-                if (metricsBar) metricsBar.classList.add('hidden');
-                if (filtersBar) filtersBar.classList.add('hidden');
-                if (navigationBar) navigationBar.classList.remove('hidden');
-                fetchFaturamentoData();
             } else {
                 if (metricsBar) metricsBar.classList.add('hidden');
                 if (filtersBar) filtersBar.classList.add('hidden');
@@ -660,7 +693,22 @@
             return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
         }
 
-        // CONTROLADOR DO REFRESH MANUAL E SILENCIOSO
+        // V5.6.0: RETORNA INTERVALO FORMATADO DA SEMANA (EX: 17/08 - 23/08)
+        function getWeekDateRangeStr(d) {
+            const targetDate = new Date(d);
+            let dayOfWeek = targetDate.getDay() - 1;
+            if (dayOfWeek === -1) dayOfWeek = 6;
+            const wStart = new Date(targetDate);
+            wStart.setDate(wStart.getDate() - dayOfWeek);
+            const wEnd = new Date(wStart);
+            wEnd.setDate(wEnd.getDate() + 6);
+
+            const fmtDay = (date) => String(date.getDate()).padStart(2, '0');
+            const fmtMonth = (date) => String(date.getMonth() + 1).padStart(2, '0');
+
+            return `${fmtDay(wStart)}/${fmtMonth(wStart)} - ${fmtDay(wEnd)}/${fmtMonth(wEnd)}`;
+        }
+
         async function fetchData(isSilent = false) {
             const refreshIcon = document.getElementById('refreshIcon');
             const btnRefresh = document.getElementById('btnRefresh');
@@ -811,7 +859,7 @@
         }
 
         function navigateDate(delta) {
-            if (currentView === 'month') {
+            if (currentView === 'month' || abaAtiva === 'faturamento') {
                 currentDate.setMonth(currentDate.getMonth() + delta);
             } else if (currentView === 'week') {
                 currentDate.setDate(currentDate.getDate() + (delta * 7));
@@ -837,7 +885,7 @@
                 return;
             }
             
-            if (currentView === 'month') {
+            if (currentView === 'month' || abaAtiva === 'faturamento') {
                 const monthStr = currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
                 label.textContent = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
             } else if (currentView === 'week') {
@@ -872,12 +920,13 @@
             return isNaN(parsed) ? 0 : parsed;
         }
 
+        // V5.6.0: NO FATURAMENTO OS VALORES SÃO VISÍVEIS DIRETO SEM TRAVA DE SENHA
         function formatBRL(value) {
             if (abaAtiva === 'faturamento') {
-                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
             }
             if (!isValuesUnlocked) return 'R$ *****';
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
         }
 
         function getFilteredData() {
@@ -1007,7 +1056,7 @@
             lucide.createIcons();
         }
 
-        // CONTEÚDO COMPLETO DA ABA CONFERÊNCIA APONTAMENTOS (HORAS A MAIS)
+        // CONTEÚDO DA ABA CONFERÊNCIA APONTAMENTOS (HORAS A MAIS)
         function renderPaginaConferenciaView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1185,62 +1234,68 @@
             `;
         }
 
-        // CONTEÚDO DA ABA FATURAMENTO (V5.5.0 - AGRUPADO POR ORÇAMENTO + ORDENAÇÃO SEMANAL)
+        // V5.6.0: CONTEÚDO DA ABA FATURAMENTO (VISÃO MENSAL FIXA + AGRUPADO POR ORÇAMENTO)
         function renderPaginaFaturamentoView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
 
             updateDateLabel();
 
-            const targetDate = new Date(currentDate);
-            let dayOfWeek = targetDate.getDay() - 1;
-            if (dayOfWeek === -1) dayOfWeek = 6;
-
-            const wStart = new Date(targetDate);
-            wStart.setDate(wStart.getDate() - dayOfWeek);
-            wStart.setHours(0,0,0,0);
-
-            const wEnd = new Date(wStart);
-            wEnd.setDate(wEnd.getDate() + 6);
-            wEnd.setHours(23,59,59,999);
-
-            const monthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-            const dayKey = currentDate.toISOString().substring(0, 10);
+            const selectedYear = currentDate.getFullYear();
+            const selectedMonth = currentDate.getMonth() + 1;
+            const monthKey = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
 
             const nowObj = new Date();
+            const currYear = nowObj.getFullYear();
+            const currMonth = nowObj.getMonth() + 1;
             const currWeekNum = getISOWeekNumber(nowObj);
 
-            // 1. FILTRAGEM POR PERÍODO
+            // VERIFICA SE É UM MÊS PASSADO
+            const isMesPassado = (selectedYear < currYear) || (selectedYear === currYear && selectedMonth < currMonth);
+
+            const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+            const segmentoFiltro = document.getElementById('segmentoFilter')?.value || '';
+            const clienteFiltro = document.getElementById('clientFilter')?.value || '';
+
+            // 1. FILTRAGEM DOS DADOS DO FATURAMENTO
             const filteredFat = rawFaturamentoData.filter(item => {
                 const dtBaseStr = item.dt_previsao_entrega || item.entrega_normalizada || '';
                 if (!dtBaseStr) return false;
                 const itemDateStr = String(dtBaseStr).substring(0, 10);
 
-                if (currentView === 'month') {
-                    return itemDateStr.substring(0, 7) === monthKey;
-                } else if (currentView === 'day') {
-                    return itemDateStr === dayKey;
-                } else if (currentView === 'week') {
-                    const parts = itemDateStr.split('-');
-                    if (parts.length === 3) {
-                        const itemDate = new Date(parts[0], parts[1] - 1, parts[2]);
-                        return itemDate >= wStart && itemDate <= wEnd;
-                    }
+                // Garante que é do mês selecionado
+                if (itemDateStr.substring(0, 7) !== monthKey) return false;
+
+                // Filtro por Segmento
+                if (segmentoFiltro && String(item.segmento || '') !== segmentoFiltro) return false;
+
+                // Filtro por Cliente
+                if (clienteFiltro && String(item.cliente || '') !== clienteFiltro) return false;
+
+                // Busca por texto
+                if (search) {
+                    const mCliente = String(item.cliente || '').toLowerCase().includes(search);
+                    const mOrcamento = String(item.n_orcamento || '').toLowerCase().includes(search);
+                    const mOS = String(item.n_os || '').toLowerCase().includes(search);
+                    const mCod = String(item.cod_interno || '').toLowerCase().includes(search);
+                    const mDesc = String(item.descricao || '').toLowerCase().includes(search);
+                    if (!mCliente && !mOrcamento && !mOS && !mCod && !mDesc) return false;
                 }
-                return false;
+
+                return true;
             });
 
             if (filteredFat.length === 0) {
                 grid.innerHTML = `
                     <div class="bg-white rounded-2xl border border-blue-200 p-12 text-center text-slate-400 flex flex-col items-center gap-3 shadow-sm">
                         <i data-lucide="package-x" class="w-12 h-12 text-blue-300 stroke-1"></i>
-                        <p class="text-xs font-bold text-slate-600">Nenhum registro de faturamento encontrado para o período selecionado.</p>
+                        <p class="text-xs font-bold text-slate-600">Nenhum registro de faturamento encontrado para o mês selecionado com os filtros atuais.</p>
                     </div>
                 `;
                 return;
             }
 
-            // 2. AGRUPAMENTO POR ORÇAMENTO (N_ORCAMENTO) PARA EVITAR DUPLICAÇÃO DE ITENS
+            // 2. AGRUPAMENTO POR ORÇAMENTO (N_ORCAMENTO) PARA EVITAR DUPLICIDADE
             const budgetGrouped = {};
             filteredFat.forEach(item => {
                 const key = String(item.n_orcamento || 'SEM_ORCAMENTO').trim();
@@ -1252,6 +1307,7 @@
                         cod_interno: item.cod_interno || '-',
                         dt_previsao_entrega: item.dt_previsao_entrega,
                         entrega_normalizada: item.entrega_normalizada,
+                        dt_emissao: item.dt_emissao,
                         os_set: new Set(),
                         vl_faturado: 0,
                         vl_a_faturar: 0,
@@ -1265,30 +1321,36 @@
                 }
 
                 const fat = parseFloat(item.vl_faturado) || 0;
-                const aFat = parseFloat(item.vl_a_faturar) || 0;
+                let aFat = parseFloat(item.vl_a_faturar) || 0;
+
+                // REQUISITO: Em meses passados não pode considerar valor a faturar
+                if (isMesPassado) {
+                    aFat = 0;
+                }
 
                 budgetGrouped[key].vl_faturado += fat;
                 budgetGrouped[key].vl_a_faturar += aFat;
 
-                if (fat > 0 || (item.numero_nf && String(item.numero_nf).trim() !== '')) {
+                if (fat > 0 || (item.numero_nf && String(item.numero_nf).trim() !== '' && String(item.numero_nf) !== 'None')) {
                     budgetGrouped[key].is_faturado = true;
                 }
             });
 
             const consolidatedList = Object.values(budgetGrouped);
 
-            // MÉTRICAS DO TOPO DO FATURAMENTO
+            // MÉTRICAS TOTAIS RECALCULADAS DINAMICAMENTE CONFORME FILTROS
             const totalFaturadoVal = consolidatedList.reduce((acc, i) => acc + i.vl_faturado, 0);
-            const totalAFaturarVal = consolidatedList.reduce((acc, i) => acc + i.vl_a_faturar, 0);
+            const totalAFaturarVal = isMesPassado ? 0 : consolidatedList.reduce((acc, i) => acc + i.vl_a_faturar, 0);
             const totalGeralVal = totalFaturadoVal + totalAFaturarVal;
 
-            // 3. AGRUPAMENTO DAS LINHAS CONSOLIDADAS POR SEMANA DO ANO
+            // 3. AGRUPAMENTO POR SEMANA DO ANO
             const groupedByWeek = {};
             consolidatedList.forEach(item => {
                 const dtStr = item.dt_previsao_entrega || item.entrega_normalizada || '';
                 const dateObj = new Date(dtStr.substring(0, 10));
                 const weekNum = isNaN(dateObj.getTime()) ? 0 : getISOWeekNumber(dateObj);
-                const weekName = isNaN(dateObj.getTime()) ? 'Outros' : `Semana ${weekNum}`;
+                const weekDateRange = isNaN(dateObj.getTime()) ? '' : getWeekDateRangeStr(dateObj);
+                const weekName = isNaN(dateObj.getTime()) ? 'Outros' : `SEMANA ${weekNum} (${weekDateRange})`;
 
                 if (!groupedByWeek[weekName]) {
                     groupedByWeek[weekName] = {
@@ -1313,17 +1375,17 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-3 flex-wrap">
-                        <div class="bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 text-right">
+                        <div class="bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200 text-right">
                             <span class="text-[9px] uppercase font-bold text-slate-400 block">Total Faturado</span>
-                            <span class="text-xs font-black text-emerald-600 font-mono">${formatBRL(totalFaturadoVal)}</span>
+                            <span class="text-sm font-black text-emerald-600 font-mono">${formatBRL(totalFaturadoVal)}</span>
                         </div>
-                        <div class="bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 text-right">
+                        <div class="bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200 text-right">
                             <span class="text-[9px] uppercase font-bold text-slate-400 block">A Faturar</span>
-                            <span class="text-xs font-black text-blue-600 font-mono">${formatBRL(totalAFaturarVal)}</span>
+                            <span class="text-sm font-black text-blue-600 font-mono">${formatBRL(totalAFaturarVal)}</span>
                         </div>
-                        <div class="bg-columbia-700 text-white px-3.5 py-2 rounded-xl text-right shadow-xs">
+                        <div class="bg-columbia-700 text-white px-4 py-2 rounded-xl text-right shadow-xs">
                             <span class="text-[9px] uppercase font-bold text-columbia-100 block">Total Geral</span>
-                            <span class="text-sm font-extrabold text-amber-300 font-mono">${formatBRL(totalGeralVal)}</span>
+                            <span class="text-base font-extrabold text-amber-300 font-mono">${formatBRL(totalGeralVal)}</span>
                         </div>
                     </div>
                 </div>
@@ -1337,14 +1399,14 @@
                 const weekNum = weekGroup.num;
                 const items = weekGroup.items;
 
-                // ORDENAÇÃO SEGUNDO REGRA DE NEGÓCIO:
-                // Semana Atual: Primeiro Faturados, depois Previstos
-                if (weekNum === currWeekNum) {
+                // REQUISITO DE ORDENAÇÃO POR SEMANA:
+                // Semana Atual: Primeiro os Faturados, depois Previstos
+                if (weekNum === currWeekNum && !isMesPassado) {
                     items.sort((a, b) => {
                         if (a.is_faturado === b.is_faturado) {
                             return String(a.dt_previsao_entrega).localeCompare(String(b.dt_previsao_entrega));
                         }
-                        return a.is_faturado ? -1 : 1; // Faturados em primeiro lugar
+                        return a.is_faturado ? -1 : 1;
                     });
                 } else {
                     items.sort((a, b) => String(a.dt_previsao_entrega).localeCompare(String(b.dt_previsao_entrega)));
@@ -1358,7 +1420,7 @@
                         <div class="bg-columbia-800 text-white px-4 py-2.5 flex justify-between items-center flex-wrap gap-2 border-b border-columbia-900">
                             <div class="flex items-center gap-2 font-bold text-xs">
                                 <i data-lucide="layers" class="w-4 h-4 text-columbia-100"></i>
-                                <span class="uppercase tracking-wider">${weekGroup.name}</span>
+                                <span class="uppercase tracking-wider font-extrabold">${weekGroup.name}</span>
                                 <span class="bg-columbia-900 text-columbia-100 px-2 py-0.5 rounded-md text-[10px] font-mono">
                                     ${items.length} orçamento${items.length === 1 ? '' : 's'}
                                 </span>
@@ -1368,7 +1430,7 @@
                             </div>
                         </div>
 
-                        <!-- TABELA DE FATURAMENTO EXATAMENTE CONFORME EXCEL -->
+                        <!-- TABELA DE FATURAMENTO IDENTICA AO EXCEL -->
                         <div class="overflow-x-auto custom-scroll">
                             <table class="w-full text-left text-[11px] border-collapse">
                                 <thead>
@@ -1379,7 +1441,7 @@
                                         <th class="p-2.5">OS</th>
                                         <th class="p-2.5 text-center">Data Inicial</th>
                                         <th class="p-2.5 text-center">Faturado</th>
-                                        <th class="p-2.5 text-center">Data Prevista</th>
+                                        <th class="p-2.5 text-center">Data Prevista / Emissão</th>
                                         <th class="p-2.5 text-right">Valor</th>
                                     </tr>
                                 </thead>
@@ -1388,7 +1450,9 @@
                                         const isFaturado = item.is_faturado;
                                         const valorExibir = isFaturado ? item.vl_faturado : item.vl_a_faturar;
                                         const dtInicial = formatDate(item.dt_previsao_entrega);
-                                        const dtPrevista = formatDate(item.entrega_normalizada);
+                                        
+                                        // REQUISITO: Quando nota emitida, trazer data de emissão da nota
+                                        const dtPrevistaOuEmissao = isFaturado ? formatDate(item.dt_emissao || item.entrega_normalizada) : formatDate(item.entrega_normalizada);
                                         
                                         const osListStr = Array.from(item.os_set).map(o => `OS ${o}`).join(' - ');
 
@@ -1404,7 +1468,7 @@
                                                         ${isFaturado ? 'Faturado' : '-'}
                                                     </span>
                                                 </td>
-                                                <td class="p-2.5 text-center font-bold ${isFaturado ? 'text-slate-600' : 'text-red-600'}">${dtPrevista}</td>
+                                                <td class="p-2.5 text-center font-bold ${isFaturado ? 'text-emerald-700' : 'text-red-600'}">${dtPrevistaOuEmissao}</td>
                                                 <td class="p-2.5 text-right font-mono font-bold ${isFaturado ? 'text-emerald-700' : 'text-slate-800'}">${formatBRL(valorExibir)}</td>
                                             </tr>
                                         `;
