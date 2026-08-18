@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V5.4.0</title>
+    <title>Programação de Produção - Columbia V5.5.0</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V5.4.0</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V5.5.0</p>
                 </div>
             </div>
 
@@ -660,6 +660,7 @@
             return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
         }
 
+        // CONTROLADOR DO REFRESH MANUAL E SILENCIOSO
         async function fetchData(isSilent = false) {
             const refreshIcon = document.getElementById('refreshIcon');
             const btnRefresh = document.getElementById('btnRefresh');
@@ -872,6 +873,9 @@
         }
 
         function formatBRL(value) {
+            if (abaAtiva === 'faturamento') {
+                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+            }
             if (!isValuesUnlocked) return 'R$ *****';
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
         }
@@ -1181,7 +1185,7 @@
             `;
         }
 
-        // CONTEÚDO COMPLETO DA ABA FATURAMENTO (SUBSTITUIÇÃO DE PLANILHA)
+        // CONTEÚDO DA ABA FATURAMENTO (V5.5.0 - AGRUPADO POR ORÇAMENTO + ORDENAÇÃO SEMANAL)
         function renderPaginaFaturamentoView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1203,7 +1207,10 @@
             const monthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
             const dayKey = currentDate.toISOString().substring(0, 10);
 
-            // FILTRAGEM POR DATA DO PERÍODO SELECIONADO
+            const nowObj = new Date();
+            const currWeekNum = getISOWeekNumber(nowObj);
+
+            // 1. FILTRAGEM POR PERÍODO
             const filteredFat = rawFaturamentoData.filter(item => {
                 const dtBaseStr = item.dt_previsao_entrega || item.entrega_normalizada || '';
                 if (!dtBaseStr) return false;
@@ -1223,11 +1230,6 @@
                 return false;
             });
 
-            // MÉTRICAS TOTAIS DE FATURAMENTO
-            const totalGeralVal = filteredFat.reduce((acc, i) => acc + (parseFloat(i.vl_a_faturar) || 0) + (parseFloat(i.vl_faturado) || 0), 0);
-            const totalFaturadoVal = filteredFat.reduce((acc, i) => acc + (parseFloat(i.vl_faturado) || 0), 0);
-            const totalAFaturarVal = filteredFat.reduce((acc, i) => acc + (parseFloat(i.vl_a_faturar) || 0), 0);
-
             if (filteredFat.length === 0) {
                 grid.innerHTML = `
                     <div class="bg-white rounded-2xl border border-blue-200 p-12 text-center text-slate-400 flex flex-col items-center gap-3 shadow-sm">
@@ -1238,15 +1240,64 @@
                 return;
             }
 
-            // AGRUPAR POR SEMANA DO ANO
-            const groupedByWeek = {};
+            // 2. AGRUPAMENTO POR ORÇAMENTO (N_ORCAMENTO) PARA EVITAR DUPLICAÇÃO DE ITENS
+            const budgetGrouped = {};
             filteredFat.forEach(item => {
-                const dtStr = item.dt_previsao_entrega || item.entrega_normalizada;
-                const dateObj = new Date(dtStr.substring(0, 10));
-                const weekNum = isNaN(dateObj) ? 'Outros' : `Semana ${getISOWeekNumber(dateObj)}`;
+                const key = String(item.n_orcamento || 'SEM_ORCAMENTO').trim();
                 
-                if (!groupedByWeek[weekNum]) groupedByWeek[weekNum] = [];
-                groupedByWeek[weekNum].push(item);
+                if (!budgetGrouped[key]) {
+                    budgetGrouped[key] = {
+                        n_orcamento: item.n_orcamento || '-',
+                        cliente: item.cliente || '-',
+                        cod_interno: item.cod_interno || '-',
+                        dt_previsao_entrega: item.dt_previsao_entrega,
+                        entrega_normalizada: item.entrega_normalizada,
+                        os_set: new Set(),
+                        vl_faturado: 0,
+                        vl_a_faturar: 0,
+                        numero_nf: item.numero_nf || '',
+                        is_faturado: false
+                    };
+                }
+
+                if (item.n_os) {
+                    budgetGrouped[key].os_set.add(String(item.n_os).trim());
+                }
+
+                const fat = parseFloat(item.vl_faturado) || 0;
+                const aFat = parseFloat(item.vl_a_faturar) || 0;
+
+                budgetGrouped[key].vl_faturado += fat;
+                budgetGrouped[key].vl_a_faturar += aFat;
+
+                if (fat > 0 || (item.numero_nf && String(item.numero_nf).trim() !== '')) {
+                    budgetGrouped[key].is_faturado = true;
+                }
+            });
+
+            const consolidatedList = Object.values(budgetGrouped);
+
+            // MÉTRICAS DO TOPO DO FATURAMENTO
+            const totalFaturadoVal = consolidatedList.reduce((acc, i) => acc + i.vl_faturado, 0);
+            const totalAFaturarVal = consolidatedList.reduce((acc, i) => acc + i.vl_a_faturar, 0);
+            const totalGeralVal = totalFaturadoVal + totalAFaturarVal;
+
+            // 3. AGRUPAMENTO DAS LINHAS CONSOLIDADAS POR SEMANA DO ANO
+            const groupedByWeek = {};
+            consolidatedList.forEach(item => {
+                const dtStr = item.dt_previsao_entrega || item.entrega_normalizada || '';
+                const dateObj = new Date(dtStr.substring(0, 10));
+                const weekNum = isNaN(dateObj.getTime()) ? 0 : getISOWeekNumber(dateObj);
+                const weekName = isNaN(dateObj.getTime()) ? 'Outros' : `Semana ${weekNum}`;
+
+                if (!groupedByWeek[weekName]) {
+                    groupedByWeek[weekName] = {
+                        num: weekNum,
+                        name: weekName,
+                        items: []
+                    };
+                }
+                groupedByWeek[weekName].items.push(item);
             });
 
             let html = `
@@ -1280,13 +1331,26 @@
                 <div class="space-y-4">
             `;
 
-            Object.keys(groupedByWeek).forEach(weekName => {
-                const items = groupedByWeek[weekName];
-                
-                // Ordena por data de previsão de entrega
-                items.sort((a, b) => String(a.dt_previsao_entrega).localeCompare(String(b.dt_previsao_entrega)));
+            const sortedWeeks = Object.values(groupedByWeek).sort((a, b) => a.num - b.num);
 
-                const subtotalSemana = items.reduce((acc, i) => acc + (parseFloat(i.vl_a_faturar) || 0) + (parseFloat(i.vl_faturado) || 0), 0);
+            sortedWeeks.forEach(weekGroup => {
+                const weekNum = weekGroup.num;
+                const items = weekGroup.items;
+
+                // ORDENAÇÃO SEGUNDO REGRA DE NEGÓCIO:
+                // Semana Atual: Primeiro Faturados, depois Previstos
+                if (weekNum === currWeekNum) {
+                    items.sort((a, b) => {
+                        if (a.is_faturado === b.is_faturado) {
+                            return String(a.dt_previsao_entrega).localeCompare(String(b.dt_previsao_entrega));
+                        }
+                        return a.is_faturado ? -1 : 1; // Faturados em primeiro lugar
+                    });
+                } else {
+                    items.sort((a, b) => String(a.dt_previsao_entrega).localeCompare(String(b.dt_previsao_entrega)));
+                }
+
+                const subtotalSemana = items.reduce((acc, i) => acc + (i.is_faturado ? i.vl_faturado : i.vl_a_faturar), 0);
 
                 html += `
                     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
@@ -1294,54 +1358,54 @@
                         <div class="bg-columbia-800 text-white px-4 py-2.5 flex justify-between items-center flex-wrap gap-2 border-b border-columbia-900">
                             <div class="flex items-center gap-2 font-bold text-xs">
                                 <i data-lucide="layers" class="w-4 h-4 text-columbia-100"></i>
-                                <span class="uppercase tracking-wider">${weekName}</span>
+                                <span class="uppercase tracking-wider">${weekGroup.name}</span>
                                 <span class="bg-columbia-900 text-columbia-100 px-2 py-0.5 rounded-md text-[10px] font-mono">
-                                    ${items.length} item${items.length === 1 ? '' : 'ns'}
+                                    ${items.length} orçamento${items.length === 1 ? '' : 's'}
                                 </span>
                             </div>
                             <div class="text-xs font-extrabold text-emerald-300 font-mono">
-                                Subtotal: ${formatBRL(subtotalSemana)}
+                                TOTAL: ${formatBRL(subtotalSemana)}
                             </div>
                         </div>
 
-                        <!-- TABELA DA SEMANA ESTILO PLANILHA -->
+                        <!-- TABELA DE FATURAMENTO EXATAMENTE CONFORME EXCEL -->
                         <div class="overflow-x-auto custom-scroll">
                             <table class="w-full text-left text-[11px] border-collapse">
                                 <thead>
                                     <tr class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200 uppercase text-[9.5px]">
                                         <th class="p-2.5">Orçamento</th>
                                         <th class="p-2.5">Cliente</th>
+                                        <th class="p-2.5">Caixa exportação</th>
                                         <th class="p-2.5">OS</th>
-                                        <th class="p-2.5">Código Interno</th>
-                                        <th class="p-2.5">Descrição</th>
-                                        <th class="p-2.5 text-center">Prev. Entrega</th>
-                                        <th class="p-2.5 text-center">Status</th>
-                                        <th class="p-2.5 text-right">Valor A Faturar</th>
-                                        <th class="p-2.5 text-right">Valor Faturado</th>
+                                        <th class="p-2.5 text-center">Data Inicial</th>
+                                        <th class="p-2.5 text-center">Faturado</th>
+                                        <th class="p-2.5 text-center">Data Prevista</th>
+                                        <th class="p-2.5 text-right">Valor</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 font-medium">
                                     ${items.map(item => {
-                                        const isFaturado = (parseFloat(item.vl_faturado) > 0) || (item.numero_nf && String(item.numero_nf).trim() !== '');
-                                        const valAFaturar = parseFloat(item.vl_a_faturar) || 0;
-                                        const valFaturado = parseFloat(item.vl_faturado) || 0;
-                                        const dtPrev = formatDate(item.dt_previsao_entrega);
+                                        const isFaturado = item.is_faturado;
+                                        const valorExibir = isFaturado ? item.vl_faturado : item.vl_a_faturar;
+                                        const dtInicial = formatDate(item.dt_previsao_entrega);
+                                        const dtPrevista = formatDate(item.entrega_normalizada);
+                                        
+                                        const osListStr = Array.from(item.os_set).map(o => `OS ${o}`).join(' - ');
 
                                         return `
-                                            <tr class="${isFaturado ? 'bg-emerald-50/70 hover:bg-emerald-100/60' : 'hover:bg-slate-50'} transition-colors">
-                                                <td class="p-2.5 font-bold font-mono text-columbia-700">${item.n_orcamento || '-'}</td>
-                                                <td class="p-2.5 font-bold text-slate-800 uppercase">${item.cliente || '-'}</td>
-                                                <td class="p-2.5 font-mono font-bold text-slate-700">${item.n_os ? 'OS ' + item.n_os : '-'}</td>
-                                                <td class="p-2.5 font-mono text-slate-600">${item.cod_interno || '-'}</td>
-                                                <td class="p-2.5 text-slate-700 truncate max-w-[220px]" title="${item.descricao}">${item.descricao || '-'}</td>
-                                                <td class="p-2.5 text-center font-bold text-slate-600">${dtPrev}</td>
+                                            <tr class="${isFaturado ? 'bg-emerald-50/80 hover:bg-emerald-100/70' : 'hover:bg-slate-50'} transition-colors">
+                                                <td class="p-2.5 font-bold font-mono text-columbia-700">${item.n_orcamento}</td>
+                                                <td class="p-2.5 font-bold text-slate-800 uppercase">${item.cliente}</td>
+                                                <td class="p-2.5 font-mono text-slate-600">${item.cod_interno !== '-' ? item.cod_interno : ''}</td>
+                                                <td class="p-2.5 font-mono font-bold text-slate-700">${osListStr}</td>
+                                                <td class="p-2.5 text-center font-bold text-slate-600">${dtInicial}</td>
                                                 <td class="p-2.5 text-center">
-                                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${isFaturado ? 'bg-emerald-200 text-emerald-900 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-200'}">
-                                                        ${isFaturado ? 'Faturado 🟢' : 'Pendente 🟡'}
+                                                    <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase ${isFaturado ? 'bg-emerald-200 text-emerald-900 border border-emerald-300' : 'bg-slate-100 text-slate-500 border border-slate-200'}">
+                                                        ${isFaturado ? 'Faturado' : '-'}
                                                     </span>
                                                 </td>
-                                                <td class="p-2.5 text-right font-mono font-bold text-blue-700">${formatBRL(valAFaturar)}</td>
-                                                <td class="p-2.5 text-right font-mono font-bold ${isFaturado ? 'text-emerald-700' : 'text-slate-400'}">${formatBRL(valFaturado)}</td>
+                                                <td class="p-2.5 text-center font-bold ${isFaturado ? 'text-slate-600' : 'text-red-600'}">${dtPrevista}</td>
+                                                <td class="p-2.5 text-right font-mono font-bold ${isFaturado ? 'text-emerald-700' : 'text-slate-800'}">${formatBRL(valorExibir)}</td>
                                             </tr>
                                         `;
                                     }).join('')}
