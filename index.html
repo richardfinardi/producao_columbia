@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.5.0</title>
+    <title>Programação de Produção - Columbia V7.6.0</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.5.0</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.0</p>
                 </div>
             </div>
 
@@ -239,7 +239,6 @@
 
             <!-- BOTÕES DE FILTRO SEPARADOS -->
             <div id="extraButtonsContainer" class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-                <!-- V7.5.0: SUBSTITUÍDO BOTÃO "EXIBIR TODAS AS SEMANAS" PELO "EXIBIR OS CONCLUÍDA" -->
                 <button id="btnToggleConcluidas" onclick="toggleConcluidasFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-columbia-600"></i>
                     <span id="txtToggleConcluidas">Exibir OS Concluída</span>
@@ -467,7 +466,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO NO ESCOPO GLOBAL COM CHECAGEM DE NULOS -->
+    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO NO ESCOPO GLOBAL -->
     <script>
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         const API_HR_A_MAIS = 'https://columbia.consultoriarf.net/hr-a-mais';
@@ -482,7 +481,8 @@
         let currentView = 'week';
         let abaAtiva = 'dashboard';
 
-        let showConcluidas = false; // V7.5.0: Padrão exibe apenas concluido: "nao"
+        let showConcluidas = false; 
+        let isFaturamentoLoading = false; // V7.6.0: Controle do estado de carregamento do faturamento
         let onlyCurrentMonth = true;
         let onlyWithBudget = false;
         let isValuesUnlocked = false;
@@ -499,6 +499,9 @@
             lucide.createIcons();
             setViewMode('week', false);
             fetchData();
+
+            // V7.6.0: Pré-carrega faturamento em background
+            fetchFaturamentoData(true);
 
             // AUTO-REFRESH SILENCIOSO A CADA 30 SEGUNDOS
             setInterval(() => {
@@ -517,10 +520,6 @@
                 }
             }, 30000);
         });
-
-        // ==============================================================================
-        // DECLARAÇÃO SEGURA DAS FUNÇÕES DE MODAL NO WINDOW
-        // ==============================================================================
 
         window.setElText = function(id, text) {
             const el = document.getElementById(id);
@@ -744,6 +743,7 @@
                     throw new Error(errorData.detail || 'Falha ao salvar a alteração no banco.');
                 }
 
+                // ATUALIZAÇÃO IMEDIATA NA MEMÓRIA LOCAL
                 const updatedOSStr = String(selectedItemModal.n_os).trim();
                 rawData.forEach(i => {
                     if (String(i.n_os).trim() === updatedOSStr) {
@@ -782,6 +782,7 @@
             }
         };
 
+        // ABERTURA DE ANEXOS DESENHO TÉCNICO PDF
         async function abrirDesenhoAnexo(event, cod_empresa, cod_os, cod_os_aux) {
             if (event && typeof event.stopPropagation === 'function') {
                 event.stopPropagation();
@@ -1103,15 +1104,24 @@
             }
         }
 
+        // V7.6.0: BUSCA DE FATURAMENTO COM CONTROLE DE STATE DE CARREGAMENTO
         async function fetchFaturamentoData(isSilent = false) {
             try {
+                if (rawFaturamentoData.length === 0 && !isSilent) {
+                    isFaturamentoLoading = true;
+                    if (abaAtiva === 'faturamento') renderPaginaFaturamentoView();
+                }
+
                 const cacheBusterUrl = `${API_FATURAMENTO}?_t=${Date.now()}`;
                 const response = await fetch(cacheBusterUrl, { cache: 'no-store' });
                 if (!response.ok) throw new Error('Erro na requisição da API de faturamento');
                 rawFaturamentoData = await response.json();
-                if (abaAtiva === 'faturamento') renderPaginaFaturamentoView();
+                
             } catch (err) {
                 console.error('Erro ao buscar dados de faturamento:', err);
+            } finally {
+                isFaturamentoLoading = false;
+                if (abaAtiva === 'faturamento') renderPaginaFaturamentoView();
             }
         }
 
@@ -1242,7 +1252,6 @@
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
         }
 
-        // V7.5.0: FILTRO DE PRODUÇÃO - EXIBE PADRÃO APENAS CONCLUIDO "NAO"
         function getFilteredData() {
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
             const atrasadaFiltro = document.getElementById('atrasadaFilter')?.value || '';
@@ -1258,7 +1267,6 @@
                 const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
                 if (estaNoLimbo) return false;
 
-                // V7.5.0: FILTRO DE CONCLUÍDO (Se showConcluidas == false, esconde concluido == "sim")
                 const isConcluido = String(item.concluido || '').toLowerCase() === 'sim' || String(item.concluido || '').toLowerCase() === 's' || String(item.concluido || '') === '1';
                 if (!showConcluidas && isConcluido) {
                     return false;
@@ -1529,11 +1537,27 @@
             `;
         }
 
+        // V7.6.0: ABA FATURAMENTO COM INDICADOR VISUAL DE CARREGAMENTO (LOADING SKELETON)
         function renderPaginaFaturamentoView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
 
             updateDateLabel();
+
+            // V7.6.0: Exibe tela de carregando se a API ainda não terminou
+            if (isFaturamentoLoading) {
+                grid.innerHTML = `
+                    <div class="bg-white rounded-2xl border border-blue-200 p-12 text-center text-slate-500 flex flex-col items-center gap-3 shadow-sm">
+                        <i data-lucide="loader-2" class="w-10 h-10 text-columbia-600 animate-spin"></i>
+                        <div>
+                            <h4 class="font-extrabold text-sm text-slate-800">Carregando dados de faturamento...</h4>
+                            <p class="text-xs text-slate-400 font-medium mt-1">Buscando as notas e orçamentos atualizados.</p>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
 
             const selectedYear = currentDate.getFullYear();
             const selectedMonth = currentDate.getMonth() + 1;
@@ -2083,7 +2107,6 @@
             grid.innerHTML = html;
         }
 
-        // V7.5.0: ALTERNA O EXIBIR OS CONCLUÍDA
         function toggleConcluidasFilter() {
             showConcluidas = !showConcluidas;
             const btn = document.getElementById('btnToggleConcluidas');
