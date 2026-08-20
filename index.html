@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V5.7.0</title>
+    <title>Programação de Produção - Columbia V5.8.0</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V5.7.0</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V5.8.0</p>
                 </div>
             </div>
 
@@ -85,7 +85,7 @@
                     <span id="userDisplayName">Usuário</span>
                 </div>
 
-                <!-- ABAS DE NAVEGAÇÃO INTERNA NO HEADER -->
+                <!-- ABAS DE NAVEGAÇÃO INTERNA NO HEADER (SISTEMA DE ABAS SPA) -->
                 <button id="btnAbaDashboard" onclick="setAbaAtiva('dashboard')" class="flex items-center gap-1.5 px-3 py-2 bg-columbia-900 text-white font-extrabold rounded-xl text-xs transition shadow-md border border-columbia-500">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
                     <span>Produção</span>
@@ -159,7 +159,7 @@
             <!-- Busca Geral Universal -->
             <div class="flex items-center gap-2 flex-1 min-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
-                <input type="text" id="searchInput" oninput="renderView()" placeholder="Pesquisar (OS, Título, Cliente, Origem, Cod. Interno...)" 
+                <input type="text" id="searchInput" oninput="renderView()" placeholder="Pesquisar (OS, Título, Cliente, Origem, NF, Cod. Interno...)" 
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
             </div>
 
@@ -506,15 +506,16 @@
             setViewMode(currentView, false);
             fetchData();
 
-            // AUTO-REFRESH DE BACKGROUND A CADA 30 SEGUNDOS (SEM PISCAR DADOS)
+            // AUTO-REFRESH SILENCIOSO A CADA 30 SEGUNDOS (SEM ZERAR CAMPO DE PESQUISA)
             setInterval(() => {
                 const isModalOpen = !document.getElementById('osModal').classList.contains('hidden') ||
                                     !document.getElementById('altRenegociationFormModal').classList.contains('hidden') ||
                                     !document.getElementById('passwordModal').classList.contains('hidden');
                 
                 if (!isModalOpen) {
-                    fetchData(true);
-                    if (abaAtiva === 'conferencia') {
+                    if (abaAtiva === 'dashboard' || abaAtiva === 'limbo') {
+                        fetchData(true);
+                    } else if (abaAtiva === 'conferencia') {
                         fetchConferenciaData(true);
                     } else if (abaAtiva === 'faturamento') {
                         fetchFaturamentoData(true);
@@ -551,7 +552,7 @@
             }
         }
 
-        // TROCA O ESTADO DA ABA ATIVA E RE-ESTRUTURA FILTROS
+        // TROCA O ESTADO DA ABA ATIVA E AJUSTA VISIBILIDADE DE FILTROS
         function setAbaAtiva(novaAba) {
             abaAtiva = novaAba;
 
@@ -603,7 +604,6 @@
                 if (filtersBar) filtersBar.classList.remove('hidden');
                 if (navigationBar) navigationBar.classList.remove('hidden');
 
-                // Faturamento mantem Busca, Segmento e Cliente. Esconde os demais filtros de produção.
                 if (atrasadaContainer) atrasadaContainer.classList.add('hidden');
                 if (apontamentoContainer) apontamentoContainer.classList.add('hidden');
                 if (producaoContainer) producaoContainer.classList.add('hidden');
@@ -685,7 +685,7 @@
             return `${num.toFixed(2)} hrs`;
         }
 
-        // V5.7.0: CALCULADOR DE SEMANA ISO DE FORMA ESTRITA E SEM DESVIO DE FUSO
+        // V5.8.0: CALCULADOR DE SEMANA ISO DE FORMA ESTRITA E SEM DESVIO DE FUSO
         function getISOWeekNumber(d) {
             let date;
             if (typeof d === 'string') {
@@ -705,7 +705,7 @@
             return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
         }
 
-        // V5.7.0: RETORNA INTERVALO FORMATADO DA SEMANA (EX: 17/08 - 23/08) SEM DESVIO UTC
+        // V5.8.0: RETORNA INTERVALO FORMATADO DA SEMANA (EX: 17/08 - 23/08) SEM DESVIO UTC
         function getWeekDateRangeStr(d) {
             let targetDate;
             if (typeof d === 'string') {
@@ -729,7 +729,7 @@
             return `${fmtDay(wStart)}/${fmtMonth(wStart)} - ${fmtDay(wEnd)}/${fmtMonth(wEnd)}`;
         }
 
-        // V5.7.0: PRESERVA FILTROS APLICADOS EM REFRESH EM BACKGROUND
+        // REQUISIÇÃO DO DASHBOARD PRINCIPAL
         async function fetchData(isSilent = false) {
             const refreshIcon = document.getElementById('refreshIcon');
             const btnRefresh = document.getElementById('btnRefresh');
@@ -770,11 +770,13 @@
                 }
 
                 const searchInput = document.getElementById('searchInput');
-                if (searchInput && searchInput.value !== savedFilters.search) {
+                if (searchInput && searchInput.value !== savedFilters.search && !isSilent) {
                     searchInput.value = savedFilters.search;
                 }
 
-                renderView();
+                if (abaAtiva === 'dashboard' || abaAtiva === 'limbo') {
+                    renderView();
+                }
 
             } catch (error) {
                 console.error('Erro ao buscar dados da API:', error);
@@ -782,12 +784,8 @@
                     alert('Não foi possível atualizar os dados de produção. Verifique a conexão com o servidor.');
                 }
             } finally {
-                if (refreshIcon) {
-                    refreshIcon.classList.remove('animate-spin');
-                }
-                if (btnRefresh) {
-                    btnRefresh.disabled = false;
-                }
+                if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+                if (btnRefresh) btnRefresh.disabled = false;
                 lucide.createIcons();
             }
         }
@@ -1080,7 +1078,7 @@
             lucide.createIcons();
         }
 
-        // CONTEÚDO COMPLETO DA ABA CONFERÊNCIA APONTAMENTOS
+        // CONTEÚDO COMPLETO DA ABA CONFERÊNCIA APONTAMENTOS (HORAS A MAIS)
         function renderPaginaConferenciaView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1254,7 +1252,7 @@
             `;
         }
 
-        // V5.7.0: CONTEÚDO DA ABA FATURAMENTO (VISÃO MENSAL + CORREÇÃO DE AGRUPAMENTO SEMANAL E MESES PASSADOS)
+        // V5.8.0: CONTEÚDO DA ABA FATURAMENTO COM CORREÇÃO DE DATAS DE EMISSÃO/NF E FUSO DE SEMANA
         function renderPaginaFaturamentoView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1277,9 +1275,20 @@
             const segmentoFiltro = document.getElementById('segmentoFilter')?.value || '';
             const clienteFiltro = document.getElementById('clientFilter')?.value || '';
 
-            // 1. FILTRAGEM DOS DADOS
+            // 1. FILTRAGEM DOS DADOS PELA DATA PRINCIPAL DE REFERÊNCIA
             const filteredFat = rawFaturamentoData.filter(item => {
-                const dtBaseStr = item.dt_previsao_entrega || item.entrega_normalizada || '';
+                const fat = parseFloat(item.vl_faturado) || 0;
+                const temNF = item.numero_nf && String(item.numero_nf).trim() !== '' && String(item.numero_nf) !== 'None';
+                const isFaturado = fat > 0 || temNF;
+
+                // V5.8.0: Se faturado usa dt_emissao como chave principal, senão usa dt_previsao_entrega/entrega_normalizada
+                let dtBaseStr = '';
+                if (isFaturado && item.dt_emissao && String(item.dt_emissao).trim() !== 'NaT' && String(item.dt_emissao).trim() !== 'None') {
+                    dtBaseStr = item.dt_emissao;
+                } else {
+                    dtBaseStr = item.dt_previsao_entrega || item.entrega_normalizada || '';
+                }
+
                 if (!dtBaseStr) return false;
                 const itemDateStr = String(dtBaseStr).substring(0, 10);
 
@@ -1293,7 +1302,8 @@
                     const mOS = String(item.n_os || '').toLowerCase().includes(search);
                     const mCod = String(item.cod_interno || '').toLowerCase().includes(search);
                     const mDesc = String(item.descricao || '').toLowerCase().includes(search);
-                    if (!mCliente && !mOrcamento && !mOS && !mCod && !mDesc) return false;
+                    const mNF = String(item.numero_nf || '').toLowerCase().includes(search);
+                    if (!mCliente && !mOrcamento && !mOS && !mCod && !mDesc && !mNF) return false;
                 }
 
                 return true;
@@ -1313,7 +1323,10 @@
             const budgetGrouped = {};
             filteredFat.forEach(item => {
                 const key = String(item.n_orcamento || 'SEM_ORCAMENTO').trim();
-                
+                const fat = parseFloat(item.vl_faturado) || 0;
+                const temNF = item.numero_nf && String(item.numero_nf).trim() !== '' && String(item.numero_nf) !== 'None';
+                const isFaturado = fat > 0 || temNF;
+
                 if (!budgetGrouped[key]) {
                     budgetGrouped[key] = {
                         n_orcamento: item.n_orcamento || '-',
@@ -1325,7 +1338,7 @@
                         os_set: new Set(),
                         vl_faturado: 0,
                         vl_a_faturar: 0,
-                        numero_nf: item.numero_nf || '',
+                        numero_nf: (item.numero_nf && String(item.numero_nf) !== 'None') ? String(item.numero_nf) : '',
                         is_faturado: false
                     };
                 }
@@ -1334,10 +1347,7 @@
                     budgetGrouped[key].os_set.add(String(item.n_os).trim());
                 }
 
-                const fat = parseFloat(item.vl_faturado) || 0;
                 let aFat = parseFloat(item.vl_a_faturar) || 0;
-
-                // REQUISITO: Em meses passados não considera valor a faturar
                 if (isMesPassado) {
                     aFat = 0;
                 }
@@ -1345,7 +1355,7 @@
                 budgetGrouped[key].vl_faturado += fat;
                 budgetGrouped[key].vl_a_faturar += aFat;
 
-                if (fat > 0 || (item.numero_nf && String(item.numero_nf).trim() !== '' && String(item.numero_nf) !== 'None')) {
+                if (isFaturado) {
                     budgetGrouped[key].is_faturado = true;
                 }
             });
@@ -1357,12 +1367,18 @@
             const totalAFaturarVal = isMesPassado ? 0 : consolidatedList.reduce((acc, i) => acc + i.vl_a_faturar, 0);
             const totalGeralVal = totalFaturadoVal + totalAFaturarVal;
 
-            // 3. AGRUPAMENTO POR SEMANA DO ANO
+            // 3. AGRUPAMENTO POR SEMANA DO ANO BASEADO NA DATA RELEVANTE (EMISSÃO OU PREVISTA)
             const groupedByWeek = {};
             consolidatedList.forEach(item => {
-                const dtStr = item.dt_previsao_entrega || item.entrega_normalizada || '';
-                const weekNum = getISOWeekNumber(dtStr);
-                const weekDateRange = getWeekDateRangeStr(dtStr);
+                let dtRef = '';
+                if (item.is_faturado && item.dt_emissao && String(item.dt_emissao).trim() !== 'NaT' && String(item.dt_emissao).trim() !== 'None') {
+                    dtRef = item.dt_emissao;
+                } else {
+                    dtRef = item.dt_previsao_entrega || item.entrega_normalizada || '';
+                }
+
+                const weekNum = getISOWeekNumber(dtRef);
+                const weekDateRange = getWeekDateRangeStr(dtRef);
                 const weekName = `SEMANA ${weekNum} (${weekDateRange})`;
 
                 if (!groupedByWeek[weekName]) {
@@ -1463,10 +1479,11 @@
                                         const valorExibir = isFaturado ? item.vl_faturado : item.vl_a_faturar;
                                         const dtInicial = formatDate(item.dt_previsao_entrega);
                                         
-                                        // Quando nota emitida, traz data de emissão
+                                        // V5.8.0: Se nota emitida traz a data de emissão
                                         const dtPrevistaOuEmissao = isFaturado ? formatDate(item.dt_emissao || item.entrega_normalizada) : formatDate(item.entrega_normalizada);
                                         
                                         const osListStr = Array.from(item.os_set).map(o => `OS ${o}`).join(' - ');
+                                        const nfBadgeText = (isFaturado && item.numero_nf) ? `FATURADO (NF ${item.numero_nf})` : 'FATURADO';
 
                                         return `
                                             <tr class="${isFaturado ? 'bg-emerald-50/80 hover:bg-emerald-100/70' : 'hover:bg-slate-50'} transition-colors">
@@ -1477,7 +1494,7 @@
                                                 <td class="p-2.5 text-center font-bold text-slate-600">${dtInicial}</td>
                                                 <td class="p-2.5 text-center">
                                                     <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase ${isFaturado ? 'bg-emerald-200 text-emerald-900 border border-emerald-300' : 'bg-slate-100 text-slate-500 border border-slate-200'}">
-                                                        ${isFaturado ? 'Faturado' : '-'}
+                                                        ${isFaturado ? nfBadgeText : '-'}
                                                     </span>
                                                 </td>
                                                 <td class="p-2.5 text-center font-bold ${isFaturado ? 'text-emerald-700' : 'text-red-600'}">${dtPrevistaOuEmissao}</td>
