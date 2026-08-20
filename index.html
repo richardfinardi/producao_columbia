@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.6.0</title>
+    <title>Programação de Produção - Columbia V7.5.1</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.0</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.5.1</p>
                 </div>
             </div>
 
@@ -466,7 +466,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO NO ESCOPO GLOBAL -->
+    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO NO ESCOPO GLOBAL COM CHECAGEM DE NULOS -->
     <script>
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         const API_HR_A_MAIS = 'https://columbia.consultoriarf.net/hr-a-mais';
@@ -482,7 +482,7 @@
         let abaAtiva = 'dashboard';
 
         let showConcluidas = false; 
-        let isFaturamentoLoading = false; // V7.6.0: Controle do estado de carregamento do faturamento
+        let isFaturamentoLoading = false; 
         let onlyCurrentMonth = true;
         let onlyWithBudget = false;
         let isValuesUnlocked = false;
@@ -500,7 +500,6 @@
             setViewMode('week', false);
             fetchData();
 
-            // V7.6.0: Pré-carrega faturamento em background
             fetchFaturamentoData(true);
 
             // AUTO-REFRESH SILENCIOSO A CADA 30 SEGUNDOS
@@ -1032,6 +1031,7 @@
             return `${fmtDay(wStart)}/${fmtMonth(wStart)} - ${fmtDay(wEnd)}/${fmtMonth(wEnd)}`;
         }
 
+        // V7.5.1: CONTROLE ESTRITO DO BOTÃO E ÍCONE REFRESH PARA EVITAR ANIMAÇÃO PERMANENTE
         async function fetchData(isSilent = false) {
             const refreshIcon = document.getElementById('refreshIcon');
             const btnRefresh = document.getElementById('btnRefresh');
@@ -1086,8 +1086,13 @@
                     alert('Não foi possível atualizar os dados de produção. Verifique a conexão com o servidor.');
                 }
             } finally {
-                if (refreshIcon) refreshIcon.classList.remove('animate-spin');
-                if (btnRefresh) btnRefresh.disabled = false;
+                // V7.5.1: Remove rigorosamente a classe de animação e reseta o ícone
+                if (refreshIcon) {
+                    refreshIcon.classList.remove('animate-spin');
+                }
+                if (btnRefresh) {
+                    btnRefresh.disabled = false;
+                }
                 lucide.createIcons();
             }
         }
@@ -1104,7 +1109,6 @@
             }
         }
 
-        // V7.6.0: BUSCA DE FATURAMENTO COM CONTROLE DE STATE DE CARREGAMENTO
         async function fetchFaturamentoData(isSilent = false) {
             try {
                 if (rawFaturamentoData.length === 0 && !isSilent) {
@@ -1537,14 +1541,12 @@
             `;
         }
 
-        // V7.6.0: ABA FATURAMENTO COM INDICADOR VISUAL DE CARREGAMENTO (LOADING SKELETON)
         function renderPaginaFaturamentoView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
 
             updateDateLabel();
 
-            // V7.6.0: Exibe tela de carregando se a API ainda não terminou
             if (isFaturamentoLoading) {
                 grid.innerHTML = `
                     <div class="bg-white rounded-2xl border border-blue-200 p-12 text-center text-slate-500 flex flex-col items-center gap-3 shadow-sm">
