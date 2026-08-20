@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V6.1.0</title>
+    <title>Programação de Produção - Columbia V7.0.0</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V6.1.0</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V7.0.0</p>
                 </div>
             </div>
 
@@ -405,6 +405,14 @@
                     <div><span class="text-slate-500 block font-semibold">Nº do Orçamento</span><span id="mNumOrcamento" class="font-bold text-columbia-700"></span></div>
                 </div>
 
+                <!-- SEÇÃO DE ANEXOS / DESENHOS TÉCNICOS NO MODAL -->
+                <div id="mAnexosContainer" class="space-y-1.5 pt-1 hidden">
+                    <h4 class="font-bold text-blue-800 uppercase tracking-wider text-[10px]">Anexos / Desenhos Técnicos (PDF)</h4>
+                    <div id="mAnexosList" class="flex flex-wrap gap-2 bg-blue-50/60 p-2.5 rounded-xl border border-blue-200">
+                        <!-- Botões de download injetados via JS -->
+                    </div>
+                </div>
+
                 <!-- STATUS OPERAÇÃO -->
                 <div class="space-y-1.5">
                     <h4 class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Status da Operação</h4>
@@ -512,7 +520,7 @@
             setViewMode(currentView, false);
             fetchData();
 
-            // AUTO-REFRESH SILENCIOSO A CADA 30 SEGUNDOS (PRESERVA INPUTS E FILTROS DO USUÁRIO)
+            // AUTO-REFRESH SILENCIOSO A CADA 30 SEGUNDOS
             setInterval(() => {
                 const isModalOpen = !document.getElementById('osModal').classList.contains('hidden') ||
                                     !document.getElementById('altRenegociationFormModal').classList.contains('hidden') ||
@@ -530,7 +538,58 @@
             }, 30000);
         });
 
-        // VALIDA AS PERMISSÕES COM TRAVA ESTRITA (OCULTA OBRIGATORIAMENTE CASO NÃO SEJA "1")
+        // ==============================================================================
+        // FUNÇÃO DE ABERTURA DO ANEXO PDF (PASSO 2)
+        // ==============================================================================
+        async function abrirDesenhoAnexo(event, cod_empresa, cod_os, cod_os_aux) {
+            if (event) event.stopPropagation(); // Impede de abrir o modal ao clicar no botão de anexo
+
+            try {
+                const btnTarget = event ? event.currentTarget : null;
+                if (btnTarget) {
+                    btnTarget.disabled = true;
+                    btnTarget.classList.add('opacity-50');
+                }
+
+                const url = `${API_URL}/desenho-anexo?cod_empresa=${cod_empresa}&cod_os=${cod_os}&cod_os_aux=${cod_os_aux}`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Não foi possível carregar o anexo.');
+                }
+
+                const data = await response.json();
+
+                if (!data.pdf_base64) {
+                    alert('Arquivo não encontrado ou corrompido.');
+                    return;
+                }
+
+                // Converte Base64 para Blob
+                const byteCharacters = atob(data.pdf_base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const fileBlob = new Blob([byteArray], { type: 'application/pdf' });
+
+                // Cria URL de memória e abre em nova aba
+                const fileURL = URL.createObjectURL(fileBlob);
+                window.open(fileURL, '_blank');
+
+            } catch (error) {
+                console.error('Erro ao abrir anexo:', error);
+                alert(`Erro ao abrir o anexo: ${error.message}`);
+            } finally {
+                if (event && event.currentTarget) {
+                    event.currentTarget.disabled = false;
+                    event.currentTarget.classList.remove('opacity-50');
+                }
+            }
+        }
+
         function configurarVisibilidadeAbas() {
             const valFaturamento = localStorage.getItem('columbia_perm_faturamento');
             const valFinalizacao = localStorage.getItem('columbia_perm_finalizacao');
@@ -558,7 +617,6 @@
             }
         }
 
-        // TROCA O ESTADO DA ABA ATIVA E AJUSTA VISIBILIDADE DE FILTROS
         function setAbaAtiva(novaAba) {
             abaAtiva = novaAba;
 
@@ -571,7 +629,6 @@
             const btnConferencia = document.getElementById('btnAbaConferencia');
             const btnLimbo = document.getElementById('btnVerLimbo');
 
-            // Elementos de filtros específicos
             const atrasadaContainer = document.getElementById('atrasadaContainer');
             const apontamentoContainer = document.getElementById('apontamentoContainer');
             const producaoContainer = document.getElementById('producaoContainer');
@@ -581,7 +638,6 @@
             const extraButtonsContainer = document.getElementById('extraButtonsContainer');
             const viewModeContainer = document.getElementById('viewModeContainer');
 
-            // Reset estilos dos botões
             if (btnDashboard) btnDashboard.className = "flex items-center gap-1.5 px-3 py-2 bg-columbia-800 hover:bg-columbia-900 text-white font-extrabold rounded-xl text-xs transition shadow-md";
             if (btnFaturamento) btnFaturamento.className = "flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-xs transition shadow-md";
             if (btnConferencia) btnConferencia.className = "flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs transition shadow-md";
@@ -733,7 +789,6 @@
             return `${fmtDay(wStart)}/${fmtMonth(wStart)} - ${fmtDay(wEnd)}/${fmtMonth(wEnd)}`;
         }
 
-        // REQUISIÇÃO DO DASHBOARD PRINCIPAL
         async function fetchData(isSilent = false) {
             const refreshIcon = document.getElementById('refreshIcon');
             const btnRefresh = document.getElementById('btnRefresh');
@@ -1041,7 +1096,6 @@
             }
         }
 
-        // GERENCIADOR DE RENDERIZAÇÃO DAS ABAS
         function renderView() {
             if (abaAtiva === 'limbo') {
                 renderPaginaLimboView();
@@ -1061,7 +1115,6 @@
                 return;
             }
 
-            // PADRÃO: ABA DASHBOARD / PRODUÇÃO
             updateDateLabel();
             const filtered = getFilteredData();
             updateMetrics(filtered);
@@ -1082,7 +1135,6 @@
             lucide.createIcons();
         }
 
-        // CONTEÚDO COMPLETO DA ABA CONFERÊNCIA APONTAMENTOS (HORAS A MAIS)
         function renderPaginaConferenciaView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1256,7 +1308,6 @@
             `;
         }
 
-        // V6.1.0: ABA FATURAMENTO COM SUPORTE A ORÇAMENTOS PARCIAIS (FATURADO vs PENDENTE SEPARADOS POR STATUS)
         function renderPaginaFaturamentoView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1278,7 +1329,6 @@
             const segmentoFiltro = document.getElementById('segmentoFilter')?.value || '';
             const clienteFiltro = document.getElementById('clientFilter')?.value || '';
 
-            // 1. FILTRAGEM DOS DADOS BRUTOS DO MÊS
             const filteredFat = rawFaturamentoData.filter(item => {
                 const fat = parseFloat(item.vl_faturado) || 0;
                 const temNF = item.numero_nf && String(item.numero_nf).trim() !== '' && String(item.numero_nf) !== 'None';
@@ -1323,8 +1373,6 @@
                 return;
             }
 
-            // 2. AGRUPAMENTO INTELIGENTE POR (N_ORCAMENTO + STATUS FATURADO)
-            // Se um orçamento tem itens faturados e itens pendentes, gera 2 linhas limpas na tabela
             const budgetGrouped = {};
             filteredFat.forEach(item => {
                 const fat = parseFloat(item.vl_faturado) || 0;
@@ -1381,12 +1429,10 @@
 
             const consolidatedList = Object.values(budgetGrouped);
 
-            // MÉTRICAS DO TOPO
             const totalFaturadoVal = consolidatedList.reduce((acc, i) => acc + i.vl_faturado, 0);
             const totalAFaturarVal = isMesPassado ? 0 : consolidatedList.reduce((acc, i) => acc + i.vl_a_faturar, 0);
             const totalGeralVal = totalFaturadoVal + totalAFaturarVal;
 
-            // 3. AGRUPAMENTO POR SEMANA DO ANO BASEADO NA DATA DE REFERÊNCIA DE CADA LINHA
             const groupedByWeek = {};
             consolidatedList.forEach(item => {
                 const dtRef = item.dt_referencia;
@@ -1405,7 +1451,6 @@
             });
 
             let html = `
-                <!-- PAINEL DE RESUMO DO FATURAMENTO -->
                 <div class="bg-white rounded-2xl border border-blue-200 p-5 shadow-sm mb-4 flex flex-wrap justify-between items-center gap-3">
                     <div class="flex items-center gap-3">
                         <div class="p-2.5 bg-blue-100 text-blue-800 rounded-xl">
@@ -1441,7 +1486,6 @@
                 const weekNum = weekGroup.num;
                 const items = weekGroup.items;
 
-                // ORDENAÇÃO DENTRO DA SEMANA
                 if (weekNum === currWeekNum && !isMesPassado) {
                     items.sort((a, b) => {
                         if (a.is_faturado === b.is_faturado) {
@@ -1457,7 +1501,6 @@
 
                 html += `
                     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                        <!-- CABEÇALHO DA SEMANA -->
                         <div class="bg-columbia-800 text-white px-4 py-2.5 flex justify-between items-center flex-wrap gap-2 border-b border-columbia-900">
                             <div class="flex items-center gap-2 font-bold text-xs">
                                 <i data-lucide="layers" class="w-4 h-4 text-columbia-100"></i>
@@ -1471,7 +1514,6 @@
                             </div>
                         </div>
 
-                        <!-- TABELA DE FATURAMENTO IDENTICA AO EXCEL -->
                         <div class="overflow-x-auto custom-scroll">
                             <table class="w-full text-left text-[11px] border-collapse">
                                 <thead>
@@ -1617,7 +1659,7 @@
             grid.innerHTML = html;
         }
 
-        // COMPONENTE DE CARD DE OS REUSÁVEL
+        // COMPONENTE DE CARD DE OS REUSÁVEL (COM BOTÃO DE ANEXO PDF)
         function renderOSCard(item) {
             const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
             const prodStatus = item.status_producao || '0%';
@@ -1639,6 +1681,10 @@
             const dtRenegociada = formatDate(item.dt_renegociada || item.u_data_renegociacao);
             const dtUltimoApontamento = formatDate(item.ultimo_apontamento);
 
+            // PROCESSAMENTO DOS ANEXOS
+            const anexos = Array.isArray(item.anexos) ? item.anexos : [];
+            const temAnexoPdf = anexos.length > 0;
+
             return `
                 <div onclick="openModal('${item.n_os}')" class="group bg-white border border-slate-200 hover:border-columbia-500 hover:shadow-md p-3.5 rounded-2xl cursor-pointer transition-all duration-200 flex flex-col justify-between gap-2.5 relative overflow-hidden">
                     <div class="absolute left-0 top-0 bottom-0 w-1.5 ${isAtrasado ? 'bg-red-500' : 'bg-emerald-500'}"></div>
@@ -1648,9 +1694,21 @@
                             <span class="font-mono text-xs font-extrabold text-columbia-700 bg-columbia-50 px-2 py-0.5 rounded-lg border border-columbia-100">
                                 OS ${item.n_os}
                             </span>
-                            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full ${isAtrasado ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}">
-                                ${isAtrasado ? 'Atrasado' : 'No prazo'}
-                            </span>
+
+                            <div class="flex items-center gap-1.5">
+                                ${temAnexoPdf ? `
+                                    <button onclick="abrirDesenhoAnexo(event, ${item.cod_empresa}, ${item.cod_os}, ${anexos[0].cod_os_aux})" 
+                                            class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs transition animate-pulse" 
+                                            title="Abrir Desenho Técnico PDF">
+                                        <i data-lucide="paperclip" class="w-3 h-3"></i>
+                                        <span>PDF</span>
+                                    </button>
+                                ` : ''}
+
+                                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full ${isAtrasado ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}">
+                                    ${isAtrasado ? 'Atrasado' : 'No prazo'}
+                                </span>
+                            </div>
                         </div>
 
                         <div class="pl-1 space-y-0.5">
@@ -1725,7 +1783,7 @@
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
 
-            let startingDay = firstDay.getDay() - 1; // Segunda = 0
+            let startingDay = firstDay.getDay() - 1; 
             if (startingDay === -1) startingDay = 6;
 
             const daysInMonth = lastDay.getDate();
@@ -2106,6 +2164,25 @@
             document.getElementById('mPpPendentes').textContent = safeText(item.pp_pendentes);
             
             document.getElementById('mJustificativa').textContent = safeText(item.justificativa);
+
+            // PROCESSA EXIBIÇÃO DOS BOTÕES DE ANEXO DENTRO DO MODAL
+            const containerAnexos = document.getElementById('mAnexosContainer');
+            const listAnexos = document.getElementById('mAnexosList');
+            const anexos = Array.isArray(item.anexos) ? item.anexos : [];
+
+            if (anexos.length > 0) {
+                containerAnexos.classList.remove('hidden');
+                listAnexos.innerHTML = anexos.map((anx, idx) => `
+                    <button onclick="abrirDesenhoAnexo(event, ${item.cod_empresa}, ${item.cod_os}, ${anx.cod_os_aux})" 
+                            class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition shadow-xs flex items-center gap-1.5">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        <span>Abrir Desenho ${idx + 1} (Aux ${anx.cod_os_aux})</span>
+                    </button>
+                `).join('');
+            } else {
+                containerAnexos.classList.add('hidden');
+                listAnexos.innerHTML = '';
+            }
 
             const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
             const btnLimbo = document.getElementById('btnEnviarLimbo');
