@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V5.6.0</title>
+    <title>Programação de Produção - Columbia V5.7.0</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V5.6.0</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V5.7.0</p>
                 </div>
             </div>
 
@@ -506,7 +506,7 @@
             setViewMode(currentView, false);
             fetchData();
 
-            // AUTO-REFRESH DE BACKGROUND A CADA 30 SEGUNDOS
+            // AUTO-REFRESH DE BACKGROUND A CADA 30 SEGUNDOS (SEM PISCAR DADOS)
             setInterval(() => {
                 const isModalOpen = !document.getElementById('osModal').classList.contains('hidden') ||
                                     !document.getElementById('altRenegociationFormModal').classList.contains('hidden') ||
@@ -551,7 +551,7 @@
             }
         }
 
-        // V5.6.0: TROCA O ESTADO DA ABA ATIVA E AJUSTA FILTROS DA TELA
+        // TROCA O ESTADO DA ABA ATIVA E RE-ESTRUTURA FILTROS
         function setAbaAtiva(novaAba) {
             abaAtiva = novaAba;
 
@@ -603,7 +603,7 @@
                 if (filtersBar) filtersBar.classList.remove('hidden');
                 if (navigationBar) navigationBar.classList.remove('hidden');
 
-                // V5.6.0: No Faturamento mantemos Busca, Segmento e Cliente. Esconde o resto.
+                // Faturamento mantem Busca, Segmento e Cliente. Esconde os demais filtros de produção.
                 if (atrasadaContainer) atrasadaContainer.classList.add('hidden');
                 if (apontamentoContainer) apontamentoContainer.classList.add('hidden');
                 if (producaoContainer) producaoContainer.classList.add('hidden');
@@ -613,7 +613,7 @@
                 if (extraButtonsContainer) extraButtonsContainer.classList.add('hidden');
                 if (viewModeContainer) viewModeContainer.classList.add('hidden'); // Faturamento é exclusivo MÊS
 
-                currentView = 'month'; // Fixa visão mensal no Faturamento
+                currentView = 'month'; 
                 fetchFaturamentoData();
 
             } else if (abaAtiva === 'conferencia') {
@@ -685,19 +685,39 @@
             return `${num.toFixed(2)} hrs`;
         }
 
+        // V5.7.0: CALCULADOR DE SEMANA ISO DE FORMA ESTRITA E SEM DESVIO DE FUSO
         function getISOWeekNumber(d) {
-            const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            let date;
+            if (typeof d === 'string') {
+                const yyyyMmDd = d.substring(0, 10).split('-');
+                if (yyyyMmDd.length === 3) {
+                    date = new Date(Date.UTC(parseInt(yyyyMmDd[0]), parseInt(yyyyMmDd[1]) - 1, parseInt(yyyyMmDd[2])));
+                } else {
+                    date = new Date(d);
+                }
+            } else {
+                date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            }
+
             const dayNum = date.getUTCDay() || 7;
             date.setUTCDate(date.getUTCDate() + 4 - dayNum);
             const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
             return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
         }
 
-        // V5.6.0: RETORNA INTERVALO FORMATADO DA SEMANA (EX: 17/08 - 23/08)
+        // V5.7.0: RETORNA INTERVALO FORMATADO DA SEMANA (EX: 17/08 - 23/08) SEM DESVIO UTC
         function getWeekDateRangeStr(d) {
-            const targetDate = new Date(d);
+            let targetDate;
+            if (typeof d === 'string') {
+                const parts = d.substring(0, 10).split('-');
+                targetDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            } else {
+                targetDate = new Date(d);
+            }
+
             let dayOfWeek = targetDate.getDay() - 1;
             if (dayOfWeek === -1) dayOfWeek = 6;
+
             const wStart = new Date(targetDate);
             wStart.setDate(wStart.getDate() - dayOfWeek);
             const wEnd = new Date(wStart);
@@ -709,6 +729,7 @@
             return `${fmtDay(wStart)}/${fmtMonth(wStart)} - ${fmtDay(wEnd)}/${fmtMonth(wEnd)}`;
         }
 
+        // V5.7.0: PRESERVA FILTROS APLICADOS EM REFRESH EM BACKGROUND
         async function fetchData(isSilent = false) {
             const refreshIcon = document.getElementById('refreshIcon');
             const btnRefresh = document.getElementById('btnRefresh');
@@ -744,10 +765,14 @@
 
                 initializeCurrentDate();
 
-                populateSelectOptions(savedFilters);
+                if (!isSilent) {
+                    populateSelectOptions(savedFilters);
+                }
 
                 const searchInput = document.getElementById('searchInput');
-                if (searchInput) searchInput.value = savedFilters.search;
+                if (searchInput && searchInput.value !== savedFilters.search) {
+                    searchInput.value = savedFilters.search;
+                }
 
                 renderView();
 
@@ -920,7 +945,6 @@
             return isNaN(parsed) ? 0 : parsed;
         }
 
-        // V5.6.0: NO FATURAMENTO OS VALORES SÃO VISÍVEIS DIRETO SEM TRAVA DE SENHA
         function formatBRL(value) {
             if (abaAtiva === 'faturamento') {
                 return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
@@ -1056,7 +1080,7 @@
             lucide.createIcons();
         }
 
-        // CONTEÚDO DA ABA CONFERÊNCIA APONTAMENTOS (HORAS A MAIS)
+        // CONTEÚDO COMPLETO DA ABA CONFERÊNCIA APONTAMENTOS
         function renderPaginaConferenciaView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1078,7 +1102,6 @@
             const monthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
             const dayKey = currentDate.toISOString().substring(0, 10);
 
-            // FILTRAGEM POR DATA DO PERÍODO SELECIONADO
             const filteredConferencia = rawConferenciaData.filter(item => {
                 const dtBaseStr = item.dt_finalizacao || item.data_fim || '';
                 if (!dtBaseStr) return false;
@@ -1110,7 +1133,6 @@
                 return;
             }
 
-            // AGRUPAR POR DIA
             const groupedByDay = {};
             filteredConferencia.forEach(item => {
                 const dtBaseStr = item.dt_finalizacao || item.data_fim || 'Sem Data';
@@ -1146,8 +1168,6 @@
 
             sortedDays.forEach(dateKey => {
                 const dayItems = groupedByDay[dateKey];
-
-                // REQUISITO: ORDENAR DENTRO DO DIA DO MAIOR 'horas_a_mais' PARA O MENOR
                 dayItems.sort((a, b) => (parseFloat(b.horas_a_mais) || 0) - (parseFloat(a.horas_a_mais) || 0));
 
                 const totalHrsDiaAMais = dayItems.reduce((acc, i) => acc + (parseFloat(i.horas_a_mais) || 0), 0);
@@ -1234,7 +1254,7 @@
             `;
         }
 
-        // V5.6.0: CONTEÚDO DA ABA FATURAMENTO (VISÃO MENSAL FIXA + AGRUPADO POR ORÇAMENTO)
+        // V5.7.0: CONTEÚDO DA ABA FATURAMENTO (VISÃO MENSAL + CORREÇÃO DE AGRUPAMENTO SEMANAL E MESES PASSADOS)
         function renderPaginaFaturamentoView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1257,22 +1277,16 @@
             const segmentoFiltro = document.getElementById('segmentoFilter')?.value || '';
             const clienteFiltro = document.getElementById('clientFilter')?.value || '';
 
-            // 1. FILTRAGEM DOS DADOS DO FATURAMENTO
+            // 1. FILTRAGEM DOS DADOS
             const filteredFat = rawFaturamentoData.filter(item => {
                 const dtBaseStr = item.dt_previsao_entrega || item.entrega_normalizada || '';
                 if (!dtBaseStr) return false;
                 const itemDateStr = String(dtBaseStr).substring(0, 10);
 
-                // Garante que é do mês selecionado
                 if (itemDateStr.substring(0, 7) !== monthKey) return false;
-
-                // Filtro por Segmento
                 if (segmentoFiltro && String(item.segmento || '') !== segmentoFiltro) return false;
-
-                // Filtro por Cliente
                 if (clienteFiltro && String(item.cliente || '') !== clienteFiltro) return false;
 
-                // Busca por texto
                 if (search) {
                     const mCliente = String(item.cliente || '').toLowerCase().includes(search);
                     const mOrcamento = String(item.n_orcamento || '').toLowerCase().includes(search);
@@ -1295,7 +1309,7 @@
                 return;
             }
 
-            // 2. AGRUPAMENTO POR ORÇAMENTO (N_ORCAMENTO) PARA EVITAR DUPLICIDADE
+            // 2. AGRUPAMENTO POR ORÇAMENTO (N_ORCAMENTO)
             const budgetGrouped = {};
             filteredFat.forEach(item => {
                 const key = String(item.n_orcamento || 'SEM_ORCAMENTO').trim();
@@ -1323,7 +1337,7 @@
                 const fat = parseFloat(item.vl_faturado) || 0;
                 let aFat = parseFloat(item.vl_a_faturar) || 0;
 
-                // REQUISITO: Em meses passados não pode considerar valor a faturar
+                // REQUISITO: Em meses passados não considera valor a faturar
                 if (isMesPassado) {
                     aFat = 0;
                 }
@@ -1338,7 +1352,7 @@
 
             const consolidatedList = Object.values(budgetGrouped);
 
-            // MÉTRICAS TOTAIS RECALCULADAS DINAMICAMENTE CONFORME FILTROS
+            // MÉTRICAS DO TOPO RECALCULADAS
             const totalFaturadoVal = consolidatedList.reduce((acc, i) => acc + i.vl_faturado, 0);
             const totalAFaturarVal = isMesPassado ? 0 : consolidatedList.reduce((acc, i) => acc + i.vl_a_faturar, 0);
             const totalGeralVal = totalFaturadoVal + totalAFaturarVal;
@@ -1347,10 +1361,9 @@
             const groupedByWeek = {};
             consolidatedList.forEach(item => {
                 const dtStr = item.dt_previsao_entrega || item.entrega_normalizada || '';
-                const dateObj = new Date(dtStr.substring(0, 10));
-                const weekNum = isNaN(dateObj.getTime()) ? 0 : getISOWeekNumber(dateObj);
-                const weekDateRange = isNaN(dateObj.getTime()) ? '' : getWeekDateRangeStr(dateObj);
-                const weekName = isNaN(dateObj.getTime()) ? 'Outros' : `SEMANA ${weekNum} (${weekDateRange})`;
+                const weekNum = getISOWeekNumber(dtStr);
+                const weekDateRange = getWeekDateRangeStr(dtStr);
+                const weekName = `SEMANA ${weekNum} (${weekDateRange})`;
 
                 if (!groupedByWeek[weekName]) {
                     groupedByWeek[weekName] = {
@@ -1399,8 +1412,7 @@
                 const weekNum = weekGroup.num;
                 const items = weekGroup.items;
 
-                // REQUISITO DE ORDENAÇÃO POR SEMANA:
-                // Semana Atual: Primeiro os Faturados, depois Previstos
+                // ORDENAÇÃO POR SEMANA
                 if (weekNum === currWeekNum && !isMesPassado) {
                     items.sort((a, b) => {
                         if (a.is_faturado === b.is_faturado) {
@@ -1451,7 +1463,7 @@
                                         const valorExibir = isFaturado ? item.vl_faturado : item.vl_a_faturar;
                                         const dtInicial = formatDate(item.dt_previsao_entrega);
                                         
-                                        // REQUISITO: Quando nota emitida, trazer data de emissão da nota
+                                        // Quando nota emitida, traz data de emissão
                                         const dtPrevistaOuEmissao = isFaturado ? formatDate(item.dt_emissao || item.entrega_normalizada) : formatDate(item.entrega_normalizada);
                                         
                                         const osListStr = Array.from(item.os_set).map(o => `OS ${o}`).join(' - ');
