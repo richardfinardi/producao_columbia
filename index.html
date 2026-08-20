@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.3.0</title>
+    <title>Programação de Produção - Columbia V7.4.0</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.3.0</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.4.0</p>
                 </div>
             </div>
 
@@ -369,7 +369,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE DETALHES DA OS -->
+    <!-- MODAL DE DETALHES DA OS (Otimizado com IDs estritamente mapeados) -->
     <div id="osModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-2.5 sm:p-4 z-50">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-[95vw] sm:max-w-lg w-full flex flex-col max-h-[90vh] overflow-hidden border border-slate-200">
             <!-- CABEÇALHO DO MODAL (FIXO) -->
@@ -401,6 +401,17 @@
                     <h4 class="font-bold text-blue-800 uppercase tracking-wider text-[10px]">Anexos / Desenhos Técnicos (PDF)</h4>
                     <div id="mAnexosList" class="flex flex-wrap gap-2 bg-blue-50/60 p-2.5 rounded-xl border border-blue-200">
                         <!-- Botões de download injetados via JS -->
+                    </div>
+                </div>
+
+                <!-- STATUS OPERAÇÃO -->
+                <div class="space-y-1.5">
+                    <h4 class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Status da Operação</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200"><span class="text-slate-500 block">Compras</span><span id="mCompras" class="font-semibold text-slate-800"></span></div>
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200"><span class="text-slate-500 block">Terceiros</span><span id="mTerceiros" class="font-semibold text-slate-800"></span></div>
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200"><span class="text-slate-500 block">Produção</span><span id="mProducao" class="font-semibold text-columbia-600"></span></div>
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200"><span class="text-slate-500 block">Atrasada</span><span id="mAtrasada" class="font-bold"></span></div>
                     </div>
                 </div>
 
@@ -466,7 +477,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO NO ESCOPO GLOBAL -->
+    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO NO ESCOPO GLOBAL COM CHECAGEM DE NULOS -->
     <script>
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         const API_HR_A_MAIS = 'https://columbia.consultoriarf.net/hr-a-mais';
@@ -517,8 +528,13 @@
         });
 
         // ==============================================================================
-        // DECLARAÇÃO DAS FUNÇÕES DE MODAL NO ESCOPO PRINCIPAL
+        // V7.4.0: DECLARAÇÃO SEGURA DAS FUNÇÕES DE MODAL NO WINDOW
         // ==============================================================================
+
+        window.setElText = function(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        };
 
         window.openModal = function(n_os) {
             const osTarget = String(n_os).trim();
@@ -532,54 +548,57 @@
 
             const safeText = (val) => (!val || val === 'NaT' || val === 'None' || val === 'null' || String(val).trim() === '') ? '-' : val;
 
-            document.getElementById('mOS').textContent = `OS ${item.n_os || 'N/A'}`;
-            document.getElementById('mTitulo').textContent = item.titulo || 'Sem Título';
-            document.getElementById('mPedido').textContent = safeText(item.n_pedido);
-            document.getElementById('mCliente').textContent = safeText(item.cliente);
-            document.getElementById('mSegmento').textContent = safeText(item.segmento);
-            document.getElementById('mCodInterno').textContent = safeText(item.cod_interno);
-            document.getElementById('mOrigem').textContent = safeText(item.origem);
-            document.getElementById('mEngenhariaStatus').textContent = safeText(item.engenharia_status);
-            document.getElementById('mOsFilhosQuais').textContent = safeText(item.os_filhos_quais);
-            document.getElementById('mPossuiOrcamento').textContent = safeText(item.possui_orcamento);
-            document.getElementById('mPreco').textContent = formatBRL(parseValue(item.preco_geral_a_vista || item.orcamento));
-            document.getElementById('mNumOrcamento').textContent = safeText(item.orcamento);
+            setElText('mOS', `OS ${item.n_os || 'N/A'}`);
+            setElText('mTitulo', item.titulo || 'Sem Título');
+            setElText('mPedido', safeText(item.n_pedido));
+            setElText('mCliente', safeText(item.cliente));
+            setElText('mSegmento', safeText(item.segmento));
+            setElText('mCodInterno', safeText(item.cod_interno));
+            setElText('mOrigem', safeText(item.origem));
+            setElText('mEngenhariaStatus', safeText(item.engenharia_status));
+            setElText('mOsFilhosQuais', safeText(item.os_filhos_quais));
+            setElText('mPossuiOrcamento', safeText(item.possui_orcamento));
+            setElText('mPreco', formatBRL(parseValue(item.preco_geral_a_vista || item.orcamento)));
+            setElText('mNumOrcamento', safeText(item.orcamento));
 
-            document.getElementById('mCompras').textContent = safeText(item.status_compras);
-            document.getElementById('mTerceiros').textContent = safeText(item.status_terceiros);
-            document.getElementById('mProducao').textContent = safeText(item.status_producao);
-            document.getElementById('mPpPendentes').textContent = safeText(item.pp_pendentes);
-            
-            document.getElementById('mJustificativa').textContent = safeText(item.justificativa);
+            setElText('mCompras', safeText(item.status_compras));
+            setElText('mTerceiros', safeText(item.status_terceiros));
+            setElText('mProducao', safeText(item.status_producao));
+            setElText('mPpPendentes', safeText(item.pp_pendentes));
+            setElText('mJustificativa', safeText(item.justificativa));
 
             const containerAnexos = document.getElementById('mAnexosContainer');
             const listAnexos = document.getElementById('mAnexosList');
             const anexos = Array.isArray(item.anexos) ? item.anexos : [];
 
-            if (anexos.length > 0) {
-                containerAnexos.classList.remove('hidden');
-                listAnexos.innerHTML = anexos.map((anx, idx) => `
-                    <button onclick="abrirDesenhoAnexo(event, ${item.cod_empresa}, ${item.cod_os}, ${anx.cod_os_aux})" 
-                            class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition shadow-xs flex items-center gap-1.5">
-                        <i data-lucide="file-text" class="w-4 h-4"></i>
-                        <span>Abrir Desenho ${idx + 1} (Aux ${anx.cod_os_aux})</span>
-                    </button>
-                `).join('');
-            } else {
-                containerAnexos.classList.add('hidden');
-                listAnexos.innerHTML = '';
+            if (containerAnexos && listAnexos) {
+                if (anexos.length > 0) {
+                    containerAnexos.classList.remove('hidden');
+                    listAnexos.innerHTML = anexos.map((anx, idx) => `
+                        <button onclick="abrirDesenhoAnexo(event, ${item.cod_empresa}, ${item.cod_os}, ${anx.cod_os_aux})" 
+                                class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition shadow-xs flex items-center gap-1.5">
+                            <i data-lucide="file-text" class="w-4 h-4"></i>
+                            <span>Abrir Desenho ${idx + 1} (Aux ${anx.cod_os_aux})</span>
+                        </button>
+                    `).join('');
+                } else {
+                    containerAnexos.classList.add('hidden');
+                    listAnexos.innerHTML = '';
+                }
             }
 
             const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
             const btnLimbo = document.getElementById('btnEnviarLimbo');
             const txtLabelBtnLimbo = document.getElementById('txtLabelBtnLimbo');
 
-            if (estaNoLimbo) {
-                btnLimbo.className = "px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5";
-                txtLabelBtnLimbo.textContent = "Tirar do Limbo 🟢";
-            } else {
-                btnLimbo.className = "px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-amber-400 border border-slate-700 rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5";
-                txtLabelBtnLimbo.textContent = "Enviar para o Limbo";
+            if (btnLimbo && txtLabelBtnLimbo) {
+                if (estaNoLimbo) {
+                    btnLimbo.className = "px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5";
+                    txtLabelBtnLimbo.textContent = "Tirar do Limbo 🟢";
+                } else {
+                    btnLimbo.className = "px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-amber-400 border border-slate-700 rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5";
+                    txtLabelBtnLimbo.textContent = "Enviar ao Limbo";
+                }
             }
 
             const temAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
@@ -588,37 +607,43 @@
             const badgeAp = document.getElementById('mApontamentoBadge');
             const textAp = document.getElementById('mApontamentoDetalheText');
 
-            if (temAberto) {
-                containerAp.className = "p-3 rounded-xl border border-emerald-300 bg-emerald-50/80 flex flex-col gap-1.5";
-                titleAp.textContent = "Apontamento Aberto no Momento";
-                titleAp.className = "font-extrabold text-xs text-emerald-900";
-                badgeAp.innerHTML = `<span class="bg-emerald-200 text-emerald-900 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-md animate-pulse">EM ANDAMENTO ⚙️</span>`;
-                textAp.textContent = safeText(item.apontamentos_abertos_detalhe);
-                textAp.className = "text-[11px] font-mono leading-relaxed text-emerald-900 font-bold";
-            } else {
-                containerAp.className = "p-3 rounded-xl border border-red-200 bg-red-50/60 flex flex-col gap-1.5";
-                titleAp.textContent = "Sem Apontamentos em Andamento";
-                titleAp.className = "font-bold text-xs text-red-800";
-                badgeAp.innerHTML = `<span class="bg-red-200 text-red-800 border border-red-300 text-[10px] font-bold px-2 py-0.5 rounded-md">PARADO</span>`;
-                textAp.textContent = "Nenhum operador realizando apontamento nesta OS atualmente.";
-                textAp.className = "text-[11px] font-mono leading-relaxed text-red-600 italic";
+            if (containerAp && titleAp && badgeAp && textAp) {
+                if (temAberto) {
+                    containerAp.className = "p-3 rounded-xl border border-emerald-300 bg-emerald-50/80 flex flex-col gap-1.5";
+                    titleAp.textContent = "Apontamento Aberto no Momento";
+                    titleAp.className = "font-extrabold text-xs text-emerald-900";
+                    badgeAp.innerHTML = `<span class="bg-emerald-200 text-emerald-900 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-md animate-pulse">EM ANDAMENTO ⚙️</span>`;
+                    textAp.textContent = safeText(item.apontamentos_abertos_detalhe);
+                    textAp.className = "text-[11px] font-mono leading-relaxed text-emerald-900 font-bold";
+                } else {
+                    containerAp.className = "p-3 rounded-xl border border-red-200 bg-red-50/60 flex flex-col gap-1.5";
+                    titleAp.textContent = "Sem Apontamentos em Andamento";
+                    titleAp.className = "font-bold text-xs text-red-800";
+                    badgeAp.innerHTML = `<span class="bg-red-200 text-red-800 border border-red-300 text-[10px] font-bold px-2 py-0.5 rounded-md">PARADO</span>`;
+                    textAp.textContent = "Nenhum operador realizando apontamento nesta OS atualmente.";
+                    textAp.className = "text-[11px] font-mono leading-relaxed text-red-600 italic";
+                }
             }
 
             const elAtrasada = document.getElementById('mAtrasada');
-            const isAtrasada = String(item.atrasada).toLowerCase() === 'sim' || String(item.atrasada).toLowerCase() === 's';
-            elAtrasada.textContent = isAtrasada ? 'Sim' : 'Não';
-            elAtrasada.className = `font-bold ${isAtrasada ? 'text-red-600' : 'text-emerald-600'}`;
+            if (elAtrasada) {
+                const isAtrasada = String(item.atrasada).toLowerCase() === 'sim' || String(item.atrasada).toLowerCase() === 's';
+                elAtrasada.textContent = isAtrasada ? 'Sim' : 'Não';
+                elAtrasada.className = `font-bold ${isAtrasada ? 'text-red-600' : 'text-emerald-600'}`;
+            }
 
-            document.getElementById('mAbertura').textContent = formatDate(item.abertura_os);
-            document.getElementById('mDtRenegociada').textContent = formatDate(item.dt_renegociada || item.u_data_renegociacao);
-            document.getElementById('mPrevEntregaOrcamento').textContent = formatDate(item.prev_entrega_orcamento);
-            document.getElementById('mPrevEntregaOS').textContent = formatDate(item.prev_entrega_os);
-            document.getElementById('mApontamento').textContent = formatDate(item.ultimo_apontamento);
-            document.getElementById('mEntregaNorm').textContent = formatDate(item.entrega_normalizada);
+            setElText('mAbertura', formatDate(item.abertura_os));
+            setElText('mDtRenegociada', formatDate(item.dt_renegociada || item.u_data_renegociacao));
+            setElText('mPrevEntregaOrcamento', formatDate(item.prev_entrega_orcamento));
+            setElText('mPrevEntregaOS', formatDate(item.prev_entrega_os));
+            setElText('mApontamento', formatDate(item.ultimo_apontamento));
+            setElText('mEntregaNorm', formatDate(item.entrega_normalizada));
 
             const modal = document.getElementById('osModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
             lucide.createIcons();
         };
 
@@ -653,22 +678,29 @@
         window.openAltRenegociationFormModal = function() {
             if (!selectedItemModal) return;
 
-            document.getElementById('altRenHeaderTitle').textContent = `OS ${selectedItemModal.n_os} - Alterar Renegociação`;
+            setElText('altRenHeaderTitle', `OS ${selectedItemModal.n_os} - Alterar Renegociação`);
             
             const currentDt = selectedItemModal.dt_renegociada || selectedItemModal.u_data_renegociacao || '';
             const inputDate = document.getElementById('inputNewRenegociationDate');
-            if (currentDt && currentDt.length >= 10 && currentDt !== 'NaT') {
-                inputDate.value = currentDt.substring(0, 10);
-            } else {
-                inputDate.value = '';
+            if (inputDate) {
+                if (currentDt && currentDt.length >= 10 && currentDt !== 'NaT') {
+                    inputDate.value = currentDt.substring(0, 10);
+                } else {
+                    inputDate.value = '';
+                }
             }
 
-            document.getElementById('textareaJustification').value = '';
-            document.getElementById('altRenegociationFormError').classList.add('hidden');
+            const txtJust = document.getElementById('textareaJustification');
+            if (txtJust) txtJust.value = '';
+            
+            const err = document.getElementById('altRenegociationFormError');
+            if (err) err.classList.add('hidden');
 
             const modal = document.getElementById('altRenegociationFormModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
             lucide.createIcons();
         };
 
@@ -680,7 +712,7 @@
             }
         };
 
-        // V7.3.0: ATUALIZAÇÃO IMEDIATA (OPTIMISTIC UPDATE) DA DATA RENEGOCIADA
+        // V7.4.0: OPTIMISTIC UPDATE COM RENDERIZAÇÃO IMEDIATA NA TELA
         window.submitAltRenegociation = async function() {
             if (!selectedItemModal) return;
 
@@ -690,8 +722,10 @@
             const btnSave = document.getElementById('btnSaveRenegociation');
 
             if (!userTexto) {
-                err.textContent = 'A justificativa é obrigatória.';
-                err.classList.remove('hidden');
+                if (err) {
+                    err.textContent = 'A justificativa é obrigatória.';
+                    err.classList.remove('hidden');
+                }
                 return;
             }
 
@@ -699,8 +733,10 @@
             const justificativaComUsuario = `[${usuarioLogado.toUpperCase()}] ${userTexto}`;
 
             try {
-                btnSave.disabled = true;
-                btnSave.classList.add('opacity-50');
+                if (btnSave) {
+                    btnSave.disabled = true;
+                    btnSave.classList.add('opacity-50');
+                }
 
                 const patchUrl = `${API_URL}/${selectedItemModal.n_os}/alterar-renegociacao`;
 
@@ -718,7 +754,7 @@
                     throw new Error(errorData.detail || 'Falha ao salvar a alteração no banco.');
                 }
 
-                // V7.3.0: Atualização em memória imediata sem esperar rede
+                // ATUALIZAÇÃO IMEDIATA NA MEMÓRIA LOCAL
                 const updatedOSStr = String(selectedItemModal.n_os).trim();
                 rawData.forEach(i => {
                     if (String(i.n_os).trim() === updatedOSStr) {
@@ -738,20 +774,24 @@
                 closeAltRenegociationFormModal();
                 closeModal();
                 
-                // Re-renderiza a tela no ato
+                // RENDERIZA A TELA IMEDIATAMENTE
                 renderView();
 
-                // Busca dados consolidados em background
+                // REFAZ FETCH SILENCIOSO
                 fetchData(true);
                 fetchFaturamentoData(true);
 
             } catch (error) {
                 console.error('Erro ao salvar renegociação:', error);
-                err.textContent = error.message;
-                err.classList.remove('hidden');
+                if (err) {
+                    err.textContent = error.message;
+                    err.classList.remove('hidden');
+                }
             } finally {
-                btnSave.disabled = false;
-                btnSave.classList.remove('opacity-50');
+                if (btnSave) {
+                    btnSave.disabled = false;
+                    btnSave.classList.remove('opacity-50');
+                }
             }
         };
 
@@ -1290,16 +1330,13 @@
 
             const valorTotal = filtered.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
 
-            document.getElementById('metricTotalOS').textContent = totalOS;
-            document.getElementById('metricAtrasadas').textContent = atrasadas;
-            document.getElementById('metricSemOrcamento').textContent = semOrcamento;
-            document.getElementById('metricValorTotal').textContent = formatBRL(valorTotal);
+            setElText('metricTotalOS', totalOS);
+            setElText('metricAtrasadas', atrasadas);
+            setElText('metricSemOrcamento', semOrcamento);
+            setElText('metricValorTotal', formatBRL(valorTotal));
 
             const totalLimbo = rawData.filter(i => String(i.u_limbo) === '1' || i.u_limbo === 1).length;
-            const txtBtnLimbo = document.getElementById('txtBtnLimbo');
-            if (txtBtnLimbo) {
-                txtBtnLimbo.textContent = `Limbo (${totalLimbo})`;
-            }
+            setElText('txtBtnLimbo', `Limbo (${totalLimbo})`);
         }
 
         function renderView() {
