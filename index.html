@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V5.9.0</title>
+    <title>Programação de Produção - Columbia V6.0.0</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide text-white">Columbia Machine Brasil</h1>
-                    <p class="text-xs text-columbia-100">Controle de Produção V5.9.0</p>
+                    <p class="text-xs text-columbia-100">Controle de Produção V6.0.0</p>
                 </div>
             </div>
 
@@ -691,7 +691,6 @@
             return `${num.toFixed(2)} hrs`;
         }
 
-        // V5.9.0: CALCULADOR DE SEMANA ISO BASEADO EM STRING 'YYYY-MM-DD' SEM DESVIO DE FUSO
         function getISOWeekNumber(d) {
             let date;
             if (typeof d === 'string') {
@@ -711,7 +710,6 @@
             return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
         }
 
-        // V5.9.0: RETORNA INTERVALO FORMATADO DA SEMANA SEM DESVIO UTC
         function getWeekDateRangeStr(d) {
             let targetDate;
             if (typeof d === 'string') {
@@ -1084,7 +1082,7 @@
             lucide.createIcons();
         }
 
-        // CONTEÚDO DA ABA CONFERÊNCIA APONTAMENTOS
+        // CONTEÚDO COMPLETO DA ABA CONFERÊNCIA APONTAMENTOS (HORAS A MAIS)
         function renderPaginaConferenciaView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1258,7 +1256,7 @@
             `;
         }
 
-        // V5.9.0: CONTEÚDO DA ABA FATURAMENTO (ORDENAÇÃO E AGRUPAMENTO SEMANAL PELA DATA PREVISTA / EMISSÃO REAL)
+        // V6.0.0: CONTEÚDO DA ABA FATURAMENTO (CAPTURA CORRETA DE NOTA FISCAL E DATA EM ORÇAMENTOS MULTI-ITEM)
         function renderPaginaFaturamentoView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1280,22 +1278,17 @@
             const segmentoFiltro = document.getElementById('segmentoFilter')?.value || '';
             const clienteFiltro = document.getElementById('clientFilter')?.value || '';
 
-            // 1. FILTRAGEM DOS DADOS
+            // 1. FILTRAGEM DOS DADOS PELA DATA PRINCIPAL DE REFERÊNCIA
             const filteredFat = rawFaturamentoData.filter(item => {
                 const fat = parseFloat(item.vl_faturado) || 0;
                 const temNF = item.numero_nf && String(item.numero_nf).trim() !== '' && String(item.numero_nf) !== 'None';
                 const isFaturado = fat > 0 || temNF;
 
-                // DATA DE REFERÊNCIA SOBERANA:
-                // Se Faturado: usa dt_emissao (ou entrega_normalizada se emissao vier vazia)
-                // Se Não Faturado: usa entrega_normalizada (ou dt_previsao_entrega)
                 let dtRefStr = '';
-                if (isFaturado) {
-                    dtRefStr = item.dt_emissao && String(item.dt_emissao).trim() !== 'NaT' && String(item.dt_emissao).trim() !== 'None' 
-                        ? item.dt_emissao 
-                        : (item.entrega_normalizada && String(item.entrega_normalizada).trim() !== 'NaT' ? item.entrega_normalizada : item.dt_previsao_entrega);
+                if (isFaturado && item.dt_emissao && String(item.dt_emissao).trim() !== 'NaT' && String(item.dt_emissao).trim() !== 'None') {
+                    dtRefStr = item.dt_emissao;
                 } else {
-                    dtRefStr = item.entrega_normalizada && String(item.entrega_normalizada).trim() !== 'NaT' 
+                    dtRefStr = (item.entrega_normalizada && String(item.entrega_normalizada).trim() !== 'NaT') 
                         ? item.entrega_normalizada 
                         : item.dt_previsao_entrega;
                 }
@@ -1330,7 +1323,7 @@
                 return;
             }
 
-            // 2. AGRUPAMENTO POR ORÇAMENTO (N_ORCAMENTO)
+            // 2. AGRUPAMENTO POR ORÇAMENTO (N_ORCAMENTO) COM CAPTURA INTELIGENTE DE NF E DATA
             const budgetGrouped = {};
             filteredFat.forEach(item => {
                 const key = String(item.n_orcamento || 'SEM_ORCAMENTO').trim();
@@ -1338,17 +1331,16 @@
                 const temNF = item.numero_nf && String(item.numero_nf).trim() !== '' && String(item.numero_nf) !== 'None';
                 const isFaturado = fat > 0 || temNF;
 
-                // Determina a data de referência soberana deste orçamento
                 let dtRefStr = '';
-                if (isFaturado) {
-                    dtRefStr = item.dt_emissao && String(item.dt_emissao).trim() !== 'NaT' && String(item.dt_emissao).trim() !== 'None' 
-                        ? item.dt_emissao 
-                        : (item.entrega_normalizada && String(item.entrega_normalizada).trim() !== 'NaT' ? item.entrega_normalizada : item.dt_previsao_entrega);
+                if (isFaturado && item.dt_emissao && String(item.dt_emissao).trim() !== 'NaT' && String(item.dt_emissao).trim() !== 'None') {
+                    dtRefStr = item.dt_emissao;
                 } else {
-                    dtRefStr = item.entrega_normalizada && String(item.entrega_normalizada).trim() !== 'NaT' 
+                    dtRefStr = (item.entrega_normalizada && String(item.entrega_normalizada).trim() !== 'NaT') 
                         ? item.entrega_normalizada 
                         : item.dt_previsao_entrega;
                 }
+
+                const nfNum = (item.numero_nf && String(item.numero_nf) !== 'None') ? String(item.numero_nf).trim() : '';
 
                 if (!budgetGrouped[key]) {
                     budgetGrouped[key] = {
@@ -1362,7 +1354,7 @@
                         os_set: new Set(),
                         vl_faturado: 0,
                         vl_a_faturar: 0,
-                        numero_nf: (item.numero_nf && String(item.numero_nf) !== 'None') ? String(item.numero_nf) : '',
+                        numero_nf: nfNum,
                         is_faturado: false
                     };
                 }
@@ -1379,8 +1371,16 @@
                 budgetGrouped[key].vl_faturado += fat;
                 budgetGrouped[key].vl_a_faturar += aFat;
 
+                // V6.0.0: Preserva a NF e Data de Emissão caso um item posterior do mesmo orçamento contenha a NF
                 if (isFaturado) {
                     budgetGrouped[key].is_faturado = true;
+                    if (nfNum && !budgetGrouped[key].numero_nf) {
+                        budgetGrouped[key].numero_nf = nfNum;
+                    }
+                    if (dtRefStr && item.dt_emissao && String(item.dt_emissao).trim() !== 'NaT' && String(item.dt_emissao).trim() !== 'None') {
+                        budgetGrouped[key].dt_emissao = item.dt_emissao;
+                        budgetGrouped[key].dt_referencia = item.dt_emissao;
+                    }
                 }
             });
 
@@ -1391,7 +1391,7 @@
             const totalAFaturarVal = isMesPassado ? 0 : consolidatedList.reduce((acc, i) => acc + i.vl_a_faturar, 0);
             const totalGeralVal = totalFaturadoVal + totalAFaturarVal;
 
-            // 3. AGRUPAMENTO POR SEMANA DO ANO PELA DATA DE REFERÊNCIA SOBERANA
+            // 3. AGRUPAMENTO POR SEMANA DO ANO BASEADO NA DATA DE REFERÊNCIA SOBERANA
             const groupedByWeek = {};
             consolidatedList.forEach(item => {
                 const dtRef = item.dt_referencia;
@@ -1497,7 +1497,6 @@
                                         const valorExibir = isFaturado ? item.vl_faturado : item.vl_a_faturar;
                                         const dtInicial = formatDate(item.dt_previsao_entrega);
                                         
-                                        // Se nota emitida traz a data de emissão, senão a entrega normalizada
                                         const dtPrevistaOuEmissao = isFaturado ? formatDate(item.dt_emissao || item.entrega_normalizada) : formatDate(item.entrega_normalizada);
                                         
                                         const osListStr = Array.from(item.os_set).map(o => `OS ${o}`).join(' - ');
