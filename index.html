@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.4.0</title>
+    <title>Programação de Produção - Columbia V7.5.0</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.4.0</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.5.0</p>
                 </div>
             </div>
 
@@ -239,9 +239,10 @@
 
             <!-- BOTÕES DE FILTRO SEPARADOS -->
             <div id="extraButtonsContainer" class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-                <button id="btnToggleMonth" onclick="toggleMonthFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
-                    <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-columbia-600"></i>
-                    <span id="txtToggleMonth">Exibir todas as semanas</span>
+                <!-- V7.5.0: SUBSTITUÍDO BOTÃO "EXIBIR TODAS AS SEMANAS" PELO "EXIBIR OS CONCLUÍDA" -->
+                <button id="btnToggleConcluidas" onclick="toggleConcluidasFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-columbia-600"></i>
+                    <span id="txtToggleConcluidas">Exibir OS Concluída</span>
                 </button>
 
                 <button id="btnToggleOrcamento" onclick="toggleOrcamentoFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
@@ -369,7 +370,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE DETALHES DA OS (Otimizado com IDs estritamente mapeados) -->
+    <!-- MODAL DE DETALHES DA OS -->
     <div id="osModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-2.5 sm:p-4 z-50">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-[95vw] sm:max-w-lg w-full flex flex-col max-h-[90vh] overflow-hidden border border-slate-200">
             <!-- CABEÇALHO DO MODAL (FIXO) -->
@@ -401,17 +402,6 @@
                     <h4 class="font-bold text-blue-800 uppercase tracking-wider text-[10px]">Anexos / Desenhos Técnicos (PDF)</h4>
                     <div id="mAnexosList" class="flex flex-wrap gap-2 bg-blue-50/60 p-2.5 rounded-xl border border-blue-200">
                         <!-- Botões de download injetados via JS -->
-                    </div>
-                </div>
-
-                <!-- STATUS OPERAÇÃO -->
-                <div class="space-y-1.5">
-                    <h4 class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Status da Operação</h4>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200"><span class="text-slate-500 block">Compras</span><span id="mCompras" class="font-semibold text-slate-800"></span></div>
-                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200"><span class="text-slate-500 block">Terceiros</span><span id="mTerceiros" class="font-semibold text-slate-800"></span></div>
-                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200"><span class="text-slate-500 block">Produção</span><span id="mProducao" class="font-semibold text-columbia-600"></span></div>
-                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200"><span class="text-slate-500 block">Atrasada</span><span id="mAtrasada" class="font-bold"></span></div>
                     </div>
                 </div>
 
@@ -492,6 +482,7 @@
         let currentView = 'week';
         let abaAtiva = 'dashboard';
 
+        let showConcluidas = false; // V7.5.0: Padrão exibe apenas concluido: "nao"
         let onlyCurrentMonth = true;
         let onlyWithBudget = false;
         let isValuesUnlocked = false;
@@ -528,7 +519,7 @@
         });
 
         // ==============================================================================
-        // V7.4.0: DECLARAÇÃO SEGURA DAS FUNÇÕES DE MODAL NO WINDOW
+        // DECLARAÇÃO SEGURA DAS FUNÇÕES DE MODAL NO WINDOW
         // ==============================================================================
 
         window.setElText = function(id, text) {
@@ -712,7 +703,6 @@
             }
         };
 
-        // V7.4.0: OPTIMISTIC UPDATE COM RENDERIZAÇÃO IMEDIATA NA TELA
         window.submitAltRenegociation = async function() {
             if (!selectedItemModal) return;
 
@@ -754,7 +744,6 @@
                     throw new Error(errorData.detail || 'Falha ao salvar a alteração no banco.');
                 }
 
-                // ATUALIZAÇÃO IMEDIATA NA MEMÓRIA LOCAL
                 const updatedOSStr = String(selectedItemModal.n_os).trim();
                 rawData.forEach(i => {
                     if (String(i.n_os).trim() === updatedOSStr) {
@@ -774,10 +763,8 @@
                 closeAltRenegociationFormModal();
                 closeModal();
                 
-                // RENDERIZA A TELA IMEDIATAMENTE
                 renderView();
 
-                // REFAZ FETCH SILENCIOSO
                 fetchData(true);
                 fetchFaturamentoData(true);
 
@@ -795,7 +782,6 @@
             }
         };
 
-        // ABERTURA DE ANEXOS DESENHO TÉCNICO PDF
         async function abrirDesenhoAnexo(event, cod_empresa, cod_os, cod_os_aux) {
             if (event && typeof event.stopPropagation === 'function') {
                 event.stopPropagation();
@@ -1256,6 +1242,7 @@
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
         }
 
+        // V7.5.0: FILTRO DE PRODUÇÃO - EXIBE PADRÃO APENAS CONCLUIDO "NAO"
         function getFilteredData() {
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
             const atrasadaFiltro = document.getElementById('atrasadaFilter')?.value || '';
@@ -1270,6 +1257,12 @@
             return rawData.filter(item => {
                 const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
                 if (estaNoLimbo) return false;
+
+                // V7.5.0: FILTRO DE CONCLUÍDO (Se showConcluidas == false, esconde concluido == "sim")
+                const isConcluido = String(item.concluido || '').toLowerCase() === 'sim' || String(item.concluido || '').toLowerCase() === 's' || String(item.concluido || '') === '1';
+                if (!showConcluidas && isConcluido) {
+                    return false;
+                }
 
                 if (search) {
                     const matchOS = String(item.n_os || '').toLowerCase().includes(search);
@@ -1389,8 +1382,6 @@
             const wEnd = new Date(wStart);
             wEnd.setDate(wEnd.getDate() + 6);
             wEnd.setHours(23,59,59,999);
-
-            const monthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
 
             const filteredConferencia = rawConferenciaData.filter(item => {
                 const dtBaseStr = item.dt_finalizacao || item.data_fim || '';
@@ -2092,16 +2083,19 @@
             grid.innerHTML = html;
         }
 
-        function toggleMonthFilter() {
-            onlyCurrentMonth = !onlyCurrentMonth;
-            const btn = document.getElementById('btnToggleMonth');
-            const txt = document.getElementById('txtToggleMonth');
-            if (onlyCurrentMonth) {
-                txt.textContent = 'Exibir todas as semanas';
-                btn.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
-            } else {
-                txt.textContent = 'Ocultar semanas passadas';
-                btn.className = "px-3 py-2 bg-columbia-700 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm";
+        // V7.5.0: ALTERNA O EXIBIR OS CONCLUÍDA
+        function toggleConcluidasFilter() {
+            showConcluidas = !showConcluidas;
+            const btn = document.getElementById('btnToggleConcluidas');
+            const txt = document.getElementById('txtToggleConcluidas');
+            if (btn && txt) {
+                if (showConcluidas) {
+                    txt.textContent = 'Ocultar OS Concluída';
+                    btn.className = "px-3 py-2 bg-columbia-700 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm";
+                } else {
+                    txt.textContent = 'Exibir OS Concluída';
+                    btn.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+                }
             }
             renderView();
         }
@@ -2130,6 +2124,15 @@
             document.getElementById('engenhariaFilter').value = '';
             document.getElementById('comprasFilter').value = '';
             document.getElementById('terceirosFilter').value = '';
+            showConcluidas = false;
+            
+            const btnC = document.getElementById('btnToggleConcluidas');
+            const txtC = document.getElementById('txtToggleConcluidas');
+            if (btnC && txtC) {
+                txtC.textContent = 'Exibir OS Concluída';
+                btnC.className = "px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5";
+            }
+
             renderView();
         }
 
