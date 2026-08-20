@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.1.2</title>
+    <title>Programação de Produção - Columbia V7.2.0</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.1.2</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.2.0</p>
                 </div>
             </div>
 
@@ -85,7 +85,7 @@
                     <span id="userDisplayName">Usuário</span>
                 </div>
 
-                <!-- ABAS DE NAVEGAÇÃO INTERNA NO HEADER (SISTEMA DE ABAS SPA) -->
+                <!-- ABAS DE NAVEGAÇÃO INTERNA NO HEADER -->
                 <button id="btnAbaDashboard" onclick="setAbaAtiva('dashboard')" class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-columbia-900 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md border border-columbia-500 shrink-0">
                     <i data-lucide="calendar" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span>Produção</span>
@@ -146,7 +146,7 @@
             </div>
             <div class="bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-200">
                 <span class="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase block">Sem Orçamento</span>
-                <span id="metricSemOrcamento" class="text-base sm:text-xl font-extrabold text-amber-600">0</span>
+                <span id="metricSemOrcamento" class="text-xl font-extrabold text-amber-600">0</span>
             </div>
         </div>
     </div>
@@ -159,15 +159,11 @@
             <!-- Busca Geral Universal -->
             <div class="flex items-center gap-2 flex-1 min-w-[180px] sm:min-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <input type="search" 
+                <input type="text" 
                        id="searchInput" 
-                       name="search_query_custom_columbia"
                        oninput="renderView()" 
                        placeholder="Pesquisar (OS, Título, Cliente, Origem, NF, Cod. Interno...)" 
-                       autocomplete="one-time-code"
-                       autocorrect="off"
-                       aria-autocomplete="none"
-                       spellcheck="false"
+                       autocomplete="off"
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
             </div>
 
@@ -373,7 +369,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE DETALHES DA OS (Otimizado para Celular) -->
+    <!-- MODAL DE DETALHES DA OS -->
     <div id="osModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-2.5 sm:p-4 z-50">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-[95vw] sm:max-w-lg w-full flex flex-col max-h-[90vh] overflow-hidden border border-slate-200">
             <!-- CABEÇALHO DO MODAL (FIXO) -->
@@ -398,6 +394,14 @@
                     <div><span class="text-slate-500 block font-semibold">Possui Orçamento</span><span id="mPossuiOrcamento" class="font-bold text-slate-800"></span></div>
                     <div><span class="text-slate-500 block font-semibold">Preço Geral / Valor</span><span id="mPreco" class="font-bold text-emerald-600"></span></div>
                     <div><span class="text-slate-500 block font-semibold">Nº do Orçamento</span><span id="mNumOrcamento" class="font-bold text-columbia-700"></span></div>
+                </div>
+
+                <!-- SEÇÃO DE ANEXOS / DESENHOS TÉCNICOS NO MODAL -->
+                <div id="mAnexosContainer" class="space-y-1.5 pt-1 hidden">
+                    <h4 class="font-bold text-blue-800 uppercase tracking-wider text-[10px]">Anexos / Desenhos Técnicos (PDF)</h4>
+                    <div id="mAnexosList" class="flex flex-wrap gap-2 bg-blue-50/60 p-2.5 rounded-xl border border-blue-200">
+                        <!-- Botões de download injetados via JS -->
+                    </div>
                 </div>
 
                 <!-- PROCESSOS PENDENTES (PP PENDENTES) -->
@@ -511,6 +515,56 @@
                 }
             }, 30000);
         });
+
+        // ABERTURA DE ANEXOS DESENHO TÉCNICO PDF
+        async function abrirDesenhoAnexo(event, cod_empresa, cod_os, cod_os_aux) {
+            if (event && typeof event.stopPropagation === 'function') {
+                event.stopPropagation();
+            }
+
+            try {
+                const btnTarget = event ? event.currentTarget : null;
+                if (btnTarget) {
+                    btnTarget.disabled = true;
+                    btnTarget.classList.add('opacity-50');
+                }
+
+                const url = `${API_URL}/desenho-anexo?cod_empresa=${cod_empresa}&cod_os=${cod_os}&cod_os_aux=${cod_os_aux}`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Não foi possível carregar o anexo.');
+                }
+
+                const data = await response.json();
+
+                if (!data.pdf_base64) {
+                    alert('Arquivo não encontrado ou corrompido.');
+                    return;
+                }
+
+                const byteCharacters = atob(data.pdf_base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const fileBlob = new Blob([byteArray], { type: 'application/pdf' });
+
+                const fileURL = URL.createObjectURL(fileBlob);
+                window.open(fileURL, '_blank');
+
+            } catch (error) {
+                console.error('Erro ao abrir anexo:', error);
+                alert(`Erro ao abrir o anexo: ${error.message}`);
+            } finally {
+                if (event && event.currentTarget) {
+                    event.currentTarget.disabled = false;
+                    event.currentTarget.classList.remove('opacity-50');
+                }
+            }
+        }
 
         function configurarVisibilidadeAbas() {
             const valFaturamento = localStorage.getItem('columbia_perm_faturamento');
@@ -1208,7 +1262,6 @@
             `;
         }
 
-        // V7.1.1: ABA FATURAMENTO COM ABERTURA DIRETA E BUSCA DA OS NO MODAL
         function renderPaginaFaturamentoView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1483,12 +1536,22 @@
             grid.innerHTML = html;
         }
 
-        // V7.1.1: BUSCA CONVERTENDO ID PARA STRING PARA GARANTIR ABERTURA DO MODAL
         function abrirModalRenegociacaoPelaOS(n_os) {
-            let item = rawData.find(i => String(i.n_os).trim() === String(n_os).trim());
+            const osTarget = String(n_os).trim();
+            let item = rawData.find(i => String(i.n_os).trim() === osTarget);
+            
             if (!item) {
-                item = { n_os: String(n_os).trim(), dt_renegociada: null, u_data_renegociacao: null };
+                // Fallback de busca no faturamento caso o item não esteja no array principal
+                const fatMatch = rawFaturamentoData.find(i => String(i.n_os).trim() === osTarget);
+                item = { 
+                    n_os: osTarget, 
+                    dt_renegociada: null, 
+                    u_data_renegociacao: null,
+                    cliente: fatMatch ? fatMatch.cliente : '',
+                    titulo: fatMatch ? fatMatch.descricao : ''
+                };
             }
+            
             selectedItemModal = item;
             openAltRenegociationFormModal();
         }
@@ -1883,108 +1946,6 @@
                 input.type = 'password';
                 eye.setAttribute('data-lucide', 'eye');
             }
-            lucide.createIcons();
-        }
-
-        // V7.1.1: BUSCA CONVERTENDO ID PARA STRING DE FORMA STRICTA PARA GARANTIR ABERTURA DO MODAL
-        function openModal(n_os) {
-            const osBusca = String(n_os).trim();
-            const item = rawData.find(i => String(i.n_os).trim() === osBusca);
-            if (!item) {
-                console.warn('Item não localizado na lista rawData para OS:', osBusca);
-                return;
-            }
-            selectedItemModal = item;
-
-            const safeText = (val) => (!val || val === 'NaT' || val === 'None' || val === 'null' || String(val).trim() === '') ? '-' : val;
-
-            document.getElementById('mOS').textContent = `OS ${item.n_os || 'N/A'}`;
-            document.getElementById('mTitulo').textContent = item.titulo || 'Sem Título';
-            document.getElementById('mPedido').textContent = safeText(item.n_pedido);
-            document.getElementById('mCliente').textContent = safeText(item.cliente);
-            document.getElementById('mSegmento').textContent = safeText(item.segmento);
-            document.getElementById('mCodInterno').textContent = safeText(item.cod_interno);
-            document.getElementById('mOrigem').textContent = safeText(item.origem);
-            document.getElementById('mEngenhariaStatus').textContent = safeText(item.engenharia_status);
-            document.getElementById('mOsFilhosQuais').textContent = safeText(item.os_filhos_quais);
-            document.getElementById('mPossuiOrcamento').textContent = safeText(item.possui_orcamento);
-            document.getElementById('mPreco').textContent = formatBRL(parseValue(item.preco_geral_a_vista || item.orcamento));
-            document.getElementById('mNumOrcamento').textContent = safeText(item.orcamento);
-
-            document.getElementById('mCompras').textContent = safeText(item.status_compras);
-            document.getElementById('mTerceiros').textContent = safeText(item.status_terceiros);
-            document.getElementById('mProducao').textContent = safeText(item.status_producao);
-            document.getElementById('mPpPendentes').textContent = safeText(item.pp_pendentes);
-            
-            document.getElementById('mJustificativa').textContent = safeText(item.justificativa);
-
-            const containerAnexos = document.getElementById('mAnexosContainer');
-            const listAnexos = document.getElementById('mAnexosList');
-            const anexos = Array.isArray(item.anexos) ? item.anexos : [];
-
-            if (anexos.length > 0) {
-                containerAnexos.classList.remove('hidden');
-                listAnexos.innerHTML = anexos.map((anx, idx) => `
-                    <button onclick="abrirDesenhoAnexo(event, ${item.cod_empresa}, ${item.cod_os}, ${anx.cod_os_aux})" 
-                            class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition shadow-xs flex items-center gap-1.5">
-                        <i data-lucide="file-text" class="w-4 h-4"></i>
-                        <span>Abrir Desenho ${idx + 1} (Aux ${anx.cod_os_aux})</span>
-                    </button>
-                `).join('');
-            } else {
-                containerAnexos.classList.add('hidden');
-                listAnexos.innerHTML = '';
-            }
-
-            const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
-            const btnLimbo = document.getElementById('btnEnviarLimbo');
-            const txtLabelBtnLimbo = document.getElementById('txtLabelBtnLimbo');
-
-            if (estaNoLimbo) {
-                btnLimbo.className = "px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5";
-                txtLabelBtnLimbo.textContent = "Tirar do Limbo 🟢";
-            } else {
-                btnLimbo.className = "px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-amber-400 border border-slate-700 rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5";
-                txtLabelBtnLimbo.textContent = "Enviar para o Limbo";
-            }
-
-            const temAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
-            const containerAp = document.getElementById('mApontamentoContainer');
-            const titleAp = document.getElementById('mApontamentoStatusTitle');
-            const badgeAp = document.getElementById('mApontamentoBadge');
-            const textAp = document.getElementById('mApontamentoDetalheText');
-
-            if (temAberto) {
-                containerAp.className = "p-3 rounded-xl border border-emerald-300 bg-emerald-50/80 flex flex-col gap-1.5";
-                titleAp.textContent = "Apontamento Aberto no Momento";
-                titleAp.className = "font-extrabold text-xs text-emerald-900";
-                badgeAp.innerHTML = `<span class="bg-emerald-200 text-emerald-900 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-md animate-pulse">EM ANDAMENTO ⚙️</span>`;
-                textAp.textContent = safeText(item.apontamentos_abertos_detalhe);
-                textAp.className = "text-[11px] font-mono leading-relaxed text-emerald-900 font-bold";
-            } else {
-                containerAp.className = "p-3 rounded-xl border border-red-200 bg-red-50/60 flex flex-col gap-1.5";
-                titleAp.textContent = "Sem Apontamentos em Andamento";
-                titleAp.className = "font-bold text-xs text-red-800";
-                badgeAp.innerHTML = `<span class="bg-red-200 text-red-800 border border-red-300 text-[10px] font-bold px-2 py-0.5 rounded-md">PARADO</span>`;
-                textAp.textContent = "Nenhum operador realizando apontamento nesta OS atualmente.";
-                textAp.className = "text-[11px] font-mono leading-relaxed text-red-600 italic";
-            }
-
-            const elAtrasada = document.getElementById('mAtrasada');
-            const isAtrasada = String(item.atrasada).toLowerCase() === 'sim' || String(item.atrasada).toLowerCase() === 's';
-            elAtrasada.textContent = isAtrasada ? 'Sim' : 'Não';
-            elAtrasada.className = `font-bold ${isAtrasada ? 'text-red-600' : 'text-emerald-600'}`;
-
-            document.getElementById('mAbertura').textContent = formatDate(item.abertura_os);
-            document.getElementById('mDtRenegociada').textContent = formatDate(item.dt_renegociada || item.u_data_renegociacao);
-            document.getElementById('mPrevEntregaOrcamento').textContent = formatDate(item.prev_entrega_orcamento);
-            document.getElementById('mPrevEntregaOS').textContent = formatDate(item.prev_entrega_os);
-            document.getElementById('mApontamento').textContent = formatDate(item.ultimo_apontamento);
-            document.getElementById('mEntregaNorm').textContent = formatDate(item.entrega_normalizada);
-
-            const modal = document.getElementById('osModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
             lucide.createIcons();
         }
 
