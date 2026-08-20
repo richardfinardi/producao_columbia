@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.2.0</title>
+    <title>Programação de Produção - Columbia V7.3.0</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.2.0</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.3.0</p>
                 </div>
             </div>
 
@@ -466,7 +466,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO -->
+    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO NO ESCOPO GLOBAL -->
     <script>
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         const API_HR_A_MAIS = 'https://columbia.consultoriarf.net/hr-a-mais';
@@ -515,6 +515,245 @@
                 }
             }, 30000);
         });
+
+        // ==============================================================================
+        // DECLARAÇÃO DAS FUNÇÕES DE MODAL NO ESCOPO PRINCIPAL
+        // ==============================================================================
+
+        window.openModal = function(n_os) {
+            const osTarget = String(n_os).trim();
+            const item = rawData.find(i => String(i.n_os).trim() === osTarget);
+            
+            if (!item) {
+                console.warn('Item não localizado na lista rawData para OS:', osTarget);
+                return;
+            }
+            selectedItemModal = item;
+
+            const safeText = (val) => (!val || val === 'NaT' || val === 'None' || val === 'null' || String(val).trim() === '') ? '-' : val;
+
+            document.getElementById('mOS').textContent = `OS ${item.n_os || 'N/A'}`;
+            document.getElementById('mTitulo').textContent = item.titulo || 'Sem Título';
+            document.getElementById('mPedido').textContent = safeText(item.n_pedido);
+            document.getElementById('mCliente').textContent = safeText(item.cliente);
+            document.getElementById('mSegmento').textContent = safeText(item.segmento);
+            document.getElementById('mCodInterno').textContent = safeText(item.cod_interno);
+            document.getElementById('mOrigem').textContent = safeText(item.origem);
+            document.getElementById('mEngenhariaStatus').textContent = safeText(item.engenharia_status);
+            document.getElementById('mOsFilhosQuais').textContent = safeText(item.os_filhos_quais);
+            document.getElementById('mPossuiOrcamento').textContent = safeText(item.possui_orcamento);
+            document.getElementById('mPreco').textContent = formatBRL(parseValue(item.preco_geral_a_vista || item.orcamento));
+            document.getElementById('mNumOrcamento').textContent = safeText(item.orcamento);
+
+            document.getElementById('mCompras').textContent = safeText(item.status_compras);
+            document.getElementById('mTerceiros').textContent = safeText(item.status_terceiros);
+            document.getElementById('mProducao').textContent = safeText(item.status_producao);
+            document.getElementById('mPpPendentes').textContent = safeText(item.pp_pendentes);
+            
+            document.getElementById('mJustificativa').textContent = safeText(item.justificativa);
+
+            const containerAnexos = document.getElementById('mAnexosContainer');
+            const listAnexos = document.getElementById('mAnexosList');
+            const anexos = Array.isArray(item.anexos) ? item.anexos : [];
+
+            if (anexos.length > 0) {
+                containerAnexos.classList.remove('hidden');
+                listAnexos.innerHTML = anexos.map((anx, idx) => `
+                    <button onclick="abrirDesenhoAnexo(event, ${item.cod_empresa}, ${item.cod_os}, ${anx.cod_os_aux})" 
+                            class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition shadow-xs flex items-center gap-1.5">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        <span>Abrir Desenho ${idx + 1} (Aux ${anx.cod_os_aux})</span>
+                    </button>
+                `).join('');
+            } else {
+                containerAnexos.classList.add('hidden');
+                listAnexos.innerHTML = '';
+            }
+
+            const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
+            const btnLimbo = document.getElementById('btnEnviarLimbo');
+            const txtLabelBtnLimbo = document.getElementById('txtLabelBtnLimbo');
+
+            if (estaNoLimbo) {
+                btnLimbo.className = "px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5";
+                txtLabelBtnLimbo.textContent = "Tirar do Limbo 🟢";
+            } else {
+                btnLimbo.className = "px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-amber-400 border border-slate-700 rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5";
+                txtLabelBtnLimbo.textContent = "Enviar para o Limbo";
+            }
+
+            const temAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
+            const containerAp = document.getElementById('mApontamentoContainer');
+            const titleAp = document.getElementById('mApontamentoStatusTitle');
+            const badgeAp = document.getElementById('mApontamentoBadge');
+            const textAp = document.getElementById('mApontamentoDetalheText');
+
+            if (temAberto) {
+                containerAp.className = "p-3 rounded-xl border border-emerald-300 bg-emerald-50/80 flex flex-col gap-1.5";
+                titleAp.textContent = "Apontamento Aberto no Momento";
+                titleAp.className = "font-extrabold text-xs text-emerald-900";
+                badgeAp.innerHTML = `<span class="bg-emerald-200 text-emerald-900 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-md animate-pulse">EM ANDAMENTO ⚙️</span>`;
+                textAp.textContent = safeText(item.apontamentos_abertos_detalhe);
+                textAp.className = "text-[11px] font-mono leading-relaxed text-emerald-900 font-bold";
+            } else {
+                containerAp.className = "p-3 rounded-xl border border-red-200 bg-red-50/60 flex flex-col gap-1.5";
+                titleAp.textContent = "Sem Apontamentos em Andamento";
+                titleAp.className = "font-bold text-xs text-red-800";
+                badgeAp.innerHTML = `<span class="bg-red-200 text-red-800 border border-red-300 text-[10px] font-bold px-2 py-0.5 rounded-md">PARADO</span>`;
+                textAp.textContent = "Nenhum operador realizando apontamento nesta OS atualmente.";
+                textAp.className = "text-[11px] font-mono leading-relaxed text-red-600 italic";
+            }
+
+            const elAtrasada = document.getElementById('mAtrasada');
+            const isAtrasada = String(item.atrasada).toLowerCase() === 'sim' || String(item.atrasada).toLowerCase() === 's';
+            elAtrasada.textContent = isAtrasada ? 'Sim' : 'Não';
+            elAtrasada.className = `font-bold ${isAtrasada ? 'text-red-600' : 'text-emerald-600'}`;
+
+            document.getElementById('mAbertura').textContent = formatDate(item.abertura_os);
+            document.getElementById('mDtRenegociada').textContent = formatDate(item.dt_renegociada || item.u_data_renegociacao);
+            document.getElementById('mPrevEntregaOrcamento').textContent = formatDate(item.prev_entrega_orcamento);
+            document.getElementById('mPrevEntregaOS').textContent = formatDate(item.prev_entrega_os);
+            document.getElementById('mApontamento').textContent = formatDate(item.ultimo_apontamento);
+            document.getElementById('mEntregaNorm').textContent = formatDate(item.entrega_normalizada);
+
+            const modal = document.getElementById('osModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        };
+
+        window.closeModal = function() {
+            const modal = document.getElementById('osModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            selectedItemModal = null;
+        };
+
+        window.abrirModalRenegociacaoPelaOS = function(n_os) {
+            const osTarget = String(n_os).trim();
+            let item = rawData.find(i => String(i.n_os).trim() === osTarget);
+            
+            if (!item) {
+                const fatMatch = rawFaturamentoData.find(i => String(i.n_os).trim() === osTarget);
+                item = { 
+                    n_os: osTarget, 
+                    dt_renegociada: null, 
+                    u_data_renegociacao: null,
+                    cliente: fatMatch ? fatMatch.cliente : '',
+                    titulo: fatMatch ? fatMatch.descricao : ''
+                };
+            }
+            
+            selectedItemModal = item;
+            openAltRenegociationFormModal();
+        };
+
+        window.openAltRenegociationFormModal = function() {
+            if (!selectedItemModal) return;
+
+            document.getElementById('altRenHeaderTitle').textContent = `OS ${selectedItemModal.n_os} - Alterar Renegociação`;
+            
+            const currentDt = selectedItemModal.dt_renegociada || selectedItemModal.u_data_renegociacao || '';
+            const inputDate = document.getElementById('inputNewRenegociationDate');
+            if (currentDt && currentDt.length >= 10 && currentDt !== 'NaT') {
+                inputDate.value = currentDt.substring(0, 10);
+            } else {
+                inputDate.value = '';
+            }
+
+            document.getElementById('textareaJustification').value = '';
+            document.getElementById('altRenegociationFormError').classList.add('hidden');
+
+            const modal = document.getElementById('altRenegociationFormModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        };
+
+        window.closeAltRenegociationFormModal = function() {
+            const modal = document.getElementById('altRenegociationFormModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        };
+
+        // V7.3.0: ATUALIZAÇÃO IMEDIATA (OPTIMISTIC UPDATE) DA DATA RENEGOCIADA
+        window.submitAltRenegociation = async function() {
+            if (!selectedItemModal) return;
+
+            const newDate = document.getElementById('inputNewRenegociationDate').value;
+            const userTexto = document.getElementById('textareaJustification').value.trim();
+            const err = document.getElementById('altRenegociationFormError');
+            const btnSave = document.getElementById('btnSaveRenegociation');
+
+            if (!userTexto) {
+                err.textContent = 'A justificativa é obrigatória.';
+                err.classList.remove('hidden');
+                return;
+            }
+
+            const usuarioLogado = localStorage.getItem('columbia_usuario_nome') || 'SISTEMA';
+            const justificativaComUsuario = `[${usuarioLogado.toUpperCase()}] ${userTexto}`;
+
+            try {
+                btnSave.disabled = true;
+                btnSave.classList.add('opacity-50');
+
+                const patchUrl = `${API_URL}/${selectedItemModal.n_os}/alterar-renegociacao`;
+
+                const response = await fetch(patchUrl, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        u_data_renegociacao: newDate || null,
+                        U_JUST_ALT_DT_REN: justificativaComUsuario
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Falha ao salvar a alteração no banco.');
+                }
+
+                // V7.3.0: Atualização em memória imediata sem esperar rede
+                const updatedOSStr = String(selectedItemModal.n_os).trim();
+                rawData.forEach(i => {
+                    if (String(i.n_os).trim() === updatedOSStr) {
+                        i.dt_renegociada = newDate || null;
+                        i.u_data_renegociacao = newDate || null;
+                        i.entrega_normalizada = newDate || i.entrega_normalizada;
+                        i.justificativa = justificativaComUsuario;
+                    }
+                });
+
+                rawFaturamentoData.forEach(i => {
+                    if (String(i.n_os).trim() === updatedOSStr) {
+                        i.entrega_normalizada = newDate || i.entrega_normalizada;
+                    }
+                });
+
+                closeAltRenegociationFormModal();
+                closeModal();
+                
+                // Re-renderiza a tela no ato
+                renderView();
+
+                // Busca dados consolidados em background
+                fetchData(true);
+                fetchFaturamentoData(true);
+
+            } catch (error) {
+                console.error('Erro ao salvar renegociação:', error);
+                err.textContent = error.message;
+                err.classList.remove('hidden');
+            } finally {
+                btnSave.disabled = false;
+                btnSave.classList.remove('opacity-50');
+            }
+        };
 
         // ABERTURA DE ANEXOS DESENHO TÉCNICO PDF
         async function abrirDesenhoAnexo(event, cod_empresa, cod_os, cod_os_aux) {
@@ -1536,26 +1775,6 @@
             grid.innerHTML = html;
         }
 
-        function abrirModalRenegociacaoPelaOS(n_os) {
-            const osTarget = String(n_os).trim();
-            let item = rawData.find(i => String(i.n_os).trim() === osTarget);
-            
-            if (!item) {
-                // Fallback de busca no faturamento caso o item não esteja no array principal
-                const fatMatch = rawFaturamentoData.find(i => String(i.n_os).trim() === osTarget);
-                item = { 
-                    n_os: osTarget, 
-                    dt_renegociada: null, 
-                    u_data_renegociacao: null,
-                    cliente: fatMatch ? fatMatch.cliente : '',
-                    titulo: fatMatch ? fatMatch.descricao : ''
-                };
-            }
-            
-            selectedItemModal = item;
-            openAltRenegociationFormModal();
-        }
-
         function renderPaginaLimboView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1947,94 +2166,6 @@
                 eye.setAttribute('data-lucide', 'eye');
             }
             lucide.createIcons();
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('osModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            selectedItemModal = null;
-        }
-
-        function openAltRenegociationFormModal() {
-            if (!selectedItemModal) return;
-
-            document.getElementById('altRenHeaderTitle').textContent = `OS ${selectedItemModal.n_os} - Alterar Renegociação`;
-            
-            const currentDt = selectedItemModal.dt_renegociada || selectedItemModal.u_data_renegociacao || '';
-            const inputDate = document.getElementById('inputNewRenegociationDate');
-            if (currentDt && currentDt.length >= 10 && currentDt !== 'NaT') {
-                inputDate.value = currentDt.substring(0, 10);
-            } else {
-                inputDate.value = '';
-            }
-
-            document.getElementById('textareaJustification').value = '';
-            document.getElementById('altRenegociationFormError').classList.add('hidden');
-
-            const modal = document.getElementById('altRenegociationFormModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            lucide.createIcons();
-        }
-
-        function closeAltRenegociationFormModal() {
-            const modal = document.getElementById('altRenegociationFormModal');
-            if (modal) {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }
-        }
-
-        async function submitAltRenegociation() {
-            if (!selectedItemModal) return;
-
-            const newDate = document.getElementById('inputNewRenegociationDate').value;
-            const userTexto = document.getElementById('textareaJustification').value.trim();
-            const err = document.getElementById('altRenegociationFormError');
-            const btnSave = document.getElementById('btnSaveRenegociation');
-
-            if (!userTexto) {
-                err.textContent = 'A justificativa é obrigatória.';
-                err.classList.remove('hidden');
-                return;
-            }
-
-            const usuarioLogado = localStorage.getItem('columbia_usuario_nome') || 'SISTEMA';
-            const justificativaComUsuario = `[${usuarioLogado.toUpperCase()}] ${userTexto}`;
-
-            try {
-                btnSave.disabled = true;
-                btnSave.classList.add('opacity-50');
-
-                const patchUrl = `${API_URL}/${selectedItemModal.n_os}/alterar-renegociacao`;
-
-                const response = await fetch(patchUrl, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        u_data_renegociacao: newDate || null,
-                        U_JUST_ALT_DT_REN: justificativaComUsuario
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Falha ao salvar a alteração no banco.');
-                }
-
-                closeAltRenegociationFormModal();
-                closeModal();
-                fetchData();
-
-            } catch (error) {
-                console.error('Erro ao salvar renegociação:', error);
-                err.textContent = error.message;
-                err.classList.remove('hidden');
-            } finally {
-                btnSave.disabled = false;
-                btnSave.classList.remove('opacity-50');
-            }
         }
 
         async function alterarStatusLimbo(n_os, valorLimbo) {
