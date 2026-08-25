@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.6.1</title>
+    <title>Programação de Produção - Columbia V7.6.2</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.1</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.2</p>
                 </div>
             </div>
 
@@ -933,7 +933,7 @@
                 if (btnAnexos) btnAnexos.className = "flex items-center gap-1.5 px-3 py-2 bg-teal-900 border border-teal-400 text-white font-black rounded-xl text-xs transition shadow-md shrink-0";
                 if (metricsBar) metricsBar.classList.add('hidden');
                 
-                // BARRA DE FILTROS MANTIDA VISÍVEL APENAS PARA A PESQUISA GERAL
+                // MANTÉM VISÍVEL APENAS A BARRA DE PESQUISA GERAL
                 if (filtersBar) filtersBar.classList.remove('hidden');
                 if (navigationBar) navigationBar.classList.add('hidden');
 
@@ -1427,6 +1427,9 @@
             lucide.createIcons();
         }
 
+        // ==============================================================================
+        // RENDERIZAÇÃO E AÇÕES DA ABA DE LIBERAÇÃO DE ANEXOS (COM SELEÇÃO MÚLTIPLA E TOTAL)
+        // ==============================================================================
         function renderPaginaAnexosView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -1441,10 +1444,8 @@
                 return;
             }
 
-            // Captura o termo de busca universal
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
 
-            // Filtra por Orçamento, Cliente, OS, Nome do Arquivo ou Subtítulo
             const anexosFiltrados = rawAnexosPendentes.filter(item => {
                 if (!search) return true;
                 const matchOrcamento = String(item.n_orcamento || '').toLowerCase().includes(search);
@@ -1481,6 +1482,7 @@
             const listaOrcamentos = Object.values(agrupadoPorOrcamento);
 
             let html = `
+                <!-- BARRA SUPERIOR DE AÇÕES GERAIS -->
                 <div class="bg-white rounded-2xl border border-teal-200 p-3.5 sm:p-5 shadow-sm mb-4 flex flex-wrap justify-between items-center gap-3">
                     <div class="flex items-center gap-2.5 sm:gap-3">
                         <div class="p-2 sm:p-2.5 bg-teal-100 text-teal-800 rounded-xl">
@@ -1488,29 +1490,51 @@
                         </div>
                         <div>
                             <h3 class="font-extrabold text-slate-900 text-xs sm:text-base">Anexos Pendentes de Liberação</h3>
-                            <p class="text-[10px] sm:text-xs text-slate-500 font-medium">Selecione o orçamento para liberar a visualização no Connect.</p>
+                            <p class="text-[10px] sm:text-xs text-slate-500 font-medium">Marque os orçamentos que deseja liberar ou libere todos simultaneamente.</p>
                         </div>
                     </div>
-                    <span class="text-[10px] sm:text-xs font-black text-teal-900 bg-teal-100 border border-teal-300 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl">
-                        Total: ${listaOrcamentos.length} Orçamento${listaOrcamentos.length === 1 ? '' : 's'}
-                    </span>
+
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="liberarAnexosProcessar('selecionados')" 
+                                class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-extrabold text-xs transition shadow-sm flex items-center gap-1.5">
+                            <i data-lucide="check-square" class="w-4 h-4"></i>
+                            <span>Liberar Selecionados</span>
+                        </button>
+
+                        <button onclick="liberarAnexosProcessar('todos')" 
+                                class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold text-xs transition shadow-sm flex items-center gap-1.5">
+                            <i data-lucide="check-check" class="w-4 h-4"></i>
+                            <span>Liberar TODOS Pendentes</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="space-y-4">
+
+                <!-- CONTROLE DE SELEÇÃO GLOBAL DA LISTA -->
+                <div class="flex items-center justify-between bg-slate-200/80 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 mb-3">
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" id="chkMarcarTodosAnexos" onchange="toggleMarcarTodosAnexos(this)" class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer">
+                        <span>Selecionar Todos os Orçamentos Exibidos</span>
+                    </label>
+                    <span class="text-[11px] text-slate-500 font-semibold">${listaOrcamentos.length} Orçamentos na fila</span>
+                </div>
+
+                <div class="space-y-3.5">
             `;
 
             listaOrcamentos.forEach(grupo => {
                 html += `
                     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                        <div class="bg-slate-800 text-white px-3.5 sm:px-4 py-2.5 sm:py-3 flex justify-between items-center flex-wrap gap-2">
-                            <div>
-                                <span class="font-bold text-xs text-teal-400 font-mono">ORÇAMENTO Nº ${grupo.n_orcamento}</span>
-                                <h4 class="font-bold text-xs text-slate-200 uppercase truncate max-w-[260px] sm:max-w-none">${grupo.cliente}</h4>
+                        <div class="bg-slate-800 text-white px-3.5 sm:px-4 py-2.5 flex justify-between items-center flex-wrap gap-2">
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" value="${grupo.n_orcamento}" class="chkOrcamentoAnexo w-4 h-4 rounded text-teal-500 focus:ring-teal-400 cursor-pointer">
+                                <div>
+                                    <span class="font-bold text-xs text-teal-400 font-mono">ORÇAMENTO Nº ${grupo.n_orcamento}</span>
+                                    <h4 class="font-bold text-xs text-slate-200 uppercase truncate max-w-[260px] sm:max-w-none">${grupo.cliente}</h4>
+                                </div>
                             </div>
-                            <button onclick="liberarOrcamentoAnexos(${grupo.n_orcamento})" 
-                                    class="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1.5">
-                                <i data-lucide="eye" class="w-4 h-4"></i>
-                                <span>Liberar Orçamento Completo</span>
-                            </button>
+                            <span class="bg-slate-700 text-teal-300 font-mono text-[10px] font-bold px-2.5 py-1 rounded-lg border border-slate-600">
+                                ${grupo.arquivos.length} arquivo(s)
+                            </span>
                         </div>
                         <div class="p-3 bg-slate-50/50 space-y-2">
                             ${grupo.arquivos.map(arq => `
@@ -1532,28 +1556,48 @@
 
             html += `</div>`;
             grid.innerHTML = html;
+            lucide.createIcons();
         }
 
-        async function liberarOrcamentoAnexos(n_orcamento) {
-            if (!confirm(`Deseja tornar visíveis todos os anexos do Orçamento ${n_orcamento}?`)) return;
+        function toggleMarcarTodosAnexos(masterChk) {
+            const checkboxes = document.querySelectorAll('.chkOrcamentoAnexo');
+            checkboxes.forEach(chk => chk.checked = masterChk.checked);
+        }
+
+        async function liberarAnexosProcessar(modo) {
+            let payload = {};
+
+            if (modo === 'todos') {
+                if (!confirm("Deseja realmente LIBERAR TODOS os anexos pendentes de uma só vez?")) return;
+                payload = { liberar_todos: true };
+            } else {
+                const marcados = Array.from(document.querySelectorAll('.chkOrcamentoAnexo:checked')).map(c => parseInt(c.value));
+                if (marcados.length === 0) {
+                    alert("Selecione ao menos um orçamento na lista marcando a caixa de seleção.");
+                    return;
+                }
+                if (!confirm(`Deseja liberar os anexos de ${marcados.length} orçamento(s) selecionado(s)?`)) return;
+                payload = { orcamentos: marcados, liberar_todos: false };
+            }
 
             try {
                 const response = await fetch(`${API_URL}/liberar-anexos-orcamento`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ n_orcamento: parseInt(n_orcamento) })
+                    body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) {
                     const err = await response.json();
-                    throw new Error(err.detail || 'Erro ao liberar anexos.');
+                    throw new Error(err.detail || 'Erro ao processar liberação.');
                 }
 
-                alert(`Anexos do orçamento ${n_orcamento} liberados com sucesso!`);
+                const resData = await response.json();
+                alert(`Sucesso! ${resData.registros_afetados || ''} anexos liberados.`);
                 fetchAnexosPendentData();
             } catch (error) {
                 console.error('Erro ao liberar anexos:', error);
-                alert(`Falha: ${error.message}`);
+                alert(`Falha no envio: ${error.message}`);
             }
         }
 
