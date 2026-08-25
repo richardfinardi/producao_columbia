@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.6.3</title>
+    <title>Programação de Produção - Columbia V7.6.4</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.3</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.4</p>
                 </div>
             </div>
 
@@ -1434,7 +1434,7 @@
         }
 
         // ==============================================================================
-        // RENDERIZAÇÃO E LÓGICA DA ABA LIBERAR ANEXOS (SELEÇÃO INDIVIDUAL E TOTAL)
+        // RENDERIZAÇÃO E LÓGICA DA ABA LIBERAR ANEXOS (SELEÇÃO INDIVIDUAL/POR ORÇAMENTO)
         // ==============================================================================
         function renderPaginaAnexosView() {
             const grid = document.getElementById('calendarGrid');
@@ -1496,7 +1496,7 @@
                         </div>
                         <div>
                             <h3 class="font-extrabold text-slate-900 text-xs sm:text-base">Anexos Pendentes de Liberação</h3>
-                            <p class="text-[10px] sm:text-xs text-slate-500 font-medium">Selecione os arquivos individualmente ou libere por orçamento.</p>
+                            <p class="text-[10px] sm:text-xs text-slate-500 font-medium">Selecione os arquivos individualmente ou marque o cabeçalho do orçamento.</p>
                         </div>
                     </div>
 
@@ -1505,12 +1505,6 @@
                                 class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-extrabold text-xs transition shadow-sm flex items-center gap-1.5">
                             <i data-lucide="check-square" class="w-4 h-4"></i>
                             <span>Liberar Anexos Selecionados</span>
-                        </button>
-
-                        <button onclick="liberarTodosAnexos()" 
-                                class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold text-xs transition shadow-sm flex items-center gap-1.5">
-                            <i data-lucide="check-check" class="w-4 h-4"></i>
-                            <span>Liberar TODOS da Fila</span>
                         </button>
                     </div>
                 </div>
@@ -1521,7 +1515,7 @@
             listaOrcamentos.forEach(grupo => {
                 html += `
                     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                        <!-- CABEÇALHO DO ORÇAMENTO COM MARCAR TODOS DO ORÇAMENTO E BOTAO LIBERAR O ORÇAMENTO INTEIRO -->
+                        <!-- CABEÇALHO DO ORÇAMENTO COM CHECKBOX SELEÇÃO GLOBAL DO GRUPO -->
                         <div class="bg-slate-800 text-white px-3.5 sm:px-4 py-2.5 flex justify-between items-center flex-wrap gap-2">
                             <div class="flex items-center gap-3">
                                 <input type="checkbox" onchange="toggleMarcarAnexosDoOrcamento(this, ${grupo.n_orcamento})" 
@@ -1532,11 +1526,9 @@
                                     <h4 class="font-bold text-xs text-slate-200 uppercase truncate max-w-[260px] sm:max-w-none">${grupo.cliente}</h4>
                                 </div>
                             </div>
-                            <button onclick="liberarOrcamentoInteiro(${grupo.n_orcamento})" 
-                                    class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-teal-300 border border-teal-500/40 rounded-lg font-bold text-[11px] transition flex items-center gap-1">
-                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
-                                <span>Liberar Orçamento Inteiro</span>
-                            </button>
+                            <span class="bg-slate-700 text-teal-300 font-mono text-[10px] font-bold px-2.5 py-1 rounded-lg border border-slate-600">
+                                ${grupo.arquivos.length} arquivo(s)
+                            </span>
                         </div>
 
                         <!-- LISTA DE ARQUIVOS COM CHECKBOX INDIVIDUAL -->
@@ -1597,21 +1589,7 @@
             await enviarRequisicaoLiberacao({ anexos: marcados });
         }
 
-        // Libera todos os anexos de um único orçamento
-        async function liberarOrcamentoInteiro(n_orcamento) {
-            if (!confirm(`Deseja liberar TODOS os anexos do Orçamento ${n_orcamento}?`)) return;
-
-            await enviarRequisicaoLiberacao({ n_orcamento: parseInt(n_orcamento) });
-        }
-
-        // Libera absolutamente tudo o que está pendente no sistema
-        async function liberarTodosAnexos() {
-            if (!confirm("Deseja realmente LIBERAR TODOS os anexos pendentes no sistema?")) return;
-
-            await enviarRequisicaoLiberacao({ liberar_todos: true });
-        }
-
-        // Função genérica de envio
+        // Função de envio
         async function enviarRequisicaoLiberacao(payload) {
             try {
                 const response = await fetch(`${API_URL}/liberar-anexos-orcamento`, {
