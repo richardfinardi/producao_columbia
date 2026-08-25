@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.6.2</title>
+    <title>Programação de Produção - Columbia V7.6.3</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.2</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.3</p>
                 </div>
             </div>
 
@@ -162,14 +162,19 @@
         
         <div id="filtersBar" class="bg-white p-2.5 sm:p-3.5 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shadow-sm">
             
-            <!-- Busca Geral Universal -->
+            <!-- Busca Geral Universal com Trava Anti-Autofill -->
             <div class="flex items-center gap-2 flex-1 min-w-[180px] sm:min-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <input type="text" 
+                <input type="search" 
                        id="searchInput" 
+                       name="columbia_search_query"
                        oninput="renderView()" 
                        placeholder="Pesquisar (OS, Título, Cliente, Origem, NF, Cod. Interno, Orçamento...)" 
-                       autocomplete="off"
+                       autocomplete="new-password"
+                       autocorrect="off"
+                       autocapitalize="none"
+                       spellcheck="false"
+                       role="searchbox"
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
             </div>
 
@@ -321,6 +326,7 @@
                 
                 <div class="relative">
                     <input type="password" id="inputPassword" onkeydown="checkPasswordKey(event)" placeholder="Digite a senha..." 
+                           autocomplete="new-password"
                            class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-slate-800 text-xs focus:outline-none focus:border-columbia-700 font-medium">
                     <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
                         <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
@@ -1428,7 +1434,7 @@
         }
 
         // ==============================================================================
-        // RENDERIZAÇÃO E AÇÕES DA ABA DE LIBERAÇÃO DE ANEXOS (COM SELEÇÃO MÚLTIPLA E TOTAL)
+        // RENDERIZAÇÃO E LÓGICA DA ABA LIBERAR ANEXOS (SELEÇÃO INDIVIDUAL E TOTAL)
         // ==============================================================================
         function renderPaginaAnexosView() {
             const grid = document.getElementById('calendarGrid');
@@ -1490,65 +1496,77 @@
                         </div>
                         <div>
                             <h3 class="font-extrabold text-slate-900 text-xs sm:text-base">Anexos Pendentes de Liberação</h3>
-                            <p class="text-[10px] sm:text-xs text-slate-500 font-medium">Marque os orçamentos que deseja liberar ou libere todos simultaneamente.</p>
+                            <p class="text-[10px] sm:text-xs text-slate-500 font-medium">Selecione os arquivos individualmente ou libere por orçamento.</p>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2 flex-wrap">
-                        <button onclick="liberarAnexosProcessar('selecionados')" 
+                        <button onclick="liberarAnexosSelecionados()" 
                                 class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-extrabold text-xs transition shadow-sm flex items-center gap-1.5">
                             <i data-lucide="check-square" class="w-4 h-4"></i>
-                            <span>Liberar Selecionados</span>
+                            <span>Liberar Anexos Selecionados</span>
                         </button>
 
-                        <button onclick="liberarAnexosProcessar('todos')" 
+                        <button onclick="liberarTodosAnexos()" 
                                 class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold text-xs transition shadow-sm flex items-center gap-1.5">
                             <i data-lucide="check-check" class="w-4 h-4"></i>
-                            <span>Liberar TODOS Pendentes</span>
+                            <span>Liberar TODOS da Fila</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- CONTROLE DE SELEÇÃO GLOBAL DA LISTA -->
-                <div class="flex items-center justify-between bg-slate-200/80 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 mb-3">
-                    <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <input type="checkbox" id="chkMarcarTodosAnexos" onchange="toggleMarcarTodosAnexos(this)" class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer">
-                        <span>Selecionar Todos os Orçamentos Exibidos</span>
-                    </label>
-                    <span class="text-[11px] text-slate-500 font-semibold">${listaOrcamentos.length} Orçamentos na fila</span>
-                </div>
-
-                <div class="space-y-3.5">
+                <div class="space-y-4">
             `;
 
             listaOrcamentos.forEach(grupo => {
                 html += `
                     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <!-- CABEÇALHO DO ORÇAMENTO COM MARCAR TODOS DO ORÇAMENTO E BOTAO LIBERAR O ORÇAMENTO INTEIRO -->
                         <div class="bg-slate-800 text-white px-3.5 sm:px-4 py-2.5 flex justify-between items-center flex-wrap gap-2">
                             <div class="flex items-center gap-3">
-                                <input type="checkbox" value="${grupo.n_orcamento}" class="chkOrcamentoAnexo w-4 h-4 rounded text-teal-500 focus:ring-teal-400 cursor-pointer">
+                                <input type="checkbox" onchange="toggleMarcarAnexosDoOrcamento(this, ${grupo.n_orcamento})" 
+                                       title="Marcar/Desmarcar todos os arquivos deste orçamento"
+                                       class="w-4 h-4 rounded text-teal-500 focus:ring-teal-400 cursor-pointer">
                                 <div>
                                     <span class="font-bold text-xs text-teal-400 font-mono">ORÇAMENTO Nº ${grupo.n_orcamento}</span>
                                     <h4 class="font-bold text-xs text-slate-200 uppercase truncate max-w-[260px] sm:max-w-none">${grupo.cliente}</h4>
                                 </div>
                             </div>
-                            <span class="bg-slate-700 text-teal-300 font-mono text-[10px] font-bold px-2.5 py-1 rounded-lg border border-slate-600">
-                                ${grupo.arquivos.length} arquivo(s)
-                            </span>
+                            <button onclick="liberarOrcamentoInteiro(${grupo.n_orcamento})" 
+                                    class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-teal-300 border border-teal-500/40 rounded-lg font-bold text-[11px] transition flex items-center gap-1">
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                <span>Liberar Orçamento Inteiro</span>
+                            </button>
                         </div>
+
+                        <!-- LISTA DE ARQUIVOS COM CHECKBOX INDIVIDUAL -->
                         <div class="p-3 bg-slate-50/50 space-y-2">
-                            ${grupo.arquivos.map(arq => `
-                                <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex justify-between items-center text-xs">
-                                    <div>
-                                        <span class="font-mono font-bold text-columbia-700">OS ${arq.cod_os_completo}</span>
-                                        <p class="font-bold text-slate-800">${arq.nome_arquivo}</p>
-                                        <span class="text-[10px] text-slate-400 font-medium">${arq.subtitulo}</span>
+                            ${grupo.arquivos.map(arq => {
+                                const itemJson = JSON.stringify({
+                                    cod_empresa: arq.cod_empresa,
+                                    cod_os: arq.cod_os,
+                                    cod_os_aux: arq.cod_os_aux
+                                }).replace(/"/g, '&quot;');
+
+                                return `
+                                    <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs hover:border-teal-300 transition">
+                                        <div class="flex items-center gap-3">
+                                            <input type="checkbox" 
+                                                   data-orcamento="${grupo.n_orcamento}" 
+                                                   value="${itemJson}" 
+                                                   class="chkAnexoItem w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer">
+                                            <div>
+                                                <span class="font-mono font-bold text-columbia-700">OS ${arq.cod_os_completo}</span>
+                                                <p class="font-bold text-slate-800">${arq.nome_arquivo}</p>
+                                                <span class="text-[10px] text-slate-400 font-medium">${arq.subtitulo}</span>
+                                            </div>
+                                        </div>
+                                        <span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded-md">
+                                            Oculto
+                                        </span>
                                     </div>
-                                    <span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded-md">
-                                        Oculto
-                                    </span>
-                                </div>
-                            `).join('')}
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `;
@@ -1559,27 +1577,42 @@
             lucide.createIcons();
         }
 
-        function toggleMarcarTodosAnexos(masterChk) {
-            const checkboxes = document.querySelectorAll('.chkOrcamentoAnexo');
+        // Marca/Desmarca todos os checkboxes de um orçamento específico
+        function toggleMarcarAnexosDoOrcamento(masterChk, n_orcamento) {
+            const checkboxes = document.querySelectorAll(`.chkAnexoItem[data-orcamento="${n_orcamento}"]`);
             checkboxes.forEach(chk => chk.checked = masterChk.checked);
         }
 
-        async function liberarAnexosProcessar(modo) {
-            let payload = {};
+        // Libera somente os anexos cujas caixas estejam marcadas
+        async function liberarAnexosSelecionados() {
+            const marcados = Array.from(document.querySelectorAll('.chkAnexoItem:checked')).map(chk => JSON.parse(chk.value));
 
-            if (modo === 'todos') {
-                if (!confirm("Deseja realmente LIBERAR TODOS os anexos pendentes de uma só vez?")) return;
-                payload = { liberar_todos: true };
-            } else {
-                const marcados = Array.from(document.querySelectorAll('.chkOrcamentoAnexo:checked')).map(c => parseInt(c.value));
-                if (marcados.length === 0) {
-                    alert("Selecione ao menos um orçamento na lista marcando a caixa de seleção.");
-                    return;
-                }
-                if (!confirm(`Deseja liberar os anexos de ${marcados.length} orçamento(s) selecionado(s)?`)) return;
-                payload = { orcamentos: marcados, liberar_todos: false };
+            if (marcados.length === 0) {
+                alert("Selecione pelo menos um anexo individual para liberar.");
+                return;
             }
 
+            if (!confirm(`Deseja liberar os ${marcados.length} anexo(s) selecionado(s)?`)) return;
+
+            await enviarRequisicaoLiberacao({ anexos: marcados });
+        }
+
+        // Libera todos os anexos de um único orçamento
+        async function liberarOrcamentoInteiro(n_orcamento) {
+            if (!confirm(`Deseja liberar TODOS os anexos do Orçamento ${n_orcamento}?`)) return;
+
+            await enviarRequisicaoLiberacao({ n_orcamento: parseInt(n_orcamento) });
+        }
+
+        // Libera absolutamente tudo o que está pendente no sistema
+        async function liberarTodosAnexos() {
+            if (!confirm("Deseja realmente LIBERAR TODOS os anexos pendentes no sistema?")) return;
+
+            await enviarRequisicaoLiberacao({ liberar_todos: true });
+        }
+
+        // Função genérica de envio
+        async function enviarRequisicaoLiberacao(payload) {
             try {
                 const response = await fetch(`${API_URL}/liberar-anexos-orcamento`, {
                     method: 'PATCH',
@@ -1593,11 +1626,11 @@
                 }
 
                 const resData = await response.json();
-                alert(`Sucesso! ${resData.registros_afetados || ''} anexos liberados.`);
+                alert(`Sucesso! ${resData.registros_afetados || ''} anexo(s) liberado(s).`);
                 fetchAnexosPendentData();
             } catch (error) {
                 console.error('Erro ao liberar anexos:', error);
-                alert(`Falha no envio: ${error.message}`);
+                alert(`Falha: ${error.message}`);
             }
         }
 
