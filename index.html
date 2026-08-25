@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.6.4</title>
+    <title>Programação de Produção - Columbia V7.6.5</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.4</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.5</p>
                 </div>
             </div>
 
@@ -199,7 +199,7 @@
             </div>
 
             <!-- Filtro por Segmento -->
-            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
+            <div id="segmentoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="layers" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="segmentoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
                     <option value="">Segmento (Todos)</option>
@@ -217,7 +217,7 @@
             </div>
 
             <!-- Filtro por Cliente -->
-            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
+            <div id="clienteContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="user" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="clientFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
                     <option value="">Todos os Clientes</option>
@@ -880,6 +880,8 @@
             const atrasadaContainer = document.getElementById('atrasadaContainer');
             const apontamentoContainer = document.getElementById('apontamentoContainer');
             const producaoContainer = document.getElementById('producaoContainer');
+            const segmentoContainer = document.getElementById('segmentoContainer');
+            const clienteContainer = document.getElementById('clienteContainer');
             const engenhariaContainer = document.getElementById('engenhariaContainer');
             const comprasContainer = document.getElementById('comprasContainer');
             const terceirosContainer = document.getElementById('terceirosContainer');
@@ -903,6 +905,8 @@
                 if (atrasadaContainer) atrasadaContainer.classList.remove('hidden');
                 if (apontamentoContainer) apontamentoContainer.classList.remove('hidden');
                 if (producaoContainer) producaoContainer.classList.remove('hidden');
+                if (segmentoContainer) segmentoContainer.classList.remove('hidden');
+                if (clienteContainer) clienteContainer.classList.remove('hidden');
                 if (engenhariaContainer) engenhariaContainer.classList.remove('hidden');
                 if (comprasContainer) comprasContainer.classList.remove('hidden');
                 if (terceirosContainer) terceirosContainer.classList.remove('hidden');
@@ -919,6 +923,8 @@
                 if (atrasadaContainer) atrasadaContainer.classList.add('hidden');
                 if (apontamentoContainer) apontamentoContainer.classList.add('hidden');
                 if (producaoContainer) producaoContainer.classList.add('hidden');
+                if (segmentoContainer) segmentoContainer.classList.remove('hidden');
+                if (clienteContainer) clienteContainer.classList.remove('hidden');
                 if (engenhariaContainer) engenhariaContainer.classList.add('hidden');
                 if (comprasContainer) comprasContainer.classList.add('hidden');
                 if (terceirosContainer) terceirosContainer.classList.add('hidden');
@@ -939,13 +945,15 @@
                 if (btnAnexos) btnAnexos.className = "flex items-center gap-1.5 px-3 py-2 bg-teal-900 border border-teal-400 text-white font-black rounded-xl text-xs transition shadow-md shrink-0";
                 if (metricsBar) metricsBar.classList.add('hidden');
                 
-                // MANTÉM VISÍVEL APENAS A BARRA DE PESQUISA GERAL
+                // EXIBE APENAS BUSCA GERAL, SEGMENTO E CLIENTE
                 if (filtersBar) filtersBar.classList.remove('hidden');
                 if (navigationBar) navigationBar.classList.add('hidden');
 
                 if (atrasadaContainer) atrasadaContainer.classList.add('hidden');
                 if (apontamentoContainer) apontamentoContainer.classList.add('hidden');
                 if (producaoContainer) producaoContainer.classList.add('hidden');
+                if (segmentoContainer) segmentoContainer.classList.remove('hidden');
+                if (clienteContainer) clienteContainer.classList.remove('hidden');
                 if (engenhariaContainer) engenhariaContainer.classList.add('hidden');
                 if (comprasContainer) comprasContainer.classList.add('hidden');
                 if (terceirosContainer) terceirosContainer.classList.add('hidden');
@@ -1170,12 +1178,37 @@
                 const response = await fetch(`${API_URL}/anexo?_t=${Date.now()}`);
                 if (!response.ok) throw new Error('Erro ao buscar anexos pendentes.');
                 rawAnexosPendentes = await response.json();
+                
+                // Atualiza opções dos dropdowns com base nos anexos retornados
+                populateSelectOptionsAnexos();
+
                 if (abaAtiva === 'anexos') renderPaginaAnexosView();
             } catch (err) {
                 console.error('Erro ao buscar anexos pendentes:', err);
                 if (grid) {
                     grid.innerHTML = `<p class="text-red-600 text-xs text-center font-bold p-6">Erro ao carregar os dados de anexos.</p>`;
                 }
+            }
+        }
+
+        function populateSelectOptionsAnexos() {
+            if (!rawAnexosPendentes || rawAnexosPendentes.length === 0) return;
+
+            const segSel = document.getElementById('segmentoFilter');
+            const cliSel = document.getElementById('clientFilter');
+
+            if (segSel) {
+                const curSeg = segSel.value;
+                const segs = [...new Set(rawAnexosPendentes.map(a => a.segmento).filter(Boolean))].sort();
+                segSel.innerHTML = '<option value="">Segmento (Todos)</option>' + segs.map(s => `<option value="${s}">${s}</option>`).join('');
+                segSel.value = curSeg;
+            }
+
+            if (cliSel) {
+                const curCli = cliSel.value;
+                const clis = [...new Set(rawAnexosPendentes.map(a => a.cliente).filter(Boolean))].sort();
+                cliSel.innerHTML = '<option value="">Todos os Clientes</option>' + clis.map(c => `<option value="${c}">${c}</option>`).join('');
+                cliSel.value = curCli;
             }
         }
 
@@ -1434,7 +1467,7 @@
         }
 
         // ==============================================================================
-        // RENDERIZAÇÃO E LÓGICA DA ABA LIBERAR ANEXOS (SELEÇÃO INDIVIDUAL/POR ORÇAMENTO)
+        // RENDERIZAÇÃO E LÓGICA DA ABA LIBERAR ANEXOS (COM FILTROS FUNCIONANDO)
         // ==============================================================================
         function renderPaginaAnexosView() {
             const grid = document.getElementById('calendarGrid');
@@ -1450,23 +1483,33 @@
                 return;
             }
 
+            // CAPTURA VALORES DE BUSCA, SEGMENTO E CLIENTE
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+            const segmentoFiltro = document.getElementById('segmentoFilter')?.value || '';
+            const clienteFiltro = document.getElementById('clientFilter')?.value || '';
 
+            // APLICAÇÃO COMPLETA DOS FILTROS
             const anexosFiltrados = rawAnexosPendentes.filter(item => {
-                if (!search) return true;
-                const matchOrcamento = String(item.n_orcamento || '').toLowerCase().includes(search);
-                const matchCliente = String(item.cliente || '').toLowerCase().includes(search);
-                const matchOS = String(item.cod_os_completo || '').toLowerCase().includes(search);
-                const matchArquivo = String(item.nome_arquivo || '').toLowerCase().includes(search);
-                const matchSubtitulo = String(item.subtitulo || '').toLowerCase().includes(search);
-                return matchOrcamento || matchCliente || matchOS || matchArquivo || matchSubtitulo;
+                if (segmentoFiltro && String(item.segmento || '') !== segmentoFiltro) return false;
+                if (clienteFiltro && String(item.cliente || '') !== clienteFiltro) return false;
+
+                if (search) {
+                    const matchOrcamento = String(item.n_orcamento || '').toLowerCase().includes(search);
+                    const matchCliente = String(item.cliente || '').toLowerCase().includes(search);
+                    const matchOS = String(item.cod_os_completo || '').toLowerCase().includes(search);
+                    const matchArquivo = String(item.nome_arquivo || '').toLowerCase().includes(search);
+                    const matchSubtitulo = String(item.subtitulo || '').toLowerCase().includes(search);
+                    if (!matchOrcamento && !matchCliente && !matchOS && !matchArquivo && !matchSubtitulo) return false;
+                }
+
+                return true;
             });
 
             if (anexosFiltrados.length === 0) {
                 grid.innerHTML = `
                     <div class="bg-white rounded-2xl border border-teal-200 p-8 sm:p-12 text-center text-slate-400 flex flex-col items-center gap-2 shadow-sm">
                         <i data-lucide="file-x" class="w-10 h-10 text-teal-300 stroke-1"></i>
-                        <p class="text-xs font-bold text-slate-600">Nenhum anexo encontrado para o termo pesquisado.</p>
+                        <p class="text-xs font-bold text-slate-600">Nenhum anexo encontrado para os filtros selecionados.</p>
                     </div>
                 `;
                 return;
@@ -1496,7 +1539,7 @@
                         </div>
                         <div>
                             <h3 class="font-extrabold text-slate-900 text-xs sm:text-base">Anexos Pendentes de Liberação</h3>
-                            <p class="text-[10px] sm:text-xs text-slate-500 font-medium">Selecione os arquivos individualmente ou marque o cabeçalho do orçamento.</p>
+                            <p class="text-[10px] sm:text-xs text-slate-500 font-medium">Selecione os arquivos individualmente ou marque a caixa do orçamento.</p>
                         </div>
                     </div>
 
