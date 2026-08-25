@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.6.0</title>
+    <title>Programação de Produção - Columbia V7.6.1</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.0</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.1</p>
                 </div>
             </div>
 
@@ -168,7 +168,7 @@
                 <input type="text" 
                        id="searchInput" 
                        oninput="renderView()" 
-                       placeholder="Pesquisar (OS, Título, Cliente, Origem, NF, Cod. Interno...)" 
+                       placeholder="Pesquisar (OS, Título, Cliente, Origem, NF, Cod. Interno, Orçamento...)" 
                        autocomplete="off"
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
             </div>
@@ -321,7 +321,7 @@
                 
                 <div class="relative">
                     <input type="password" id="inputPassword" onkeydown="checkPasswordKey(event)" placeholder="Digite a senha..." 
-                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-slate-800 text-xs focus:outline-none focus:border-columbia-600 font-medium">
+                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-slate-800 text-xs focus:outline-none focus:border-columbia-700 font-medium">
                     <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
                         <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
                     </button>
@@ -932,8 +932,20 @@
             } else if (abaAtiva === 'anexos') {
                 if (btnAnexos) btnAnexos.className = "flex items-center gap-1.5 px-3 py-2 bg-teal-900 border border-teal-400 text-white font-black rounded-xl text-xs transition shadow-md shrink-0";
                 if (metricsBar) metricsBar.classList.add('hidden');
-                if (filtersBar) filtersBar.classList.add('hidden');
+                
+                // BARRA DE FILTROS MANTIDA VISÍVEL APENAS PARA A PESQUISA GERAL
+                if (filtersBar) filtersBar.classList.remove('hidden');
                 if (navigationBar) navigationBar.classList.add('hidden');
+
+                if (atrasadaContainer) atrasadaContainer.classList.add('hidden');
+                if (apontamentoContainer) apontamentoContainer.classList.add('hidden');
+                if (producaoContainer) producaoContainer.classList.add('hidden');
+                if (engenhariaContainer) engenhariaContainer.classList.add('hidden');
+                if (comprasContainer) comprasContainer.classList.add('hidden');
+                if (terceirosContainer) terceirosContainer.classList.add('hidden');
+                if (extraButtonsContainer) extraButtonsContainer.classList.add('hidden');
+                if (viewModeContainer) viewModeContainer.classList.add('hidden');
+
                 fetchAnexosPendentData();
             } else {
                 if (metricsBar) metricsBar.classList.add('hidden');
@@ -1138,7 +1150,7 @@
 
         async function fetchAnexosPendentData() {
             const grid = document.getElementById('calendarGrid');
-            if (grid) {
+            if (grid && rawAnexosPendentes.length === 0) {
                 grid.innerHTML = `
                     <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500 flex flex-col items-center gap-3">
                         <i data-lucide="loader-2" class="w-8 h-8 text-teal-600 animate-spin"></i>
@@ -1152,7 +1164,7 @@
                 const response = await fetch(`${API_URL}/anexo?_t=${Date.now()}`);
                 if (!response.ok) throw new Error('Erro ao buscar anexos pendentes.');
                 rawAnexosPendentes = await response.json();
-                renderPaginaAnexosView();
+                if (abaAtiva === 'anexos') renderPaginaAnexosView();
             } catch (err) {
                 console.error('Erro ao buscar anexos pendentes:', err);
                 if (grid) {
@@ -1429,8 +1441,32 @@
                 return;
             }
 
+            // Captura o termo de busca universal
+            const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+
+            // Filtra por Orçamento, Cliente, OS, Nome do Arquivo ou Subtítulo
+            const anexosFiltrados = rawAnexosPendentes.filter(item => {
+                if (!search) return true;
+                const matchOrcamento = String(item.n_orcamento || '').toLowerCase().includes(search);
+                const matchCliente = String(item.cliente || '').toLowerCase().includes(search);
+                const matchOS = String(item.cod_os_completo || '').toLowerCase().includes(search);
+                const matchArquivo = String(item.nome_arquivo || '').toLowerCase().includes(search);
+                const matchSubtitulo = String(item.subtitulo || '').toLowerCase().includes(search);
+                return matchOrcamento || matchCliente || matchOS || matchArquivo || matchSubtitulo;
+            });
+
+            if (anexosFiltrados.length === 0) {
+                grid.innerHTML = `
+                    <div class="bg-white rounded-2xl border border-teal-200 p-8 sm:p-12 text-center text-slate-400 flex flex-col items-center gap-2 shadow-sm">
+                        <i data-lucide="file-x" class="w-10 h-10 text-teal-300 stroke-1"></i>
+                        <p class="text-xs font-bold text-slate-600">Nenhum anexo encontrado para o termo pesquisado.</p>
+                    </div>
+                `;
+                return;
+            }
+
             const agrupadoPorOrcamento = {};
-            rawAnexosPendentes.forEach(item => {
+            anexosFiltrados.forEach(item => {
                 const orc = item.n_orcamento;
                 if (!agrupadoPorOrcamento[orc]) {
                     agrupadoPorOrcamento[orc] = {
@@ -1441,6 +1477,8 @@
                 }
                 agrupadoPorOrcamento[orc].arquivos.push(item);
             });
+
+            const listaOrcamentos = Object.values(agrupadoPorOrcamento);
 
             let html = `
                 <div class="bg-white rounded-2xl border border-teal-200 p-3.5 sm:p-5 shadow-sm mb-4 flex flex-wrap justify-between items-center gap-3">
@@ -1454,13 +1492,13 @@
                         </div>
                     </div>
                     <span class="text-[10px] sm:text-xs font-black text-teal-900 bg-teal-100 border border-teal-300 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl">
-                        Total: ${Object.keys(agrupadoPorOrcamento).length} Orçamento${Object.keys(agrupadoPorOrcamento).length === 1 ? '' : 's'}
+                        Total: ${listaOrcamentos.length} Orçamento${listaOrcamentos.length === 1 ? '' : 's'}
                     </span>
                 </div>
                 <div class="space-y-4">
             `;
 
-            Object.values(agrupadoPorOrcamento).forEach(grupo => {
+            listaOrcamentos.forEach(grupo => {
                 html += `
                     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                         <div class="bg-slate-800 text-white px-3.5 sm:px-4 py-2.5 sm:py-3 flex justify-between items-center flex-wrap gap-2">
