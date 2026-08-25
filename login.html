@@ -76,11 +76,12 @@
                     throw new Error(data.detail || 'Usuário ou senha inválidos.');
                 }
 
-                // Salva Token, Nome do Usuário e Permissões U_FATURAMENTO / U_FINALIZACAO no localStorage
+                // Salva Token, Nome do Usuário e Permissões (U_FATURAMENTO, U_FINALIZACAO e U_ANEXO) no localStorage
                 localStorage.setItem('columbia_token', data.access_token);
                 localStorage.setItem('columbia_usuario_nome', data.usuario);
                 localStorage.setItem('columbia_perm_faturamento', data.u_faturamento ?? 0);
                 localStorage.setItem('columbia_perm_finalizacao', data.u_finalizacao ?? 0);
+                localStorage.setItem('columbia_perm_anexo', data.u_anexo ?? 0);
 
                 window.location.href = 'index.html';
 
