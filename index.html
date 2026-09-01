@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.6.6</title>
+    <title>Programação de Produção - Columbia V7.6.7</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.6</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.7</p>
                 </div>
             </div>
 
@@ -847,54 +847,56 @@
         }
 
         // VISUALIZAR ANEXO PENDENTE DA TABELA tos_aux_anexos
-        async function visualizarAnexoPendente(event, cod_empresa, cod_os, cod_os_aux, codigo) {
-            if (event && typeof event.stopPropagation === 'function') {
-                event.stopPropagation();
-            }
+       // VISUALIZAR ANEXO PENDENTE (TRATAMENTO DE ERRO CORRIGIDO)
+async function visualizarAnexoPendente(event, cod_empresa, cod_os, cod_os_aux, codigo) {
+    if (event && typeof event.stopPropagation === 'function') {
+        event.stopPropagation();
+    }
 
-            try {
-                const btnTarget = event ? event.currentTarget : null;
-                if (btnTarget) {
-                    btnTarget.disabled = true;
-                    btnTarget.classList.add('opacity-50');
-                }
-
-                const url = `${API_URL}/anexo-visualizar?cod_empresa=${cod_empresa}&cod_os=${cod_os}&cod_os_aux=${cod_os_aux}&codigo=${codigo}`;
-                const response = await fetch(url);
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.detail || 'Não foi possível carregar o anexo de origem.');
-                }
-
-                const data = await response.json();
-
-                if (!data.pdf_base64) {
-                    alert('Arquivo não encontrado ou corrompido.');
-                    return;
-                }
-
-                const byteCharacters = atob(data.pdf_base64);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                const fileBlob = new Blob([byteArray], { type: 'application/pdf' });
-
-                const fileURL = URL.createObjectURL(fileBlob);
-                window.open(fileURL, '_blank');
-
-            } catch (error) {
-                console.error('Erro ao visualizar anexo:', error);
-                alert(`Erro ao visualizar anexo: ${error.message}`);
-            } finally {
-                if (event && event.currentTarget) {
-                    event.currentTarget.disabled = false;
-                    event.currentTarget.classList.remove('opacity-50');
-                }
-            }
+    try {
+        const btnTarget = event ? event.currentTarget : null;
+        if (btnTarget) {
+            btnTarget.disabled = true;
+            btnTarget.classList.add('opacity-50');
         }
+
+        const url = `${API_URL}/anexo-visualizar?cod_empresa=${cod_empresa}&cod_os=${cod_os}&cod_os_aux=${cod_os_aux}&codigo=${codigo}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            const err = await response.json();
+            const msg = typeof err.detail === 'string' ? err.detail : (err.detail?.[0]?.msg || JSON.stringify(err.detail) || 'Não foi possível carregar o anexo.');
+            throw new Error(msg);
+        }
+
+        const data = await response.json();
+
+        if (!data.pdf_base64) {
+            alert('Arquivo não encontrado ou corrompido.');
+            return;
+        }
+
+        const byteCharacters = atob(data.pdf_base64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const fileBlob = new Blob([byteArray], { type: 'application/pdf' });
+
+        const fileURL = URL.createObjectURL(fileBlob);
+        window.open(fileURL, '_blank');
+
+    } catch (error) {
+        console.error('Erro ao visualizar anexo:', error);
+        alert(`Erro ao visualizar anexo: ${error.message || error}`);
+    } finally {
+        if (event && event.currentTarget) {
+            event.currentTarget.disabled = false;
+            event.currentTarget.classList.remove('opacity-50');
+        }
+    }
+}
 
         // COPIAR ANEXO DA TABELA tos_aux_anexos PARA A TABELA tos_aux_desenhos
         async function copiarAnexoParaDesenhos(event, cod_empresa, cod_os, cod_os_aux, codigo) {
@@ -1561,156 +1563,159 @@
         // ==============================================================================
         // ABA LIBERAR ANEXOS (COM ABRIR/VISUALIZAR E COPIAR PARA DESENHOS)
         // ==============================================================================
-        function renderPaginaAnexosView() {
-            const grid = document.getElementById('calendarGrid');
-            if (!grid) return;
+       function renderPaginaAnexosView() {
+    const grid = document.getElementById('calendarGrid');
+    if (!grid) return;
 
-            if (!rawAnexosPendentes || rawAnexosPendentes.length === 0) {
-                grid.innerHTML = `
-                    <div class="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center text-slate-400 flex flex-col items-center gap-3 shadow-sm">
-                        <i data-lucide="check-circle" class="w-10 h-10 sm:w-12 sm:h-12 text-emerald-400 stroke-1"></i>
-                        <p class="text-xs font-bold text-slate-600">Não há nenhum anexo pendente para liberação no momento!</p>
-                    </div>
-                `;
-                return;
-            }
+    if (!rawAnexosPendentes || rawAnexosPendentes.length === 0) {
+        grid.innerHTML = `
+            <div class="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center text-slate-400 flex flex-col items-center gap-3 shadow-sm">
+                <i data-lucide="check-circle" class="w-10 h-10 sm:w-12 sm:h-12 text-emerald-400 stroke-1"></i>
+                <p class="text-xs font-bold text-slate-600">Não há nenhum anexo pendente para liberação no momento!</p>
+            </div>
+        `;
+        return;
+    }
 
-            const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
-            const segmentoFiltro = document.getElementById('segmentoFilter')?.value || '';
-            const clienteFiltro = document.getElementById('clientFilter')?.value || '';
+    const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+    const segmentoFiltro = document.getElementById('segmentoFilter')?.value || '';
+    const clienteFiltro = document.getElementById('clientFilter')?.value || '';
 
-            const anexosFiltrados = rawAnexosPendentes.filter(item => {
-                if (segmentoFiltro && String(item.segmento || '') !== segmentoFiltro) return false;
-                if (clienteFiltro && String(item.cliente || '') !== clienteFiltro) return false;
+    const anexosFiltrados = rawAnexosPendentes.filter(item => {
+        if (segmentoFiltro && String(item.segmento || '') !== segmentoFiltro) return false;
+        if (clienteFiltro && String(item.cliente || '') !== clienteFiltro) return false;
 
-                if (search) {
-                    const matchOrcamento = String(item.n_orcamento || '').toLowerCase().includes(search);
-                    const matchCliente = String(item.cliente || '').toLowerCase().includes(search);
-                    const matchOS = String(item.cod_os_completo || '').toLowerCase().includes(search);
-                    const matchArquivo = String(item.nome_arquivo || '').toLowerCase().includes(search);
-                    const matchSubtitulo = String(item.subtitulo || '').toLowerCase().includes(search);
-                    if (!matchOrcamento && !matchCliente && !matchOS && !matchArquivo && !matchSubtitulo) return false;
-                }
+        if (search) {
+            const matchOrcamento = String(item.n_orcamento || '').toLowerCase().includes(search);
+            const matchCliente = String(item.cliente || '').toLowerCase().includes(search);
+            const matchOS = String(item.cod_os_completo || '').toLowerCase().includes(search);
+            const matchArquivo = String(item.nome_arquivo || '').toLowerCase().includes(search);
+            const matchSubtitulo = String(item.subtitulo || '').toLowerCase().includes(search);
+            if (!matchOrcamento && !matchCliente && !matchOS && !matchArquivo && !matchSubtitulo) return false;
+        }
 
-                return true;
-            });
+        return true;
+    });
 
-            if (anexosFiltrados.length === 0) {
-                grid.innerHTML = `
-                    <div class="bg-white rounded-2xl border border-teal-200 p-8 sm:p-12 text-center text-slate-400 flex flex-col items-center gap-2 shadow-sm">
-                        <i data-lucide="file-x" class="w-10 h-10 text-teal-300 stroke-1"></i>
-                        <p class="text-xs font-bold text-slate-600">Nenhum anexo encontrado para os filtros selecionados.</p>
-                    </div>
-                `;
-                return;
-            }
+    if (anexosFiltrados.length === 0) {
+        grid.innerHTML = `
+            <div class="bg-white rounded-2xl border border-teal-200 p-8 sm:p-12 text-center text-slate-400 flex flex-col items-center gap-2 shadow-sm">
+                <i data-lucide="file-x" class="w-10 h-10 text-teal-300 stroke-1"></i>
+                <p class="text-xs font-bold text-slate-600">Nenhum anexo encontrado para os filtros selecionados.</p>
+            </div>
+        `;
+        return;
+    }
 
-            const agrupadoPorOrcamento = {};
-            anexosFiltrados.forEach(item => {
-                const orc = item.n_orcamento;
-                if (!agrupadoPorOrcamento[orc]) {
-                    agrupadoPorOrcamento[orc] = {
-                        n_orcamento: orc,
-                        cliente: item.cliente,
-                        arquivos: []
-                    };
-                }
-                agrupadoPorOrcamento[orc].arquivos.push(item);
-            });
+    const agrupadoPorOrcamento = {};
+    anexosFiltrados.forEach(item => {
+        const orc = item.n_orcamento;
+        if (!agrupadoPorOrcamento[orc]) {
+            agrupadoPorOrcamento[orc] = {
+                n_orcamento: orc,
+                cliente: item.cliente,
+                arquivos: []
+            };
+        }
+        agrupadoPorOrcamento[orc].arquivos.push(item);
+    });
 
-            const listaOrcamentos = Object.values(agrupadoPorOrcamento);
+    const listaOrcamentos = Object.values(agrupadoPorOrcamento);
 
-            let html = `
-                <div class="bg-white rounded-2xl border border-teal-200 p-3.5 sm:p-5 shadow-sm mb-4 flex flex-wrap justify-between items-center gap-3">
-                    <div class="flex items-center gap-2.5 sm:gap-3">
-                        <div class="p-2 sm:p-2.5 bg-teal-100 text-teal-800 rounded-xl">
-                            <i data-lucide="paperclip" class="w-5 h-5 sm:w-6 sm:h-6"></i>
-                        </div>
+    let html = `
+        <div class="bg-white rounded-2xl border border-teal-200 p-3.5 sm:p-5 shadow-sm mb-4 flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-2.5 sm:gap-3">
+                <div class="p-2 sm:p-2.5 bg-teal-100 text-teal-800 rounded-xl">
+                    <i data-lucide="paperclip" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                </div>
+                <div>
+                    <h3 class="font-extrabold text-slate-900 text-xs sm:text-base">Anexos Pendentes de Liberação</h3>
+                    <p class="text-[10px] sm:text-xs text-slate-500 font-medium">Visualize o arquivo ou copie para a aba Desenhos.</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                <button onclick="liberarAnexosSelecionados()" 
+                        class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-extrabold text-xs transition shadow-sm flex items-center gap-1.5">
+                    <i data-lucide="check-square" class="w-4 h-4"></i>
+                    <span>Liberar Anexos Selecionados</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+    `;
+
+    listaOrcamentos.forEach(grupo => {
+        html += `
+            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div class="bg-slate-800 text-white px-3.5 sm:px-4 py-2.5 flex justify-between items-center flex-wrap gap-2">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" onchange="toggleMarcarAnexosDoOrcamento(this, ${grupo.n_orcamento})" 
+                               title="Marcar/Desmarcar todos deste orçamento"
+                               class="w-4 h-4 rounded text-teal-500 focus:ring-teal-400 cursor-pointer">
                         <div>
-                            <h3 class="font-extrabold text-slate-900 text-xs sm:text-base">Anexos Pendentes de Liberação</h3>
-                            <p class="text-[10px] sm:text-xs text-slate-500 font-medium">Visualize o arquivo ou copie para a aba Desenhos.</p>
+                            <span class="font-bold text-xs text-teal-400 font-mono">ORÇAMENTO Nº ${grupo.n_orcamento}</span>
+                            <h4 class="font-bold text-xs text-slate-200 uppercase truncate max-w-[260px] sm:max-w-none">${grupo.cliente}</h4>
                         </div>
                     </div>
-
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <button onclick="liberarAnexosSelecionados()" 
-                                class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-extrabold text-xs transition shadow-sm flex items-center gap-1.5">
-                            <i data-lucide="check-square" class="w-4 h-4"></i>
-                            <span>Liberar Anexos Selecionados</span>
-                        </button>
-                    </div>
+                    <span class="bg-slate-700 text-teal-300 font-mono text-[10px] font-bold px-2.5 py-1 rounded-lg border border-slate-600">
+                        ${grupo.arquivos.length} arquivo(s)
+                    </span>
                 </div>
 
-                <div class="space-y-4">
-            `;
+                <div class="p-3 bg-slate-50/50 space-y-2">
+                    ${grupo.arquivos.map(arq => {
+                        // Trata fallback para a propriedade 'codigo' se ela vier com nome alternativo
+                        const codVal = arq.codigo ?? arq.cod ?? arq.cod_anexo ?? 1;
 
-            listaOrcamentos.forEach(grupo => {
-                html += `
-                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                        <div class="bg-slate-800 text-white px-3.5 sm:px-4 py-2.5 flex justify-between items-center flex-wrap gap-2">
-                            <div class="flex items-center gap-3">
-                                <input type="checkbox" onchange="toggleMarcarAnexosDoOrcamento(this, ${grupo.n_orcamento})" 
-                                       title="Marcar/Desmarcar todos deste orçamento"
-                                       class="w-4 h-4 rounded text-teal-500 focus:ring-teal-400 cursor-pointer">
-                                <div>
-                                    <span class="font-bold text-xs text-teal-400 font-mono">ORÇAMENTO Nº ${grupo.n_orcamento}</span>
-                                    <h4 class="font-bold text-xs text-slate-200 uppercase truncate max-w-[260px] sm:max-w-none">${grupo.cliente}</h4>
+                        const itemJson = JSON.stringify({
+                            cod_empresa: arq.cod_empresa,
+                            cod_os: arq.cod_os,
+                            cod_os_aux: arq.cod_os_aux
+                        }).replace(/"/g, '&quot;');
+
+                        return `
+                            <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs hover:border-teal-300 transition">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" 
+                                           data-orcamento="${grupo.n_orcamento}" 
+                                           value="${itemJson}" 
+                                           class="chkAnexoItem w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer">
+                                    <div>
+                                        <span class="font-mono font-bold text-columbia-700">OS ${arq.cod_os_completo}</span>
+                                        <p class="font-bold text-slate-800">${arq.nome_arquivo}</p>
+                                        <span class="text-[10px] text-slate-400 font-medium">${arq.subtitulo || ''}</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <!-- BOTÃO PARA VER ANEXO PENDENTE -->
+                                    <button onclick="visualizarAnexoPendente(event, ${arq.cod_empresa}, ${arq.cod_os}, ${arq.cod_os_aux}, ${codVal})" 
+                                            class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
+                                        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                        <span>Ver Anexo</span>
+                                    </button>
+
+                                    <!-- BOTÃO PARA COPIAR PARA DESENHOS -->
+                                    <button onclick="copiarAnexoParaDesenhos(event, ${arq.cod_empresa}, ${arq.cod_os}, ${arq.cod_os_aux}, ${codVal})" 
+                                            class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                        <span>Copiar p/ Desenhos</span>
+                                    </button>
                                 </div>
                             </div>
-                            <span class="bg-slate-700 text-teal-300 font-mono text-[10px] font-bold px-2.5 py-1 rounded-lg border border-slate-600">
-                                ${grupo.arquivos.length} arquivo(s)
-                            </span>
-                        </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    });
 
-                        <div class="p-3 bg-slate-50/50 space-y-2">
-                            ${grupo.arquivos.map(arq => {
-                                const itemJson = JSON.stringify({
-                                    cod_empresa: arq.cod_empresa,
-                                    cod_os: arq.cod_os,
-                                    cod_os_aux: arq.cod_os_aux
-                                }).replace(/"/g, '&quot;');
-
-                                return `
-                                    <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs hover:border-teal-300 transition">
-                                        <div class="flex items-center gap-3">
-                                            <input type="checkbox" 
-                                                   data-orcamento="${grupo.n_orcamento}" 
-                                                   value="${itemJson}" 
-                                                   class="chkAnexoItem w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer">
-                                            <div>
-                                                <span class="font-mono font-bold text-columbia-700">OS ${arq.cod_os_completo}</span>
-                                                <p class="font-bold text-slate-800">${arq.nome_arquivo}</p>
-                                                <span class="text-[10px] text-slate-400 font-medium">${arq.subtitulo || ''}</span>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex items-center gap-2">
-                                            <!-- BOTÃO PARA VER ANEXO PENDENTE -->
-                                            <button onclick="visualizarAnexoPendente(event, ${arq.cod_empresa}, ${arq.cod_os}, ${arq.cod_os_aux}, ${arq.codigo})" 
-                                                    class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
-                                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
-                                                <span>Ver Anexo</span>
-                                            </button>
-
-                                            <!-- BOTÃO PARA COPIAR PARA DESENHOS -->
-                                            <button onclick="copiarAnexoParaDesenhos(event, ${arq.cod_empresa}, ${arq.cod_os}, ${arq.cod_os_aux}, ${arq.codigo})" 
-                                                    class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
-                                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                                                <span>Copiar p/ Desenhos</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                `;
-            });
-
-            html += `</div>`;
-            grid.innerHTML = html;
-            lucide.createIcons();
-        }
+    html += `</div>`;
+    grid.innerHTML = html;
+    lucide.createIcons();
+}
 
         function toggleMarcarAnexosDoOrcamento(masterChk, n_orcamento) {
             const checkboxes = document.querySelectorAll(`.chkAnexoItem[data-orcamento="${n_orcamento}"]`);
