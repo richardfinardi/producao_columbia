@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Favicon (Ícone da Aba do Navegador) -->
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="LOGO MINIMALISTA.png">
     <link rel="apple-touch-icon" href="LOGO MINIMALISTA.png">
 
-    <!-- Meta Tags para Prévia no WhatsApp / Redes Sociais (Open Graph) -->
+    <!-- Meta Tags Open Graph -->
     <meta property="og:title" content="Controle Semanal de Produção | Consultoria RF">
     <meta property="og:description" content="Dashboard de acompanhamento e controle de produção.">
     <meta property="og:image" content="https://consultoriarf.net/producao_columbia/LOGO MINIMALISTA.png">
@@ -18,9 +18,9 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.6.6</title>
+    <title>Programação de Produção - Columbia V7.7</title>
 
-    <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
+    <!-- VERIFICAÇÃO DE AUTENTICAÇÃO -->
     <script>
         if (!localStorage.getItem('columbia_token')) {
             window.location.href = 'login.html';
@@ -63,7 +63,6 @@
     <header class="bg-columbia-700 text-white sticky top-0 z-50 shadow-md">
         <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex flex-wrap justify-between items-center gap-2 sm:gap-4">
             
-            <!-- Título & Logo Columbia -->
             <div class="flex items-center gap-2.5 sm:gap-4">
                 <div class="flex items-center justify-center p-1 sm:p-1.5 bg-white rounded-xl shadow-sm cursor-pointer shrink-0" onclick="setAbaAtiva('dashboard')">
                     <img src="./logo.png" alt="Columbia Machine" class="h-7 sm:h-9 max-h-10 w-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -73,60 +72,50 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.6</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.7</p>
                 </div>
             </div>
 
-            <!-- Botões de Ação do Topo -->
             <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto custom-scroll w-full lg:w-auto py-1">
-                <!-- Identificação do Usuário Logado -->
                 <div class="flex items-center gap-1 px-2.5 py-1.5 bg-columbia-800 border border-columbia-600 rounded-xl text-[11px] sm:text-xs font-bold text-slate-200 shrink-0">
                     <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-400"></i>
                     <span id="userDisplayName">Usuário</span>
                 </div>
 
-                <!-- ABAS DE NAVEGAÇÃO INTERNA NO HEADER -->
                 <button id="btnAbaDashboard" onclick="setAbaAtiva('dashboard')" class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-columbia-900 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md border border-columbia-500 shrink-0">
                     <i data-lucide="calendar" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span>Produção</span>
                 </button>
 
-                <!-- ABA FATURAMENTO -->
                 <button id="btnAbaFaturamento" onclick="setAbaAtiva('faturamento')" class="hidden flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
                     <i data-lucide="package-check" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span>Faturamento</span>
                 </button>
 
-                <!-- ABA CONFERÊNCIA APONTAMENTOS -->
                 <button id="btnAbaConferencia" onclick="setAbaAtiva('conferencia')" class="hidden flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
                     <i data-lucide="clipboard-check" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span class="truncate">Conferência</span>
                 </button>
 
-                <!-- ABA LIBERAR ANEXOS -->
                 <button id="btnAbaAnexos" onclick="setAbaAtiva('anexos')" class="hidden flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
                     <i data-lucide="paperclip" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span>Liberar Anexos</span>
                 </button>
 
-                <!-- BOTÃO OS'S NO LIMBO -->
                 <button id="btnVerLimbo" onclick="setAbaAtiva('limbo')" class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
                     <i data-lucide="ghost" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span id="txtBtnLimbo">Limbo (0)</span>
                 </button>
 
-                <!-- Botão Trava / Exibir Valores -->
                 <button id="btnToggleValues" onclick="handleValueVisibility()" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-columbia-800 hover:bg-columbia-900 border border-columbia-600 text-white rounded-xl font-bold text-[11px] sm:text-xs transition shadow shrink-0">
                     <i data-lucide="eye-off" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" id="iconValueVisibility"></i>
                     <span id="txtValueVisibility" class="hidden sm:inline">Exibir Valores</span>
                 </button>
 
-                <!-- Botão Atualizar Manual -->
                 <button id="btnRefresh" onclick="fetchData(false)" class="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-[11px] sm:text-xs transition-all shadow shrink-0" title="Atualizar Dados">
                     <i data-lucide="refresh-cw" class="w-3.5 h-3.5 sm:w-4 sm:h-4" id="refreshIcon"></i>
                 </button>
 
-                <!-- Botão Sair / Logout -->
                 <button onclick="efetuarLogout()" class="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-[11px] sm:text-xs transition shadow shrink-0" title="Sair do Sistema">
                     <i data-lucide="log-out" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span class="hidden sm:inline">Sair</span>
@@ -162,7 +151,6 @@
         
         <div id="filtersBar" class="bg-white p-2.5 sm:p-3.5 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shadow-sm">
             
-            <!-- Busca Geral Universal -->
             <div class="flex items-center gap-2 flex-1 min-w-[180px] sm:min-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <input type="search" 
@@ -178,7 +166,6 @@
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
             </div>
 
-            <!-- FILTRO DE OS ATRASADAS -->
             <div id="atrasadaContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="alert-triangle" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="atrasadaFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[140px] font-bold">
@@ -188,7 +175,6 @@
                 </select>
             </div>
 
-            <!-- FILTRO DE APONTAMENTO ABERTO -->
             <div id="apontamentoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="cog" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="apontamentoAbertoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[170px] font-bold">
@@ -198,7 +184,6 @@
                 </select>
             </div>
 
-            <!-- Filtro por Segmento -->
             <div id="segmentoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="layers" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="segmentoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -206,7 +191,6 @@
                 </select>
             </div>
 
-            <!-- Filtro por Status Produção -->
             <div id="producaoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="activity" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="producaoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[140px] font-medium">
@@ -216,7 +200,6 @@
                 </select>
             </div>
 
-            <!-- Filtro por Cliente -->
             <div id="clienteContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="user" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="clientFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -224,7 +207,6 @@
                 </select>
             </div>
 
-            <!-- Filtro por Engenharia -->
             <div id="engenhariaContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="cpu" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="engenhariaFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -232,7 +214,6 @@
                 </select>
             </div>
 
-            <!-- Filtro por Status Compras -->
             <div id="comprasContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="shopping-cart" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="comprasFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -240,7 +221,6 @@
                 </select>
             </div>
 
-            <!-- Filtro por Status Terceiros -->
             <div id="terceirosContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="truck" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="terceirosFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -248,7 +228,6 @@
                 </select>
             </div>
 
-            <!-- BOTÕES DE FILTRO SEPARADOS -->
             <div id="extraButtonsContainer" class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                 <button id="btnToggleConcluidas" onclick="toggleConcluidasFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-columbia-600"></i>
@@ -260,7 +239,6 @@
                     <span id="txtToggleOrcamento">Exibir somente com Orçamentos</span>
                 </button>
 
-                <!-- BOTÃO LIMPAR FILTROS -->
                 <button onclick="clearAllFilters()" title="Limpar todos os filtros acionados" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
                     <i data-lucide="filter-x" class="w-3.5 h-3.5 text-red-600"></i>
                     <span>Limpar Filtros</span>
@@ -288,7 +266,6 @@
             </div>
         </div>
 
-        <!-- ÁREA PRINCIPAL DO CALENDÁRIO / PAINEL DA ABA SELECIONADA -->
         <div id="calendarGrid" class="w-full"></div>
     </main>
 
@@ -302,7 +279,7 @@
         </div>
     </footer>
 
-    <!-- MODAIS DA APLICAÇÃO -->
+    <!-- MODAL SENHA -->
     <div id="passwordModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-50">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-[95vw] sm:max-w-sm w-full overflow-hidden border border-slate-200">
             <div class="bg-columbia-700 px-4 sm:px-5 py-3.5 flex justify-between items-center text-white">
@@ -329,6 +306,7 @@
         </div>
     </div>
 
+    <!-- MODAL RENEGOCIAÇÃO -->
     <div id="altRenegociationFormModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-[70]">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-[95vw] sm:max-w-md w-full overflow-hidden border border-slate-200">
             <div class="bg-purple-800 px-4 sm:px-5 py-3.5 flex justify-between items-center text-white">
@@ -360,6 +338,7 @@
         </div>
     </div>
 
+    <!-- MODAL DETALHES OS -->
     <div id="osModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-2.5 sm:p-4 z-50">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-[95vw] sm:max-w-lg w-full flex flex-col max-h-[90vh] overflow-hidden border border-slate-200">
             <div class="bg-columbia-700 px-4 sm:px-6 py-3 flex justify-between items-center text-white shrink-0">
@@ -438,7 +417,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT PRINCIPAL COMPLETO E INTEGRAÇÃO DAS DEMAIS AÇÕES -->
+    <!-- JAVASCRIPT GLOBAL COMPLETO RESTAURADO -->
     <script>
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         const API_HR_A_MAIS = 'https://columbia.consultoriarf.net/hr-a-mais';
@@ -622,12 +601,6 @@
             const filtersBar = document.getElementById('filtersBar');
             const navigationBar = document.getElementById('navigationBar');
 
-            const btnDashboard = document.getElementById('btnAbaDashboard');
-            const btnFaturamento = document.getElementById('btnAbaFaturamento');
-            const btnConferencia = document.getElementById('btnAbaConferencia');
-            const btnAnexos = document.getElementById('btnAbaAnexos');
-            const btnLimbo = document.getElementById('btnVerLimbo');
-
             if (abaAtiva === 'dashboard') {
                 if (metricsBar) metricsBar.classList.remove('hidden');
                 if (filtersBar) filtersBar.classList.remove('hidden');
@@ -646,6 +619,21 @@
             renderView();
         }
 
+        function populateSelectOptions() {
+            const fillSelect = (id, key, label) => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                const opts = [...new Set(rawData.map(i => i[key]).filter(Boolean))].sort();
+                sel.innerHTML = `<option value="">${label}</option>` + opts.map(o => `<option value="${o}">${o}</option>`).join('');
+            };
+
+            fillSelect('segmentoFilter', 'segmento', 'Segmento (Todos)');
+            fillSelect('clientFilter', 'cliente', 'Todos os Clientes');
+            fillSelect('engenhariaFilter', 'engenharia_status', 'Engenharia (Todos)');
+            fillSelect('comprasFilter', 'status_compras', 'Compras (Todos)');
+            fillSelect('terceirosFilter', 'status_terceiros', 'Terceiros (Todos)');
+        }
+
         function getFilteredData() {
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
             const atrasadaFiltro = document.getElementById('atrasadaFilter')?.value || '';
@@ -653,20 +641,55 @@
             const segmento = document.getElementById('segmentoFilter')?.value || '';
             const producao = document.getElementById('producaoFilter')?.value || '';
             const cliente = document.getElementById('clientFilter')?.value || '';
+            const engenharia = document.getElementById('engenhariaFilter')?.value || '';
+            const compras = document.getElementById('comprasFilter')?.value || '';
+            const terceiros = document.getElementById('terceirosFilter')?.value || '';
 
             return rawData.filter(item => {
                 const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
                 if (estaNoLimbo) return false;
 
+                const isConcluido = String(item.concluido || '').toLowerCase() === 'sim' || String(item.concluido || '').toLowerCase() === 's' || String(item.concluido || '') === '1';
+                if (!showConcluidas && isConcluido) return false;
+
                 if (search) {
                     const matchOS = String(item.n_os || '').toLowerCase().includes(search);
                     const matchTitulo = String(item.titulo || '').toLowerCase().includes(search);
                     const matchCliente = String(item.cliente || '').toLowerCase().includes(search);
-                    if (!matchOS && !matchTitulo && !matchCliente) return false;
+                    const matchOrigem = String(item.origem || '').toLowerCase().includes(search);
+                    if (!matchOS && !matchTitulo && !matchCliente && !matchOrigem) return false;
+                }
+
+                if (atrasadaFiltro) {
+                    const isAtrasada = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
+                    if (atrasadaFiltro === 'sim' && !isAtrasada) return false;
+                    if (atrasadaFiltro === 'nao' && isAtrasada) return false;
+                }
+
+                if (apontamentoFiltro) {
+                    const temAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
+                    if (apontamentoFiltro === 'sim' && !temAberto) return false;
+                    if (apontamentoFiltro === 'nao' && temAberto) return false;
                 }
 
                 if (segmento && (item.segmento || '') !== segmento) return false;
                 if (cliente && (item.cliente || '') !== cliente) return false;
+                if (engenharia && (item.engenharia_status || '') !== engenharia) return false;
+                if (compras && (item.status_compras || '') !== compras) return false;
+                if (terceiros && (item.status_terceiros || '') !== terceiros) return false;
+
+                if (producao === 'finalizado') {
+                    const st = String(item.status_producao || '').toLowerCase();
+                    if (!st.includes('100%') && !st.includes('finalizado')) return false;
+                } else if (producao === 'nao_finalizado') {
+                    const st = String(item.status_producao || '').toLowerCase();
+                    if (st.includes('100%') || st.includes('finalizado')) return false;
+                }
+
+                if (onlyWithBudget) {
+                    const hasB = String(item.possui_orcamento || '').toLowerCase();
+                    if (hasB !== 'sim' && hasB !== 's' && hasB !== '1') return false;
+                }
 
                 return true;
             });
@@ -674,12 +697,21 @@
 
         function updateMetrics(filtered) {
             const totalOS = filtered.length;
-            const atrasadas = filtered.filter(i => String(i.atrasada || '').toLowerCase() === 'sim').length;
+            const atrasadas = filtered.filter(i => String(i.atrasada || '').toLowerCase() === 'sim' || String(i.atrasada || '').toLowerCase() === 's').length;
+            const semOrcamento = filtered.filter(i => {
+                const hasB = String(i.possui_orcamento || '').toLowerCase();
+                return hasB !== 'sim' && hasB !== 's' && hasB !== '1';
+            }).length;
+
             const valorTotal = filtered.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
 
             setElText('metricTotalOS', totalOS);
             setElText('metricAtrasadas', atrasadas);
+            setElText('metricSemOrcamento', semOrcamento);
             setElText('metricValorTotal', formatBRL(valorTotal));
+
+            const totalLimbo = rawData.filter(i => String(i.u_limbo) === '1' || i.u_limbo === 1).length;
+            setElText('txtBtnLimbo', `Limbo (${totalLimbo})`);
         }
 
         function renderView() {
@@ -695,22 +727,61 @@
         }
 
         function renderOSCard(item) {
-            const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim';
+            const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
             const prodStatus = item.status_producao || '0%';
             const clienteNome = item.cliente || 'CLIENTE NÃO INFORMADO';
+            const origem = item.origem || 'SEM ORIGEM';
             const osNome = item.titulo || 'SEM NOME';
+            const segmento = item.segmento || 'GERAL';
+
+            const compras = item.status_compras || 'N/A';
+            const terceiros = item.status_terceiros || 'N/A';
+            const engenharia = item.engenharia_status || 'N/A';
+
+            const temApontamentoAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
+            const detalheApontamento = item.apontamentos_abertos_detalhe || 'Nenhum operador apontando no momento';
+
             const nOsClean = String(item.n_os).trim();
 
             return `
                 <div onclick="openModal('${nOsClean}')" class="group bg-white border border-slate-200 hover:border-columbia-500 hover:shadow-md p-3.5 rounded-2xl cursor-pointer transition-all duration-200 flex flex-col justify-between gap-2.5 relative overflow-hidden">
                     <div class="absolute left-0 top-0 bottom-0 w-1.5 ${isAtrasado ? 'bg-red-500' : 'bg-emerald-500'}"></div>
+
                     <div>
                         <div class="flex justify-between items-center mb-1 pl-1">
-                            <span class="font-mono text-xs font-extrabold text-columbia-700 bg-columbia-50 px-2 py-0.5 rounded-lg border border-columbia-100">OS ${item.n_os}</span>
+                            <span class="font-mono text-xs font-extrabold text-columbia-700 bg-columbia-50 px-2 py-0.5 rounded-lg border border-columbia-100">
+                                OS ${item.n_os}
+                            </span>
+                            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full ${isAtrasado ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}">
+                                ${isAtrasado ? 'Atrasado' : 'No prazo'}
+                            </span>
                         </div>
-                        <p class="text-[11px] font-bold text-slate-700 line-clamp-2">${osNome}</p>
+
+                        <div class="pl-1 space-y-0.5">
+                            <p class="text-xs font-black text-slate-800 tracking-tight uppercase"><span class="text-[9px] text-slate-400 font-normal">Origem:</span> ${origem}</p>
+                            <p class="text-[11px] font-bold text-slate-700 line-clamp-2 leading-snug" title="${osNome}">${osNome}</p>
+                        </div>
                     </div>
-                    <div class="text-[10px] text-slate-500 font-medium">Cliente: ${clienteNome}</div>
+
+                    <div class="space-y-2 pl-1">
+                        <div class="flex items-center justify-between text-[10px] pt-1.5 border-t border-slate-100">
+                            <span class="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md border border-slate-200 uppercase">${segmento}</span>
+                            <span class="text-slate-500 font-semibold uppercase truncate max-w-[130px]" title="${clienteNome}">${clienteNome}</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-1 text-[10px] bg-slate-50/80 p-2.5 rounded-xl border border-slate-100 font-medium">
+                            <div class="flex justify-between items-center"><span class="text-slate-400 font-bold">Compras:</span> <span class="font-bold text-slate-700 truncate max-w-[140px]">${compras}</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-400 font-bold">Terceiros:</span> <span class="font-bold text-slate-700 truncate max-w-[140px]">${terceiros}</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-400 font-bold">Engenharia:</span> <span class="font-bold text-slate-700 truncate max-w-[140px]">${engenharia}</span></div>
+                            <div class="flex justify-between items-center pt-1 border-t border-slate-200/60 mt-0.5"><span class="text-slate-500 font-extrabold">Produção:</span> <span class="font-black text-columbia-700 font-mono text-xs">${prodStatus}</span></div>
+                        </div>
+
+                        <div class="${temApontamentoAberto ? 'bg-emerald-50 border-emerald-300' : 'bg-red-50 border-red-200'} border p-2 rounded-xl text-[10px]">
+                            <p class="font-mono text-[9.5px] leading-tight ${temApontamentoAberto ? 'text-emerald-900 font-bold' : 'text-red-600 italic'}" title="${detalheApontamento}">
+                                ${detalheApontamento}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -721,9 +792,16 @@
 
             grid.innerHTML = `
                 <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-md">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
-                        ${filtered.map(item => renderOSCard(item)).join('')}
-                    </div>
+                    ${filtered.length === 0 ? `
+                        <div class="flex flex-col items-center justify-center py-12 text-slate-400 gap-2">
+                            <i data-lucide="calendar-x" class="w-10 h-10 stroke-1 text-slate-300"></i>
+                            <p class="text-xs font-semibold">Nenhuma Ordem de Serviço encontrada.</p>
+                        </div>
+                    ` : `
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                            ${filtered.map(item => renderOSCard(item)).join('')}
+                        </div>
+                    `}
                 </div>
             `;
         }
@@ -743,8 +821,37 @@
                 return;
             }
 
+            const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+            const segmentoFiltro = document.getElementById('segmentoFilter')?.value || '';
+            const clienteFiltro = document.getElementById('clientFilter')?.value || '';
+
+            const anexosFiltrados = rawAnexosPendentes.filter(item => {
+                if (segmentoFiltro && String(item.segmento || '') !== segmentoFiltro) return false;
+                if (clienteFiltro && String(item.cliente || '') !== clienteFiltro) return false;
+
+                if (search) {
+                    const matchOrcamento = String(item.n_orcamento || '').toLowerCase().includes(search);
+                    const matchCliente = String(item.cliente || '').toLowerCase().includes(search);
+                    const matchOS = String(item.cod_os_completo || '').toLowerCase().includes(search);
+                    const matchArquivo = String(item.nome_arquivo || '').toLowerCase().includes(search);
+                    if (!matchOrcamento && !matchCliente && !matchOS && !matchArquivo) return false;
+                }
+
+                return true;
+            });
+
+            if (anexosFiltrados.length === 0) {
+                grid.innerHTML = `
+                    <div class="bg-white rounded-2xl border border-teal-200 p-8 sm:p-12 text-center text-slate-400 flex flex-col items-center gap-2 shadow-sm">
+                        <i data-lucide="file-x" class="w-10 h-10 text-teal-300 stroke-1"></i>
+                        <p class="text-xs font-bold text-slate-600">Nenhum anexo encontrado para os filtros selecionados.</p>
+                    </div>
+                `;
+                return;
+            }
+
             const agrupadoPorOrcamento = {};
-            rawAnexosPendentes.forEach(item => {
+            anexosFiltrados.forEach(item => {
                 const orc = item.n_orcamento;
                 if (!agrupadoPorOrcamento[orc]) {
                     agrupadoPorOrcamento[orc] = {
@@ -788,6 +895,7 @@
                         <div class="bg-slate-800 text-white px-3.5 sm:px-4 py-2.5 flex justify-between items-center flex-wrap gap-2">
                             <div class="flex items-center gap-3">
                                 <input type="checkbox" onchange="toggleMarcarAnexosDoOrcamento(this, ${grupo.n_orcamento})" 
+                                       title="Marcar/Desmarcar todos deste orçamento"
                                        class="w-4 h-4 rounded text-teal-500 focus:ring-teal-400 cursor-pointer">
                                 <div>
                                     <span class="font-bold text-xs text-teal-400 font-mono">ORÇAMENTO Nº ${grupo.n_orcamento}</span>
@@ -971,13 +1079,21 @@
         }
 
         async function fetchData(isSilent = false) {
+            const refreshIcon = document.getElementById('refreshIcon');
+            if (!isSilent && refreshIcon) refreshIcon.classList.add('animate-spin');
+
             try {
                 const response = await fetch(`${API_URL}?_t=${Date.now()}`);
                 if (response.ok) {
                     rawData = await response.json();
-                    if (abaAtiva === 'dashboard') renderView();
+                    populateSelectOptions();
+                    if (abaAtiva === 'dashboard' || abaAtiva === 'limbo') renderView();
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { 
+                console.error('Erro ao carregar dados:', e); 
+            } finally {
+                if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+            }
         }
 
         async function fetchFaturamentoData(isSilent = false) {
@@ -995,6 +1111,130 @@
                     if (abaAtiva === 'anexos') renderPaginaAnexosView();
                 }
             } catch (e) { console.error(e); }
+        }
+
+        function toggleConcluidasFilter() {
+            showConcluidas = !showConcluidas;
+            renderView();
+        }
+
+        function toggleOrcamentoFilter() {
+            onlyWithBudget = !onlyWithBudget;
+            renderView();
+        }
+
+        function clearAllFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('atrasadaFilter').value = '';
+            document.getElementById('apontamentoAbertoFilter').value = '';
+            document.getElementById('segmentoFilter').value = '';
+            document.getElementById('producaoFilter').value = '';
+            document.getElementById('clientFilter').value = '';
+            document.getElementById('engenhariaFilter').value = '';
+            document.getElementById('comprasFilter').value = '';
+            document.getElementById('terceirosFilter').value = '';
+            showConcluidas = false;
+            renderView();
+        }
+
+        function handleValueVisibility() {
+            if (isValuesUnlocked) {
+                isValuesUnlocked = false;
+                renderView();
+            } else {
+                openPasswordModal();
+            }
+        }
+
+        function openPasswordModal() {
+            document.getElementById('passwordModal')?.classList.remove('hidden');
+            document.getElementById('passwordModal')?.classList.add('flex');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal')?.classList.add('hidden');
+            document.getElementById('passwordModal')?.classList.remove('flex');
+        }
+
+        function validatePassword() {
+            const input = document.getElementById('inputPassword').value;
+            if (input === 'Colmac@2026') {
+                isValuesUnlocked = true;
+                closePasswordModal();
+                renderView();
+            } else {
+                document.getElementById('passwordError')?.classList.remove('hidden');
+            }
+        }
+
+        function checkPasswordKey(e) { if (e.key === 'Enter') validatePassword(); }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('inputPassword');
+            if (input) input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        function openModal(n_os) {
+            const item = rawData.find(i => String(i.n_os).trim() === String(n_os).trim());
+            if (!item) return;
+            selectedItemModal = item;
+
+            setElText('mOS', `OS ${item.n_os || 'N/A'}`);
+            setElText('mTitulo', item.titulo || 'Sem Título');
+            setElText('mPedido', item.n_pedido || '-');
+            setElText('mCliente', item.cliente || '-');
+            setElText('mSegmento', item.segmento || '-');
+            setElText('mCodInterno', item.cod_interno || '-');
+            setElText('mOrigem', item.origem || '-');
+            setElText('mEngenhariaStatus', item.engenharia_status || '-');
+
+            document.getElementById('osModal')?.classList.remove('hidden');
+            document.getElementById('osModal')?.classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('osModal')?.classList.add('hidden');
+            document.getElementById('osModal')?.classList.remove('flex');
+        }
+
+        function openAltRenegociationFormModal() {
+            document.getElementById('altRenegociationFormModal')?.classList.remove('hidden');
+            document.getElementById('altRenegociationFormModal')?.classList.add('flex');
+        }
+
+        function closeAltRenegociationFormModal() {
+            document.getElementById('altRenegociationFormModal')?.classList.add('hidden');
+            document.getElementById('altRenegociationFormModal')?.classList.remove('flex');
+        }
+
+        async function submitAltRenegociation() {
+            if (!selectedItemModal) return;
+            const newDate = document.getElementById('inputNewRenegociationDate').value;
+            const userTexto = document.getElementById('textareaJustification').value.trim();
+
+            if (!userTexto) {
+                alert('A justificativa é obrigatória.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/${selectedItemModal.n_os}/alterar-renegociacao`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        u_data_renegociacao: newDate || null,
+                        U_JUST_ALT_DT_REN: userTexto
+                    })
+                });
+
+                if (response.ok) {
+                    closeAltRenegociationFormModal();
+                    closeModal();
+                    fetchData();
+                } else {
+                    alert('Falha ao alterar a data.');
+                }
+            } catch (e) { alert(e.message); }
         }
 
         function efetuarLogout() {
