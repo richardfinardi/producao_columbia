@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.6.5</title>
+    <title>Programação de Produção - Columbia V7.6.6</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.5</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.6</p>
                 </div>
             </div>
 
@@ -111,7 +111,7 @@
 
                 <!-- BOTÃO OS'S NO LIMBO -->
                 <button id="btnVerLimbo" onclick="setAbaAtiva('limbo')" class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
-                    <i data-lucide="ghost" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                    <i data-lucide="ghost" class="w-3.5 h-3.5"></i>
                     <span id="txtBtnLimbo">Limbo (0)</span>
                 </button>
 
@@ -162,7 +162,7 @@
         
         <div id="filtersBar" class="bg-white p-2.5 sm:p-3.5 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shadow-sm">
             
-            <!-- Busca Geral Universal com Trava Anti-Autofill -->
+            <!-- Busca Geral Universal -->
             <div class="flex items-center gap-2 flex-1 min-w-[180px] sm:min-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <input type="search" 
@@ -796,7 +796,7 @@
             }
         };
 
-        // ABERTURA DE ANEXOS DESENHO TÉCNICO PDF
+        // ABERTURA DE ANEXOS DESENHO TÉCNICO PDF DA ABA DESENHOS
         async function abrirDesenhoAnexo(event, cod_empresa, cod_os, cod_os_aux) {
             if (event && typeof event.stopPropagation === 'function') {
                 event.stopPropagation();
@@ -838,6 +838,100 @@
             } catch (error) {
                 console.error('Erro ao abrir anexo:', error);
                 alert(`Erro ao abrir o anexo: ${error.message}`);
+            } finally {
+                if (event && event.currentTarget) {
+                    event.currentTarget.disabled = false;
+                    event.currentTarget.classList.remove('opacity-50');
+                }
+            }
+        }
+
+        // VISUALIZAR ANEXO PENDENTE DA TABELA tos_aux_anexos
+        async function visualizarAnexoPendente(event, cod_empresa, cod_os, cod_os_aux, codigo) {
+            if (event && typeof event.stopPropagation === 'function') {
+                event.stopPropagation();
+            }
+
+            try {
+                const btnTarget = event ? event.currentTarget : null;
+                if (btnTarget) {
+                    btnTarget.disabled = true;
+                    btnTarget.classList.add('opacity-50');
+                }
+
+                const url = `${API_URL}/anexo-visualizar?cod_empresa=${cod_empresa}&cod_os=${cod_os}&cod_os_aux=${cod_os_aux}&codigo=${codigo}`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Não foi possível carregar o anexo de origem.');
+                }
+
+                const data = await response.json();
+
+                if (!data.pdf_base64) {
+                    alert('Arquivo não encontrado ou corrompido.');
+                    return;
+                }
+
+                const byteCharacters = atob(data.pdf_base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const fileBlob = new Blob([byteArray], { type: 'application/pdf' });
+
+                const fileURL = URL.createObjectURL(fileBlob);
+                window.open(fileURL, '_blank');
+
+            } catch (error) {
+                console.error('Erro ao visualizar anexo:', error);
+                alert(`Erro ao visualizar anexo: ${error.message}`);
+            } finally {
+                if (event && event.currentTarget) {
+                    event.currentTarget.disabled = false;
+                    event.currentTarget.classList.remove('opacity-50');
+                }
+            }
+        }
+
+        // COPIAR ANEXO DA TABELA tos_aux_anexos PARA A TABELA tos_aux_desenhos
+        async function copiarAnexoParaDesenhos(event, cod_empresa, cod_os, cod_os_aux, codigo) {
+            if (event && typeof event.stopPropagation === 'function') {
+                event.stopPropagation();
+            }
+
+            if (!confirm('Deseja realmente copiar este anexo para a aba de Desenhos da OS?')) {
+                return;
+            }
+
+            try {
+                const btnTarget = event ? event.currentTarget : null;
+                if (btnTarget) {
+                    btnTarget.disabled = true;
+                    btnTarget.classList.add('opacity-50');
+                }
+
+                const response = await fetch(`${API_URL}/copiar-para-desenhos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cod_empresa, cod_os, cod_os_aux, codigo })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Erro ao copiar o anexo para a aba desenhos.');
+                }
+
+                const data = await response.json();
+                alert(data.mensagem || 'Anexo copiado com sucesso para a aba Desenhos!');
+                
+                fetchAnexosPendentData();
+
+            } catch (error) {
+                console.error('Erro ao copiar anexo:', error);
+                alert(`Falha ao copiar anexo: ${error.message}`);
             } finally {
                 if (event && event.currentTarget) {
                     event.currentTarget.disabled = false;
@@ -945,7 +1039,6 @@
                 if (btnAnexos) btnAnexos.className = "flex items-center gap-1.5 px-3 py-2 bg-teal-900 border border-teal-400 text-white font-black rounded-xl text-xs transition shadow-md shrink-0";
                 if (metricsBar) metricsBar.classList.add('hidden');
                 
-                // EXIBE APENAS BUSCA GERAL, SEGMENTO E CLIENTE
                 if (filtersBar) filtersBar.classList.remove('hidden');
                 if (navigationBar) navigationBar.classList.add('hidden');
 
@@ -1179,7 +1272,6 @@
                 if (!response.ok) throw new Error('Erro ao buscar anexos pendentes.');
                 rawAnexosPendentes = await response.json();
                 
-                // Atualiza opções dos dropdowns com base nos anexos retornados
                 populateSelectOptionsAnexos();
 
                 if (abaAtiva === 'anexos') renderPaginaAnexosView();
@@ -1467,7 +1559,7 @@
         }
 
         // ==============================================================================
-        // RENDERIZAÇÃO E LÓGICA DA ABA LIBERAR ANEXOS (COM FILTROS FUNCIONANDO)
+        // ABA LIBERAR ANEXOS (COM ABRIR/VISUALIZAR E COPIAR PARA DESENHOS)
         // ==============================================================================
         function renderPaginaAnexosView() {
             const grid = document.getElementById('calendarGrid');
@@ -1483,12 +1575,10 @@
                 return;
             }
 
-            // CAPTURA VALORES DE BUSCA, SEGMENTO E CLIENTE
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
             const segmentoFiltro = document.getElementById('segmentoFilter')?.value || '';
             const clienteFiltro = document.getElementById('clientFilter')?.value || '';
 
-            // APLICAÇÃO COMPLETA DOS FILTROS
             const anexosFiltrados = rawAnexosPendentes.filter(item => {
                 if (segmentoFiltro && String(item.segmento || '') !== segmentoFiltro) return false;
                 if (clienteFiltro && String(item.cliente || '') !== clienteFiltro) return false;
@@ -1531,7 +1621,6 @@
             const listaOrcamentos = Object.values(agrupadoPorOrcamento);
 
             let html = `
-                <!-- BARRA SUPERIOR DE AÇÕES GERAIS -->
                 <div class="bg-white rounded-2xl border border-teal-200 p-3.5 sm:p-5 shadow-sm mb-4 flex flex-wrap justify-between items-center gap-3">
                     <div class="flex items-center gap-2.5 sm:gap-3">
                         <div class="p-2 sm:p-2.5 bg-teal-100 text-teal-800 rounded-xl">
@@ -1539,7 +1628,7 @@
                         </div>
                         <div>
                             <h3 class="font-extrabold text-slate-900 text-xs sm:text-base">Anexos Pendentes de Liberação</h3>
-                            <p class="text-[10px] sm:text-xs text-slate-500 font-medium">Selecione os arquivos individualmente ou marque a caixa do orçamento.</p>
+                            <p class="text-[10px] sm:text-xs text-slate-500 font-medium">Visualize o arquivo ou copie para a aba Desenhos.</p>
                         </div>
                     </div>
 
@@ -1558,11 +1647,10 @@
             listaOrcamentos.forEach(grupo => {
                 html += `
                     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                        <!-- CABEÇALHO DO ORÇAMENTO COM CHECKBOX SELEÇÃO GLOBAL DO GRUPO -->
                         <div class="bg-slate-800 text-white px-3.5 sm:px-4 py-2.5 flex justify-between items-center flex-wrap gap-2">
                             <div class="flex items-center gap-3">
                                 <input type="checkbox" onchange="toggleMarcarAnexosDoOrcamento(this, ${grupo.n_orcamento})" 
-                                       title="Marcar/Desmarcar todos os arquivos deste orçamento"
+                                       title="Marcar/Desmarcar todos deste orçamento"
                                        class="w-4 h-4 rounded text-teal-500 focus:ring-teal-400 cursor-pointer">
                                 <div>
                                     <span class="font-bold text-xs text-teal-400 font-mono">ORÇAMENTO Nº ${grupo.n_orcamento}</span>
@@ -1574,7 +1662,6 @@
                             </span>
                         </div>
 
-                        <!-- LISTA DE ARQUIVOS COM CHECKBOX INDIVIDUAL -->
                         <div class="p-3 bg-slate-50/50 space-y-2">
                             ${grupo.arquivos.map(arq => {
                                 const itemJson = JSON.stringify({
@@ -1584,7 +1671,7 @@
                                 }).replace(/"/g, '&quot;');
 
                                 return `
-                                    <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs hover:border-teal-300 transition">
+                                    <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs hover:border-teal-300 transition">
                                         <div class="flex items-center gap-3">
                                             <input type="checkbox" 
                                                    data-orcamento="${grupo.n_orcamento}" 
@@ -1593,12 +1680,25 @@
                                             <div>
                                                 <span class="font-mono font-bold text-columbia-700">OS ${arq.cod_os_completo}</span>
                                                 <p class="font-bold text-slate-800">${arq.nome_arquivo}</p>
-                                                <span class="text-[10px] text-slate-400 font-medium">${arq.subtitulo}</span>
+                                                <span class="text-[10px] text-slate-400 font-medium">${arq.subtitulo || ''}</span>
                                             </div>
                                         </div>
-                                        <span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded-md">
-                                            Oculto
-                                        </span>
+
+                                        <div class="flex items-center gap-2">
+                                            <!-- BOTÃO PARA VER ANEXO PENDENTE -->
+                                            <button onclick="visualizarAnexoPendente(event, ${arq.cod_empresa}, ${arq.cod_os}, ${arq.cod_os_aux}, ${arq.codigo})" 
+                                                    class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
+                                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                                <span>Ver Anexo</span>
+                                            </button>
+
+                                            <!-- BOTÃO PARA COPIAR PARA DESENHOS -->
+                                            <button onclick="copiarAnexoParaDesenhos(event, ${arq.cod_empresa}, ${arq.cod_os}, ${arq.cod_os_aux}, ${arq.codigo})" 
+                                                    class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
+                                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                                <span>Copiar p/ Desenhos</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 `;
                             }).join('')}
@@ -1612,13 +1712,11 @@
             lucide.createIcons();
         }
 
-        // Marca/Desmarca todos os checkboxes de um orçamento específico
         function toggleMarcarAnexosDoOrcamento(masterChk, n_orcamento) {
             const checkboxes = document.querySelectorAll(`.chkAnexoItem[data-orcamento="${n_orcamento}"]`);
             checkboxes.forEach(chk => chk.checked = masterChk.checked);
         }
 
-        // Libera somente os anexos cujas caixas estejam marcadas
         async function liberarAnexosSelecionados() {
             const marcados = Array.from(document.querySelectorAll('.chkAnexoItem:checked')).map(chk => JSON.parse(chk.value));
 
@@ -1632,7 +1730,6 @@
             await enviarRequisicaoLiberacao({ anexos: marcados });
         }
 
-        // Função de envio
         async function enviarRequisicaoLiberacao(payload) {
             try {
                 const response = await fetch(`${API_URL}/liberar-anexos-orcamento`, {
