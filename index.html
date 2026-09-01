@@ -1467,7 +1467,7 @@
         }
 
         // ==============================================================================
-        // RENDERIZAÇÃO E LÓGICA DA ABA LIBERAR ANEXOS (COM FILTROS FUNCIONANDO)
+        // RENDERIZAÇÃO E LÓGICA DA ABA LIBERAR ANEXOS (COM SUPORTE A ESTRUTURA E COPIA DUP)
         // ==============================================================================
         function renderPaginaAnexosView() {
             const grid = document.getElementById('calendarGrid');
@@ -1574,31 +1574,53 @@
                             </span>
                         </div>
 
-                        <!-- LISTA DE ARQUIVOS COM CHECKBOX INDIVIDUAL -->
+                        <!-- LISTA DE ARQUIVOS COM CHECKBOX INDIVIDUAL E MAPEAMENTO DAS CHAVES NOVAS -->
                         <div class="p-3 bg-slate-50/50 space-y-2">
                             ${grupo.arquivos.map(arq => {
                                 const itemJson = JSON.stringify({
                                     cod_empresa: arq.cod_empresa,
-                                    cod_os: arq.cod_os,
-                                    cod_os_aux: arq.cod_os_aux
+                                    cod_os_principal: arq.cod_os_principal,
+                                    cod_os_aux_principal: arq.cod_os_aux_principal,
+                                    cod_os_origem_anexo: arq.cod_os_origem_anexo,
+                                    cod_anexo: arq.cod_anexo
                                 }).replace(/"/g, '&quot;');
 
+                                const badgeOrigem = arq.origem_anexo === 'ESTRUTURA' 
+                                    ? `<span class="bg-purple-100 text-purple-800 border border-purple-300 text-[9px] font-black px-2 py-0.5 rounded-md">ESTRUTURA (OS ${arq.cod_os_origem_anexo})</span>`
+                                    : `<span class="bg-blue-100 text-blue-800 border border-blue-300 text-[9px] font-black px-2 py-0.5 rounded-md">OS PRINCIPAL</span>`;
+
                                 return `
-                                    <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs hover:border-teal-300 transition">
+                                    <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs hover:border-teal-300 transition">
                                         <div class="flex items-center gap-3">
                                             <input type="checkbox" 
                                                    data-orcamento="${grupo.n_orcamento}" 
                                                    value="${itemJson}" 
                                                    class="chkAnexoItem w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer">
                                             <div>
-                                                <span class="font-mono font-bold text-columbia-700">OS ${arq.cod_os_completo}</span>
+                                                <div class="flex items-center gap-2 mb-0.5">
+                                                    <span class="font-mono font-bold text-columbia-700">OS ${arq.cod_os_completo}</span>
+                                                    ${badgeOrigem}
+                                                </div>
                                                 <p class="font-bold text-slate-800">${arq.nome_arquivo}</p>
-                                                <span class="text-[10px] text-slate-400 font-medium">${arq.subtitulo}</span>
+                                                <span class="text-[10px] text-slate-400 font-medium">${arq.subtitulo || ''}</span>
                                             </div>
                                         </div>
-                                        <span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded-md">
-                                            Oculto
-                                        </span>
+
+                                        <div class="flex items-center gap-2">
+                                            <!-- VER ANEXO -->
+                                            <button onclick="visualizarAnexoPendente(event, ${arq.cod_empresa}, ${arq.cod_os_origem_anexo}, ${arq.cod_anexo})" 
+                                                    class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
+                                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                                <span>Ver Anexo</span>
+                                            </button>
+
+                                            <!-- COPIAR P/ DESENHOS -->
+                                            <button onclick="copiarAnexoParaDesenhos(event, ${arq.cod_empresa}, ${arq.cod_os_principal}, ${arq.cod_os_aux_principal}, ${arq.cod_os_origem_anexo}, ${arq.cod_anexo})" 
+                                                    class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
+                                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                                <span>Copiar p/ Desenhos</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 `;
                             }).join('')}
@@ -1630,6 +1652,88 @@
             if (!confirm(`Deseja liberar os ${marcados.length} anexo(s) selecionado(s)?`)) return;
 
             await enviarRequisicaoLiberacao({ anexos: marcados });
+        }
+
+        // COPIAR ANEXO INDIVIDUAL
+        async function copiarAnexoParaDesenhos(event, cod_empresa, cod_os_principal, cod_os_aux_principal, cod_os_origem_anexo, cod_anexo) {
+            if (event) event.stopPropagation();
+
+            if (!confirm('Deseja copiar este anexo para a OS Principal e para a Estrutura?')) return;
+
+            try {
+                const btnTarget = event ? event.currentTarget : null;
+                if (btnTarget) { btnTarget.disabled = true; btnTarget.classList.add('opacity-50'); }
+
+                const response = await fetch(`${API_URL}/copiar-para-desenhos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        cod_empresa,
+                        cod_os_principal,
+                        cod_os_aux_principal,
+                        cod_os_origem_anexo,
+                        cod_anexo
+                    })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Erro ao copiar anexo.');
+                }
+
+                const data = await response.json();
+                alert(data.mensagem || 'Anexo copiado com sucesso!');
+                
+                fetchAnexosPendentData();
+
+            } catch (error) {
+                alert(`Falha ao copiar anexo: ${error.message}`);
+            } finally {
+                if (event && event.currentTarget) {
+                    event.currentTarget.disabled = false;
+                    event.currentTarget.classList.remove('opacity-50');
+                }
+            }
+        }
+
+        // VISUALIZAR ANEXO PENDENTE
+        async function visualizarAnexoPendente(event, cod_empresa, cod_os_origem_anexo, cod_anexo) {
+            if (event) event.stopPropagation();
+
+            try {
+                const btnTarget = event ? event.currentTarget : null;
+                if (btnTarget) { btnTarget.disabled = true; btnTarget.classList.add('opacity-50'); }
+
+                const url = `${API_URL}/anexo-visualizar?cod_empresa=${cod_empresa}&cod_os=${cod_os_origem_anexo}&cod_os_aux=1&codigo=${cod_anexo}`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Não foi possível carregar o anexo de origem.');
+                }
+
+                const data = await response.json();
+                if (!data.pdf_base64) { alert('Arquivo não encontrado.'); return; }
+
+                const byteCharacters = atob(data.pdf_base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const fileBlob = new Blob([byteArray], { type: 'application/pdf' });
+
+                const fileURL = URL.createObjectURL(fileBlob);
+                window.open(fileURL, '_blank');
+
+            } catch (error) {
+                alert(`Erro ao visualizar anexo: ${error.message}`);
+            } finally {
+                if (event && event.currentTarget) {
+                    event.currentTarget.disabled = false;
+                    event.currentTarget.classList.remove('opacity-50');
+                }
+            }
         }
 
         // Função de envio
