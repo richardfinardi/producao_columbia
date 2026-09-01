@@ -1722,18 +1722,19 @@ async function visualizarAnexoPendente(event, cod_empresa, cod_os, cod_os_aux, c
             checkboxes.forEach(chk => chk.checked = masterChk.checked);
         }
 
-        async function liberarAnexosSelecionados() {
-            const marcados = Array.from(document.querySelectorAll('.chkAnexoItem:checked')).map(chk => JSON.parse(chk.value));
+       // LIBERA E COPIA TODOS OS ANEXOS SELEVISIONADOS COM CHECKBOX
+async function liberarAnexosSelecionados() {
+    const marcados = Array.from(document.querySelectorAll('.chkAnexoItem:checked')).map(chk => JSON.parse(chk.value));
 
-            if (marcados.length === 0) {
-                alert("Selecione pelo menos um anexo individual para liberar.");
-                return;
-            }
+    if (marcados.length === 0) {
+        alert("Selecione pelo menos um anexo para liberar e copiar para desenhos.");
+        return;
+    }
 
-            if (!confirm(`Deseja liberar os ${marcados.length} anexo(s) selecionado(s)?`)) return;
+    if (!confirm(`Deseja copiar e liberar os ${marcados.length} anexo(s) selecionado(s) para a aba de Desenhos?`)) return;
 
-            await enviarRequisicaoLiberacao({ anexos: marcados });
-        }
+    await enviarRequisicaoLiberacao({ anexos: marcados });
+}
 
         async function enviarRequisicaoLiberacao(payload) {
             try {
