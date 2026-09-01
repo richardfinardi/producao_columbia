@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Favicon (Ícone da Aba do Navegador) -->
     <link rel="icon" type="image/png" href="LOGO MINIMALISTA.png">
     <link rel="apple-touch-icon" href="LOGO MINIMALISTA.png">
 
-    <!-- Meta Tags para Prévia no WhatsApp / Redes Sociais (Open Graph) -->
     <meta property="og:title" content="Controle Semanal de Produção | Consultoria RF">
     <meta property="og:description" content="Dashboard de acompanhamento e controle de produção.">
     <meta property="og:image" content="https://consultoriarf.net/producao_columbia/LOGO MINIMALISTA.png">
@@ -20,14 +18,12 @@
     
     <title>Programação de Produção - Columbia V7.6.6</title>
 
-    <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
         if (!localStorage.getItem('columbia_token')) {
             window.location.href = 'login.html';
         }
     </script>
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -48,7 +44,6 @@
             }
         }
     </script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #0f172a; }
@@ -63,7 +58,6 @@
     <header class="bg-columbia-700 text-white sticky top-0 z-50 shadow-md">
         <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex flex-wrap justify-between items-center gap-2 sm:gap-4">
             
-            <!-- Título & Logo Columbia -->
             <div class="flex items-center gap-2.5 sm:gap-4">
                 <div class="flex items-center justify-center p-1 sm:p-1.5 bg-white rounded-xl shadow-sm cursor-pointer shrink-0" onclick="setAbaAtiva('dashboard')">
                     <img src="./logo.png" alt="Columbia Machine" class="h-7 sm:h-9 max-h-10 w-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -77,56 +71,46 @@
                 </div>
             </div>
 
-            <!-- Botões de Ação do Topo -->
             <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto custom-scroll w-full lg:w-auto py-1">
-                <!-- Identificação do Usuário Logado -->
                 <div class="flex items-center gap-1 px-2.5 py-1.5 bg-columbia-800 border border-columbia-600 rounded-xl text-[11px] sm:text-xs font-bold text-slate-200 shrink-0">
                     <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-400"></i>
                     <span id="userDisplayName">Usuário</span>
                 </div>
 
-                <!-- ABAS DE NAVEGAÇÃO INTERNA NO HEADER -->
                 <button id="btnAbaDashboard" onclick="setAbaAtiva('dashboard')" class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-columbia-900 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md border border-columbia-500 shrink-0">
                     <i data-lucide="calendar" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span>Produção</span>
                 </button>
 
-                <!-- ABA FATURAMENTO -->
                 <button id="btnAbaFaturamento" onclick="setAbaAtiva('faturamento')" class="hidden flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
                     <i data-lucide="package-check" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span>Faturamento</span>
                 </button>
 
-                <!-- ABA CONFERÊNCIA APONTAMENTOS -->
                 <button id="btnAbaConferencia" onclick="setAbaAtiva('conferencia')" class="hidden flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
                     <i data-lucide="clipboard-check" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span class="truncate">Conferência</span>
                 </button>
 
-                <!-- ABA LIBERAR ANEXOS -->
                 <button id="btnAbaAnexos" onclick="setAbaAtiva('anexos')" class="hidden flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
                     <i data-lucide="paperclip" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span>Liberar Anexos</span>
                 </button>
 
-                <!-- BOTÃO OS'S NO LIMBO -->
                 <button id="btnVerLimbo" onclick="setAbaAtiva('limbo')" class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
                     <i data-lucide="ghost" class="w-3.5 h-3.5"></i>
                     <span id="txtBtnLimbo">Limbo (0)</span>
                 </button>
 
-                <!-- Botão Trava / Exibir Valores -->
                 <button id="btnToggleValues" onclick="handleValueVisibility()" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-columbia-800 hover:bg-columbia-900 border border-columbia-600 text-white rounded-xl font-bold text-[11px] sm:text-xs transition shadow shrink-0">
                     <i data-lucide="eye-off" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" id="iconValueVisibility"></i>
                     <span id="txtValueVisibility" class="hidden sm:inline">Exibir Valores</span>
                 </button>
 
-                <!-- Botão Atualizar Manual -->
                 <button id="btnRefresh" onclick="fetchData(false)" class="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-[11px] sm:text-xs transition-all shadow shrink-0" title="Atualizar Dados">
                     <i data-lucide="refresh-cw" class="w-3.5 h-3.5 sm:w-4 sm:h-4" id="refreshIcon"></i>
                 </button>
 
-                <!-- Botão Sair / Logout -->
                 <button onclick="efetuarLogout()" class="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-[11px] sm:text-xs transition shadow shrink-0" title="Sair do Sistema">
                     <i data-lucide="log-out" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span class="hidden sm:inline">Sair</span>
@@ -159,26 +143,15 @@
 
     <!-- CONTROLES E FILTROS -->
     <main class="max-w-7xl w-full mx-auto p-2.5 sm:p-4 flex flex-col gap-3 sm:gap-4 flex-1">
-        
         <div id="filtersBar" class="bg-white p-2.5 sm:p-3.5 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shadow-sm">
-            
-            <!-- Busca Geral Universal -->
             <div class="flex items-center gap-2 flex-1 min-w-[180px] sm:min-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <input type="search" 
-                       id="searchInput" 
-                       name="columbia_search_query"
-                       oninput="renderView()" 
+                <input type="search" id="searchInput" name="columbia_search_query" oninput="renderView()" 
                        placeholder="Pesquisar (OS, Título, Cliente, Origem, NF, Cod. Interno, Orçamento...)" 
-                       autocomplete="new-password"
-                       autocorrect="off"
-                       autocapitalize="none"
-                       spellcheck="false"
-                       role="searchbox"
+                       autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false" role="searchbox"
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
             </div>
 
-            <!-- FILTRO DE OS ATRASADAS -->
             <div id="atrasadaContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="alert-triangle" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="atrasadaFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[140px] font-bold">
@@ -188,7 +161,6 @@
                 </select>
             </div>
 
-            <!-- FILTRO DE APONTAMENTO ABERTO -->
             <div id="apontamentoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="cog" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="apontamentoAbertoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[170px] font-bold">
@@ -198,7 +170,6 @@
                 </select>
             </div>
 
-            <!-- Filtro por Segmento -->
             <div id="segmentoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="layers" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="segmentoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -206,7 +177,6 @@
                 </select>
             </div>
 
-            <!-- Filtro por Status Produção -->
             <div id="producaoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="activity" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="producaoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[140px] font-medium">
@@ -216,7 +186,6 @@
                 </select>
             </div>
 
-            <!-- Filtro por Cliente -->
             <div id="clienteContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="user" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="clientFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -224,7 +193,6 @@
                 </select>
             </div>
 
-            <!-- Filtro por Engenharia -->
             <div id="engenhariaContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="cpu" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="engenhariaFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -232,7 +200,6 @@
                 </select>
             </div>
 
-            <!-- Filtro por Status Compras -->
             <div id="comprasContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="shopping-cart" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="comprasFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -240,7 +207,6 @@
                 </select>
             </div>
 
-            <!-- Filtro por Status Terceiros -->
             <div id="terceirosContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="truck" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="terceirosFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -248,7 +214,6 @@
                 </select>
             </div>
 
-            <!-- BOTÕES DE FILTRO SEPARADOS -->
             <div id="extraButtonsContainer" class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                 <button id="btnToggleConcluidas" onclick="toggleConcluidasFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-columbia-600"></i>
@@ -260,7 +225,6 @@
                     <span id="txtToggleOrcamento">Exibir somente com Orçamentos</span>
                 </button>
 
-                <!-- BOTÃO LIMPAR FILTROS -->
                 <button onclick="clearAllFilters()" title="Limpar todos os filtros acionados" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
                     <i data-lucide="filter-x" class="w-3.5 h-3.5 text-red-600"></i>
                     <span>Limpar Filtros</span>
@@ -268,7 +232,6 @@
             </div>
         </div>
 
-        <!-- BARRA NAVEGADORA DE DATA -->
         <div id="navigationBar" class="bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-2.5 shadow-sm">
             <div class="flex items-center bg-columbia-700 text-white rounded-xl px-2 py-1 shadow-sm w-full sm:w-auto justify-between sm:justify-start">
                 <button onclick="navigateDate(-1)" class="p-1 hover:bg-columbia-800 rounded-lg text-columbia-100 hover:text-white transition">
@@ -277,26 +240,20 @@
                 
                 <div class="flex items-center gap-2 px-2 sm:px-3">
                     <i data-lucide="calendar" class="w-4 h-4 text-columbia-100"></i>
-                    <span id="currentDateLabel" class="font-bold text-xs capitalize tracking-wide min-w-[140px] sm:min-w-[160px] text-center">
-                        Carregando...
-                    </span>
+                    <span id="currentDateLabel" class="font-bold text-xs capitalize tracking-wide min-w-[140px] sm:min-w-[160px] text-center">Carregando...</span>
                 </div>
 
                 <button onclick="navigateDate(1)" class="p-1 hover:bg-columbia-800 rounded-lg text-columbia-100 hover:text-white transition">
                     <i data-lucide="chevron-right" class="w-4 h-4"></i>
                 </button>
 
-                <button onclick="resetToToday()" class="ml-2 px-2.5 py-0.5 bg-white hover:bg-slate-100 rounded-lg text-xs font-bold text-columbia-800 transition shadow-sm">
-                    Hoje
-                </button>
+                <button onclick="resetToToday()" class="ml-2 px-2.5 py-0.5 bg-white hover:bg-slate-100 rounded-lg text-xs font-bold text-columbia-800 transition shadow-sm">Hoje</button>
             </div>
         </div>
 
-        <!-- ÁREA PRINCIPAL DO CALENDÁRIO / PAINEL DA ABA SELECIONADA -->
         <div id="calendarGrid" class="w-full"></div>
     </main>
 
-    <!-- FOOTER -->
     <footer class="bg-white border-t border-slate-200 py-4 mt-8">
         <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
             <div class="flex items-center gap-2 font-medium">
@@ -306,7 +263,7 @@
         </div>
     </footer>
 
-    <!-- MODAL CUSTOMIZADO DE SENHA DE VALORES -->
+    <!-- MODAIS DA APLICAÇÃO -->
     <div id="passwordModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-50">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-[95vw] sm:max-w-sm w-full overflow-hidden border border-slate-200">
             <div class="bg-columbia-700 px-4 sm:px-5 py-3.5 flex justify-between items-center text-white">
@@ -316,20 +273,16 @@
                 </div>
                 <button onclick="closePasswordModal()" class="text-columbia-100 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
-            
             <div class="p-4 sm:p-5 space-y-4 text-xs">
                 <p class="text-slate-600 font-medium">Digite a senha para exibir os valores de orçamento e totais:</p>
                 <div class="relative">
-                    <input type="password" id="inputPassword" onkeydown="checkPasswordKey(event)" placeholder="Digite a senha..." 
-                           autocomplete="new-password"
-                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-slate-800 text-xs focus:outline-none focus:border-columbia-700 font-medium">
+                    <input type="password" id="inputPassword" onkeydown="checkPasswordKey(event)" placeholder="Digite a senha..." autocomplete="new-password" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-slate-800 text-xs focus:outline-none focus:border-columbia-700 font-medium">
                     <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
                         <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
                     </button>
                 </div>
                 <p id="passwordError" class="text-red-600 text-[11px] font-bold hidden">Senha incorreta. Tente novamente.</p>
             </div>
-
             <div class="bg-slate-50 px-4 sm:px-5 py-3 border-t border-slate-200 flex justify-end gap-2">
                 <button onclick="closePasswordModal()" class="px-3.5 py-1.5 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition">Cancelar</button>
                 <button onclick="validatePassword()" class="px-4 py-1.5 bg-columbia-700 text-white rounded-xl font-bold hover:bg-columbia-800 shadow-sm transition">Confirmar</button>
@@ -337,7 +290,6 @@
         </div>
     </div>
 
-    <!-- MODAL FORMULÁRIO DE EDICÃO DA DATA RENEGOCIADA & JUSTIFICATIVA -->
     <div id="altRenegociationFormModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-[70]">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-[95vw] sm:max-w-md w-full overflow-hidden border border-slate-200">
             <div class="bg-purple-800 px-4 sm:px-5 py-3.5 flex justify-between items-center text-white">
@@ -347,24 +299,18 @@
                 </div>
                 <button onclick="closeAltRenegociationFormModal()" class="text-purple-200 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
-            
             <div class="p-4 sm:p-5 space-y-4 text-xs">
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">Nova Data de Renegociação:</label>
-                    <input type="date" id="inputNewRenegociationDate" 
-                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-purple-600 font-semibold">
+                    <input type="date" id="inputNewRenegociationDate" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-purple-600 font-semibold">
                     <span class="text-[10px] text-slate-400 italic">Deixe limpo para remover a data renegociada.</span>
                 </div>
-
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">Justificativa da Alteração <span class="text-red-500">*</span>:</label>
-                    <textarea id="textareaJustification" rows="3" placeholder="Digite o motivo da alteração (obrigatório)..." 
-                              class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-purple-600 font-medium custom-scroll"></textarea>
+                    <textarea id="textareaJustification" rows="3" placeholder="Digite o motivo da alteração (obrigatório)..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-purple-600 font-medium custom-scroll"></textarea>
                 </div>
-
                 <p id="altRenegociationFormError" class="text-red-600 text-[11px] font-bold hidden"></p>
             </div>
-
             <div class="bg-slate-50 px-4 sm:px-5 py-3 border-t border-slate-200 flex justify-end gap-2">
                 <button onclick="closeAltRenegociationFormModal()" class="px-3.5 py-1.5 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition">Cancelar</button>
                 <button id="btnSaveRenegociation" onclick="submitAltRenegociation()" class="px-4 py-1.5 bg-purple-700 text-white rounded-xl font-bold hover:bg-purple-800 shadow-sm transition flex items-center gap-1.5">
@@ -375,7 +321,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE DETALHES DA OS -->
     <div id="osModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-2.5 sm:p-4 z-50">
         <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-[95vw] sm:max-w-lg w-full flex flex-col max-h-[90vh] overflow-hidden border border-slate-200">
             <div class="bg-columbia-700 px-4 sm:px-6 py-3 flex justify-between items-center text-white shrink-0">
@@ -385,7 +330,6 @@
                 </div>
                 <button onclick="closeModal()" class="text-columbia-100 hover:text-white p-1 shrink-0"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            
             <div class="p-3.5 sm:p-5 space-y-3 text-xs overflow-y-auto custom-scroll flex-1">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-200">
                     <div><span class="text-slate-500 block font-semibold">Nº Pedido</span><span id="mPedido" class="font-bold text-slate-800"></span></div>
@@ -455,7 +399,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT PRINCIPAL -->
+    <!-- JAVASCRIPT GLOBAL COMPLETO -->
     <script>
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         const API_HR_A_MAIS = 'https://columbia.consultoriarf.net/hr-a-mais';
@@ -485,7 +429,6 @@
             }
 
             configurarVisibilidadeAbas();
-
             lucide.createIcons();
             setViewMode('week', false);
             fetchData();
@@ -510,12 +453,19 @@
             }, 30000);
         });
 
+        // FUNÇÃO QUE ESTAVA FALTANDO E GERAVA O ERRO NO CONSOLE
+        function setViewMode(mode, triggerRender = true) {
+            currentView = 'week';
+            localStorage.setItem('columbia_preferred_view', 'week');
+            if (triggerRender) renderView();
+        }
+
         window.setElText = function(id, text) {
             const el = document.getElementById(id);
             if (el) el.textContent = text;
         };
 
-        // RENDERIZADOR DA ABA LIBERAR ANEXOS
+        // ABA LIBERAR ANEXOS
         function renderPaginaAnexosView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -649,14 +599,12 @@
                                         </div>
 
                                         <div class="flex items-center gap-2">
-                                            <!-- VER ANEXO -->
                                             <button onclick="visualizarAnexoPendente(event, ${arq.cod_empresa}, ${arq.cod_os_origem_anexo}, ${arq.cod_anexo})" 
                                                     class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
                                                 <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                                 <span>Ver Anexo</span>
                                             </button>
 
-                                            <!-- COPIAR P/ DESENHOS -->
                                             <button onclick="copiarAnexoParaDesenhos(event, ${arq.cod_empresa}, ${arq.cod_os_principal}, ${arq.cod_os_aux_principal}, ${arq.cod_os_origem_anexo}, ${arq.cod_anexo})" 
                                                     class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
                                                 <i data-lucide="copy" class="w-3.5 h-3.5"></i>
@@ -681,7 +629,6 @@
             checkboxes.forEach(chk => chk.checked = masterChk.checked);
         }
 
-        // COPIAR ANEXO INDIVIDUAL
         async function copiarAnexoParaDesenhos(event, cod_empresa, cod_os_principal, cod_os_aux_principal, cod_os_origem_anexo, cod_anexo) {
             if (event) event.stopPropagation();
 
@@ -723,7 +670,6 @@
             }
         }
 
-        // LIBERAÇÃO EM LOTE
         async function liberarAnexosSelecionados() {
             const marcados = Array.from(document.querySelectorAll('.chkAnexoItem:checked')).map(chk => JSON.parse(chk.value));
 
@@ -754,7 +700,6 @@
             }
         }
 
-        // VISUALIZAR ANEXO PENDENTE
         async function visualizarAnexoPendente(event, cod_empresa, cod_os_origem_anexo, cod_anexo) {
             if (event) event.stopPropagation();
 
@@ -794,7 +739,6 @@
             }
         }
 
-        // DEMAIS FUNÇÕES DO DASHBOARD...
         function configurarVisibilidadeAbas() {
             const valFaturamento = localStorage.getItem('columbia_perm_faturamento');
             const valFinalizacao = localStorage.getItem('columbia_perm_finalizacao');
@@ -831,6 +775,20 @@
             } catch (err) {
                 if (grid) grid.innerHTML = `<p class="text-red-600 text-xs text-center font-bold p-6">Erro ao carregar anexos.</p>`;
             }
+        }
+
+        async function fetchData(isSilent = false) {
+            try {
+                const response = await fetch(`${API_URL}?_t=${Date.now()}`);
+                if (response.ok) rawData = await response.json();
+            } catch (e) { console.error(e); }
+        }
+
+        async function fetchFaturamentoData(isSilent = false) {
+            try {
+                const response = await fetch(`${API_FATURAMENTO}?_t=${Date.now()}`);
+                if (response.ok) rawFaturamentoData = await response.json();
+            } catch (e) { console.error(e); }
         }
 
         function efetuarLogout() {
