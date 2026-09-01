@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- Favicon (Ícone da Aba do Navegador) -->
     <link rel="icon" type="image/png" href="LOGO MINIMALISTA.png">
     <link rel="apple-touch-icon" href="LOGO MINIMALISTA.png">
 
+    <!-- Meta Tags para Prévia no WhatsApp / Redes Sociais (Open Graph) -->
     <meta property="og:title" content="Controle Semanal de Produção | Consultoria RF">
     <meta property="og:description" content="Dashboard de acompanhamento e controle de produção.">
     <meta property="og:image" content="https://consultoriarf.net/producao_columbia/LOGO MINIMALISTA.png">
@@ -18,12 +20,14 @@
     
     <title>Programação de Produção - Columbia V7.6.6</title>
 
+    <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
         if (!localStorage.getItem('columbia_token')) {
             window.location.href = 'login.html';
         }
     </script>
 
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -44,6 +48,7 @@
             }
         }
     </script>
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #0f172a; }
@@ -58,6 +63,7 @@
     <header class="bg-columbia-700 text-white sticky top-0 z-50 shadow-md">
         <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex flex-wrap justify-between items-center gap-2 sm:gap-4">
             
+            <!-- Título & Logo Columbia -->
             <div class="flex items-center gap-2.5 sm:gap-4">
                 <div class="flex items-center justify-center p-1 sm:p-1.5 bg-white rounded-xl shadow-sm cursor-pointer shrink-0" onclick="setAbaAtiva('dashboard')">
                     <img src="./logo.png" alt="Columbia Machine" class="h-7 sm:h-9 max-h-10 w-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -71,46 +77,56 @@
                 </div>
             </div>
 
+            <!-- Botões de Ação do Topo -->
             <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto custom-scroll w-full lg:w-auto py-1">
+                <!-- Identificação do Usuário Logado -->
                 <div class="flex items-center gap-1 px-2.5 py-1.5 bg-columbia-800 border border-columbia-600 rounded-xl text-[11px] sm:text-xs font-bold text-slate-200 shrink-0">
                     <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-400"></i>
                     <span id="userDisplayName">Usuário</span>
                 </div>
 
+                <!-- ABAS DE NAVEGAÇÃO INTERNA NO HEADER -->
                 <button id="btnAbaDashboard" onclick="setAbaAtiva('dashboard')" class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-columbia-900 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md border border-columbia-500 shrink-0">
                     <i data-lucide="calendar" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span>Produção</span>
                 </button>
 
+                <!-- ABA FATURAMENTO -->
                 <button id="btnAbaFaturamento" onclick="setAbaAtiva('faturamento')" class="hidden flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
                     <i data-lucide="package-check" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span>Faturamento</span>
                 </button>
 
+                <!-- ABA CONFERÊNCIA APONTAMENTOS -->
                 <button id="btnAbaConferencia" onclick="setAbaAtiva('conferencia')" class="hidden flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
                     <i data-lucide="clipboard-check" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span class="truncate">Conferência</span>
                 </button>
 
+                <!-- ABA LIBERAR ANEXOS -->
                 <button id="btnAbaAnexos" onclick="setAbaAtiva('anexos')" class="hidden flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
                     <i data-lucide="paperclip" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span>Liberar Anexos</span>
                 </button>
 
+                <!-- BOTÃO OS'S NO LIMBO -->
                 <button id="btnVerLimbo" onclick="setAbaAtiva('limbo')" class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
-                    <i data-lucide="ghost" class="w-3.5 h-3.5"></i>
+                    <i data-lucide="ghost" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span id="txtBtnLimbo">Limbo (0)</span>
                 </button>
 
+                <!-- Botão Trava / Exibir Valores -->
                 <button id="btnToggleValues" onclick="handleValueVisibility()" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-columbia-800 hover:bg-columbia-900 border border-columbia-600 text-white rounded-xl font-bold text-[11px] sm:text-xs transition shadow shrink-0">
                     <i data-lucide="eye-off" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" id="iconValueVisibility"></i>
                     <span id="txtValueVisibility" class="hidden sm:inline">Exibir Valores</span>
                 </button>
 
+                <!-- Botão Atualizar Manual -->
                 <button id="btnRefresh" onclick="fetchData(false)" class="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-[11px] sm:text-xs transition-all shadow shrink-0" title="Atualizar Dados">
                     <i data-lucide="refresh-cw" class="w-3.5 h-3.5 sm:w-4 sm:h-4" id="refreshIcon"></i>
                 </button>
 
+                <!-- Botão Sair / Logout -->
                 <button onclick="efetuarLogout()" class="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-[11px] sm:text-xs transition shadow shrink-0" title="Sair do Sistema">
                     <i data-lucide="log-out" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span class="hidden sm:inline">Sair</span>
@@ -143,15 +159,26 @@
 
     <!-- CONTROLES E FILTROS -->
     <main class="max-w-7xl w-full mx-auto p-2.5 sm:p-4 flex flex-col gap-3 sm:gap-4 flex-1">
+        
         <div id="filtersBar" class="bg-white p-2.5 sm:p-3.5 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shadow-sm">
+            
+            <!-- Busca Geral Universal -->
             <div class="flex items-center gap-2 flex-1 min-w-[180px] sm:min-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <input type="search" id="searchInput" name="columbia_search_query" oninput="renderView()" 
+                <input type="search" 
+                       id="searchInput" 
+                       name="columbia_search_query"
+                       oninput="renderView()" 
                        placeholder="Pesquisar (OS, Título, Cliente, Origem, NF, Cod. Interno, Orçamento...)" 
-                       autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false" role="searchbox"
+                       autocomplete="new-password"
+                       autocorrect="off"
+                       autocapitalize="none"
+                       spellcheck="false"
+                       role="searchbox"
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
             </div>
 
+            <!-- FILTRO DE OS ATRASADAS -->
             <div id="atrasadaContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="alert-triangle" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="atrasadaFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[140px] font-bold">
@@ -161,6 +188,7 @@
                 </select>
             </div>
 
+            <!-- FILTRO DE APONTAMENTO ABERTO -->
             <div id="apontamentoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="cog" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="apontamentoAbertoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[170px] font-bold">
@@ -170,6 +198,7 @@
                 </select>
             </div>
 
+            <!-- Filtro por Segmento -->
             <div id="segmentoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="layers" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="segmentoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -177,6 +206,7 @@
                 </select>
             </div>
 
+            <!-- Filtro por Status Produção -->
             <div id="producaoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="activity" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="producaoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[140px] font-medium">
@@ -186,6 +216,7 @@
                 </select>
             </div>
 
+            <!-- Filtro por Cliente -->
             <div id="clienteContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="user" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="clientFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -193,6 +224,7 @@
                 </select>
             </div>
 
+            <!-- Filtro por Engenharia -->
             <div id="engenhariaContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="cpu" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="engenhariaFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -200,6 +232,7 @@
                 </select>
             </div>
 
+            <!-- Filtro por Status Compras -->
             <div id="comprasContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="shopping-cart" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="comprasFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -207,6 +240,7 @@
                 </select>
             </div>
 
+            <!-- Filtro por Status Terceiros -->
             <div id="terceirosContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="truck" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="terceirosFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
@@ -214,6 +248,7 @@
                 </select>
             </div>
 
+            <!-- BOTÕES DE FILTRO SEPARADOS -->
             <div id="extraButtonsContainer" class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                 <button id="btnToggleConcluidas" onclick="toggleConcluidasFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-columbia-600"></i>
@@ -225,6 +260,7 @@
                     <span id="txtToggleOrcamento">Exibir somente com Orçamentos</span>
                 </button>
 
+                <!-- BOTÃO LIMPAR FILTROS -->
                 <button onclick="clearAllFilters()" title="Limpar todos os filtros acionados" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
                     <i data-lucide="filter-x" class="w-3.5 h-3.5 text-red-600"></i>
                     <span>Limpar Filtros</span>
@@ -232,6 +268,7 @@
             </div>
         </div>
 
+        <!-- BARRA NAVEGADORA DE DATA -->
         <div id="navigationBar" class="bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-2.5 shadow-sm">
             <div class="flex items-center bg-columbia-700 text-white rounded-xl px-2 py-1 shadow-sm w-full sm:w-auto justify-between sm:justify-start">
                 <button onclick="navigateDate(-1)" class="p-1 hover:bg-columbia-800 rounded-lg text-columbia-100 hover:text-white transition">
@@ -251,9 +288,11 @@
             </div>
         </div>
 
+        <!-- ÁREA PRINCIPAL DO CALENDÁRIO / PAINEL DA ABA SELECIONADA -->
         <div id="calendarGrid" class="w-full"></div>
     </main>
 
+    <!-- FOOTER -->
     <footer class="bg-white border-t border-slate-200 py-4 mt-8">
         <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
             <div class="flex items-center gap-2 font-medium">
@@ -399,7 +438,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT GLOBAL COMPLETO -->
+    <!-- JAVASCRIPT PRINCIPAL COMPLETO E INTEGRAÇÃO DAS DEMAIS AÇÕES -->
     <script>
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         const API_HR_A_MAIS = 'https://columbia.consultoriarf.net/hr-a-mais';
@@ -453,7 +492,6 @@
             }, 30000);
         });
 
-        // FUNÇÃO QUE ESTAVA FALTANDO E GERAVA O ERRO NO CONSOLE
         function setViewMode(mode, triggerRender = true) {
             currentView = 'week';
             localStorage.setItem('columbia_preferred_view', 'week');
@@ -465,7 +503,232 @@
             if (el) el.textContent = text;
         };
 
-        // ABA LIBERAR ANEXOS
+        function formatDate(dtStr) {
+            if (!dtStr || dtStr === 'NaT' || dtStr === 'None' || dtStr === 'null') return '-';
+            const cleanStr = String(dtStr).trim();
+            if (cleanStr.length < 10) return '-';
+            const yyyyMmDd = cleanStr.substring(0, 10);
+            const parts = yyyyMmDd.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return cleanStr;
+        }
+
+        function parseValue(val) {
+            if (val === null || val === undefined) return 0;
+            if (typeof val === 'number') return val;
+            let str = String(val).trim().replace('R$', '').replace(/\s/g, '');
+            if (str.includes(',') && str.includes('.')) {
+                str = str.replace(/\./g, '').replace(',', '.');
+            } else if (str.includes(',')) {
+                str = str.replace(',', '.');
+            }
+            const parsed = parseFloat(str);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function formatBRL(value) {
+            if (abaAtiva === 'faturamento') {
+                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+            }
+            if (!isValuesUnlocked) return 'R$ *****';
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+        }
+
+        function getISOWeekNumber(d) {
+            let date;
+            if (typeof d === 'string') {
+                const yyyyMmDd = d.substring(0, 10).split('-');
+                if (yyyyMmDd.length === 3) {
+                    date = new Date(Date.UTC(parseInt(yyyyMmDd[0]), parseInt(yyyyMmDd[1]) - 1, parseInt(yyyyMmDd[2])));
+                } else {
+                    date = new Date(d);
+                }
+            } else {
+                date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            }
+
+            const dayNum = date.getUTCDay() || 7;
+            date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+            return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+        }
+
+        function navigateDate(delta) {
+            if (abaAtiva === 'faturamento') {
+                currentDate.setMonth(currentDate.getMonth() + delta);
+            } else if (currentView === 'week') {
+                currentDate.setDate(currentDate.getDate() + (delta * 7));
+            } else {
+                currentDate.setDate(currentDate.getDate() + delta);
+            }
+            renderView();
+        }
+
+        function resetToToday() {
+            currentDate = new Date();
+            renderView();
+        }
+
+        function updateDateLabel() {
+            const label = document.getElementById('currentDateLabel');
+            if (!label) return;
+
+            const search = (document.getElementById('searchInput')?.value || '').trim();
+            if (search && abaAtiva === 'dashboard') {
+                label.textContent = "Busca Geral Ativa";
+                return;
+            }
+            
+            if (abaAtiva === 'faturamento') {
+                const monthStr = currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                label.textContent = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
+            } else {
+                const targetDate = new Date(currentDate);
+                let dayOfWeek = targetDate.getDay() - 1;
+                if (dayOfWeek === -1) dayOfWeek = 6;
+                const wStart = new Date(targetDate);
+                wStart.setDate(wStart.getDate() - dayOfWeek);
+                const wEnd = new Date(wStart);
+                wEnd.setDate(wEnd.getDate() + 6);
+
+                const weekNum = getISOWeekNumber(wStart);
+                const fmtDay = (d) => String(d.getDate()).padStart(2, '0');
+                const fmtMonth = (d) => String(d.getMonth() + 1).padStart(2, '0');
+
+                label.textContent = `Semana ${weekNum} (${fmtDay(wStart)}/${fmtMonth(wStart)} - ${fmtDay(wEnd)}/${fmtMonth(wEnd)})`;
+            }
+        }
+
+        function configurarVisibilidadeAbas() {
+            const valFaturamento = localStorage.getItem('columbia_perm_faturamento');
+            const valFinalizacao = localStorage.getItem('columbia_perm_finalizacao');
+            const valAnexo = localStorage.getItem('columbia_perm_anexo');
+
+            const btnAbaFaturamento = document.getElementById('btnAbaFaturamento');
+            const btnAbaConferencia = document.getElementById('btnAbaConferencia');
+            const btnAbaAnexos = document.getElementById('btnAbaAnexos');
+
+            if (btnAbaFaturamento) btnAbaFaturamento.classList.toggle('hidden', valFaturamento !== '1');
+            if (btnAbaConferencia) btnAbaConferencia.classList.toggle('hidden', valFinalizacao !== '1');
+            if (btnAbaAnexos) btnAbaAnexos.classList.toggle('hidden', valAnexo !== '1');
+        }
+
+        function setAbaAtiva(novaAba) {
+            abaAtiva = novaAba;
+
+            const metricsBar = document.getElementById('metricsBar');
+            const filtersBar = document.getElementById('filtersBar');
+            const navigationBar = document.getElementById('navigationBar');
+
+            const btnDashboard = document.getElementById('btnAbaDashboard');
+            const btnFaturamento = document.getElementById('btnAbaFaturamento');
+            const btnConferencia = document.getElementById('btnAbaConferencia');
+            const btnAnexos = document.getElementById('btnAbaAnexos');
+            const btnLimbo = document.getElementById('btnVerLimbo');
+
+            if (abaAtiva === 'dashboard') {
+                if (metricsBar) metricsBar.classList.remove('hidden');
+                if (filtersBar) filtersBar.classList.remove('hidden');
+                if (navigationBar) navigationBar.classList.remove('hidden');
+            } else if (abaAtiva === 'anexos') {
+                if (metricsBar) metricsBar.classList.add('hidden');
+                if (filtersBar) filtersBar.classList.remove('hidden');
+                if (navigationBar) navigationBar.classList.add('hidden');
+                fetchAnexosPendentData();
+            } else {
+                if (metricsBar) metricsBar.classList.add('hidden');
+                if (filtersBar) filtersBar.classList.add('hidden');
+                if (navigationBar) navigationBar.classList.add('hidden');
+            }
+
+            renderView();
+        }
+
+        function getFilteredData() {
+            const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+            const atrasadaFiltro = document.getElementById('atrasadaFilter')?.value || '';
+            const apontamentoFiltro = document.getElementById('apontamentoAbertoFilter')?.value || '';
+            const segmento = document.getElementById('segmentoFilter')?.value || '';
+            const producao = document.getElementById('producaoFilter')?.value || '';
+            const cliente = document.getElementById('clientFilter')?.value || '';
+
+            return rawData.filter(item => {
+                const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
+                if (estaNoLimbo) return false;
+
+                if (search) {
+                    const matchOS = String(item.n_os || '').toLowerCase().includes(search);
+                    const matchTitulo = String(item.titulo || '').toLowerCase().includes(search);
+                    const matchCliente = String(item.cliente || '').toLowerCase().includes(search);
+                    if (!matchOS && !matchTitulo && !matchCliente) return false;
+                }
+
+                if (segmento && (item.segmento || '') !== segmento) return false;
+                if (cliente && (item.cliente || '') !== cliente) return false;
+
+                return true;
+            });
+        }
+
+        function updateMetrics(filtered) {
+            const totalOS = filtered.length;
+            const atrasadas = filtered.filter(i => String(i.atrasada || '').toLowerCase() === 'sim').length;
+            const valorTotal = filtered.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
+
+            setElText('metricTotalOS', totalOS);
+            setElText('metricAtrasadas', atrasadas);
+            setElText('metricValorTotal', formatBRL(valorTotal));
+        }
+
+        function renderView() {
+            updateDateLabel();
+            if (abaAtiva === 'anexos') {
+                renderPaginaAnexosView();
+            } else {
+                const filtered = getFilteredData();
+                updateMetrics(filtered);
+                renderWeekGrid(filtered);
+            }
+            lucide.createIcons();
+        }
+
+        function renderOSCard(item) {
+            const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim';
+            const prodStatus = item.status_producao || '0%';
+            const clienteNome = item.cliente || 'CLIENTE NÃO INFORMADO';
+            const osNome = item.titulo || 'SEM NOME';
+            const nOsClean = String(item.n_os).trim();
+
+            return `
+                <div onclick="openModal('${nOsClean}')" class="group bg-white border border-slate-200 hover:border-columbia-500 hover:shadow-md p-3.5 rounded-2xl cursor-pointer transition-all duration-200 flex flex-col justify-between gap-2.5 relative overflow-hidden">
+                    <div class="absolute left-0 top-0 bottom-0 w-1.5 ${isAtrasado ? 'bg-red-500' : 'bg-emerald-500'}"></div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1 pl-1">
+                            <span class="font-mono text-xs font-extrabold text-columbia-700 bg-columbia-50 px-2 py-0.5 rounded-lg border border-columbia-100">OS ${item.n_os}</span>
+                        </div>
+                        <p class="text-[11px] font-bold text-slate-700 line-clamp-2">${osNome}</p>
+                    </div>
+                    <div class="text-[10px] text-slate-500 font-medium">Cliente: ${clienteNome}</div>
+                </div>
+            `;
+        }
+
+        function renderWeekGrid(filtered) {
+            const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
+
+            grid.innerHTML = `
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-md">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                        ${filtered.map(item => renderOSCard(item)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // RENDER DA ABA LIBERAR ANEXOS
         function renderPaginaAnexosView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
@@ -480,38 +743,8 @@
                 return;
             }
 
-            const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
-            const segmentoFiltro = document.getElementById('segmentoFilter')?.value || '';
-            const clienteFiltro = document.getElementById('clientFilter')?.value || '';
-
-            const anexosFiltrados = rawAnexosPendentes.filter(item => {
-                if (segmentoFiltro && String(item.segmento || '') !== segmentoFiltro) return false;
-                if (clienteFiltro && String(item.cliente || '') !== clienteFiltro) return false;
-
-                if (search) {
-                    const matchOrcamento = String(item.n_orcamento || '').toLowerCase().includes(search);
-                    const matchCliente = String(item.cliente || '').toLowerCase().includes(search);
-                    const matchOS = String(item.cod_os_completo || '').toLowerCase().includes(search);
-                    const matchArquivo = String(item.nome_arquivo || '').toLowerCase().includes(search);
-                    const matchSubtitulo = String(item.subtitulo || '').toLowerCase().includes(search);
-                    if (!matchOrcamento && !matchCliente && !matchOS && !matchArquivo && !matchSubtitulo) return false;
-                }
-
-                return true;
-            });
-
-            if (anexosFiltrados.length === 0) {
-                grid.innerHTML = `
-                    <div class="bg-white rounded-2xl border border-teal-200 p-8 sm:p-12 text-center text-slate-400 flex flex-col items-center gap-2 shadow-sm">
-                        <i data-lucide="file-x" class="w-10 h-10 text-teal-300 stroke-1"></i>
-                        <p class="text-xs font-bold text-slate-600">Nenhum anexo encontrado para os filtros selecionados.</p>
-                    </div>
-                `;
-                return;
-            }
-
             const agrupadoPorOrcamento = {};
-            anexosFiltrados.forEach(item => {
+            rawAnexosPendentes.forEach(item => {
                 const orc = item.n_orcamento;
                 if (!agrupadoPorOrcamento[orc]) {
                     agrupadoPorOrcamento[orc] = {
@@ -555,7 +788,6 @@
                         <div class="bg-slate-800 text-white px-3.5 sm:px-4 py-2.5 flex justify-between items-center flex-wrap gap-2">
                             <div class="flex items-center gap-3">
                                 <input type="checkbox" onchange="toggleMarcarAnexosDoOrcamento(this, ${grupo.n_orcamento})" 
-                                       title="Marcar/Desmarcar todos deste orçamento"
                                        class="w-4 h-4 rounded text-teal-500 focus:ring-teal-400 cursor-pointer">
                                 <div>
                                     <span class="font-bold text-xs text-teal-400 font-mono">ORÇAMENTO Nº ${grupo.n_orcamento}</span>
@@ -657,7 +889,6 @@
 
                 const data = await response.json();
                 alert(data.mensagem || 'Anexo copiado com sucesso!');
-                
                 fetchAnexosPendentData();
 
             } catch (error) {
@@ -739,48 +970,13 @@
             }
         }
 
-        function configurarVisibilidadeAbas() {
-            const valFaturamento = localStorage.getItem('columbia_perm_faturamento');
-            const valFinalizacao = localStorage.getItem('columbia_perm_finalizacao');
-            const valAnexo = localStorage.getItem('columbia_perm_anexo');
-
-            const btnAbaFaturamento = document.getElementById('btnAbaFaturamento');
-            const btnAbaConferencia = document.getElementById('btnAbaConferencia');
-            const btnAbaAnexos = document.getElementById('btnAbaAnexos');
-
-            if (btnAbaFaturamento) btnAbaFaturamento.classList.toggle('hidden', valFaturamento !== '1');
-            if (btnAbaConferencia) btnAbaConferencia.classList.toggle('hidden', valFinalizacao !== '1');
-            if (btnAbaAnexos) btnAbaAnexos.classList.toggle('hidden', valAnexo !== '1');
-        }
-
-        function setAbaAtiva(novaAba) {
-            abaAtiva = novaAba;
-            renderView();
-        }
-
-        function renderView() {
-            if (abaAtiva === 'anexos') {
-                renderPaginaAnexosView();
-            }
-            lucide.createIcons();
-        }
-
-        async function fetchAnexosPendentData() {
-            const grid = document.getElementById('calendarGrid');
-            try {
-                const response = await fetch(`${API_URL}/anexo?_t=${Date.now()}`);
-                if (!response.ok) throw new Error('Erro ao buscar anexos.');
-                rawAnexosPendentes = await response.json();
-                if (abaAtiva === 'anexos') renderPaginaAnexosView();
-            } catch (err) {
-                if (grid) grid.innerHTML = `<p class="text-red-600 text-xs text-center font-bold p-6">Erro ao carregar anexos.</p>`;
-            }
-        }
-
         async function fetchData(isSilent = false) {
             try {
                 const response = await fetch(`${API_URL}?_t=${Date.now()}`);
-                if (response.ok) rawData = await response.json();
+                if (response.ok) {
+                    rawData = await response.json();
+                    if (abaAtiva === 'dashboard') renderView();
+                }
             } catch (e) { console.error(e); }
         }
 
@@ -788,6 +984,16 @@
             try {
                 const response = await fetch(`${API_FATURAMENTO}?_t=${Date.now()}`);
                 if (response.ok) rawFaturamentoData = await response.json();
+            } catch (e) { console.error(e); }
+        }
+
+        async function fetchAnexosPendentData() {
+            try {
+                const response = await fetch(`${API_URL}/anexo?_t=${Date.now()}`);
+                if (response.ok) {
+                    rawAnexosPendentes = await response.json();
+                    if (abaAtiva === 'anexos') renderPaginaAnexosView();
+                }
             } catch (e) { console.error(e); }
         }
 
