@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Favicon -->
     <link rel="icon" type="image/png" href="LOGO MINIMALISTA.png">
     <link rel="apple-touch-icon" href="LOGO MINIMALISTA.png">
 
-    <!-- Meta Tags Open Graph -->
     <meta property="og:title" content="Controle Semanal de Produção | Consultoria RF">
     <meta property="og:description" content="Dashboard de acompanhamento e controle de produção.">
     <meta property="og:image" content="https://consultoriarf.net/producao_columbia/LOGO MINIMALISTA.png">
@@ -18,16 +16,14 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.7</title>
+    <title>Programação de Produção - Columbia V7.6.6</title>
 
-    <!-- VERIFICAÇÃO DE AUTENTICAÇÃO -->
     <script>
         if (!localStorage.getItem('columbia_token')) {
             window.location.href = 'login.html';
         }
     </script>
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -48,7 +44,6 @@
             }
         }
     </script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #0f172a; }
@@ -72,7 +67,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.7</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.6</p>
                 </div>
             </div>
 
@@ -103,7 +98,7 @@
                 </button>
 
                 <button id="btnVerLimbo" onclick="setAbaAtiva('limbo')" class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
-                    <i data-lucide="ghost" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                    <i data-lucide="ghost" class="w-3.5 h-3.5"></i>
                     <span id="txtBtnLimbo">Limbo (0)</span>
                 </button>
 
@@ -146,116 +141,40 @@
         </div>
     </div>
 
-    <!-- CONTROLES E FILTROS -->
+    <!-- FILTROS -->
     <main class="max-w-7xl w-full mx-auto p-2.5 sm:p-4 flex flex-col gap-3 sm:gap-4 flex-1">
-        
         <div id="filtersBar" class="bg-white p-2.5 sm:p-3.5 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shadow-sm">
-            
             <div class="flex items-center gap-2 flex-1 min-w-[180px] sm:min-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <input type="search" 
-                       id="searchInput" 
-                       name="columbia_search_query"
-                       oninput="renderView()" 
-                       placeholder="Pesquisar (OS, Título, Cliente, Origem, NF, Cod. Interno, Orçamento...)" 
-                       autocomplete="new-password"
-                       autocorrect="off"
-                       autocapitalize="none"
-                       spellcheck="false"
-                       role="searchbox"
+                <input type="search" id="searchInput" name="columbia_search_query" oninput="renderView()" 
+                       placeholder="Pesquisar (OS, Título, Cliente, Origem, NF, Cod. Interno...)" 
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
             </div>
 
-            <div id="atrasadaContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
-                <i data-lucide="alert-triangle" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <select id="atrasadaFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[140px] font-bold">
-                    <option value="">Atrasadas (Todas)</option>
-                    <option value="sim">🔴 Somente Atrasadas (Sim)</option>
-                    <option value="nao">🟢 Somente No Prazo (Não)</option>
-                </select>
-            </div>
-
-            <div id="apontamentoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
-                <i data-lucide="cog" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <select id="apontamentoAbertoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[170px] font-bold">
-                    <option value="">Apontamento Aberto (Todos)</option>
-                    <option value="sim">🟢 Com Apontamento Aberto</option>
-                    <option value="nao">🔴 Sem Apontamento Aberto</option>
-                </select>
-            </div>
-
-            <div id="segmentoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
+            <div id="segmentoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
                 <i data-lucide="layers" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <select id="segmentoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
+                <select id="segmentoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer font-medium">
                     <option value="">Segmento (Todos)</option>
                 </select>
             </div>
 
-            <div id="producaoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
-                <i data-lucide="activity" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <select id="producaoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[140px] font-medium">
-                    <option value="">Produção (Todos)</option>
-                    <option value="finalizado">Finalizado (100%)</option>
-                    <option value="nao_finalizado">Não Finalizado (&lt;100%)</option>
-                </select>
-            </div>
-
-            <div id="clienteContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
+            <div id="clienteContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
                 <i data-lucide="user" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <select id="clientFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
+                <select id="clientFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer font-medium">
                     <option value="">Todos os Clientes</option>
                 </select>
             </div>
-
-            <div id="engenhariaContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
-                <i data-lucide="cpu" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <select id="engenhariaFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
-                    <option value="">Engenharia (Todos)</option>
-                </select>
-            </div>
-
-            <div id="comprasContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
-                <i data-lucide="shopping-cart" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <select id="comprasFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
-                    <option value="">Compras (Todos)</option>
-                </select>
-            </div>
-
-            <div id="terceirosContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
-                <i data-lucide="truck" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <select id="terceirosFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
-                    <option value="">Terceiros (Todos)</option>
-                </select>
-            </div>
-
-            <div id="extraButtonsContainer" class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-                <button id="btnToggleConcluidas" onclick="toggleConcluidasFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
-                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-columbia-600"></i>
-                    <span id="txtToggleConcluidas">Exibir OS Concluída</span>
-                </button>
-
-                <button id="btnToggleOrcamento" onclick="toggleOrcamentoFilter()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
-                    <i data-lucide="dollar-sign" class="w-3.5 h-3.5 text-emerald-600"></i>
-                    <span id="txtToggleOrcamento">Exibir somente com Orçamentos</span>
-                </button>
-
-                <button onclick="clearAllFilters()" title="Limpar todos os filtros acionados" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
-                    <i data-lucide="filter-x" class="w-3.5 h-3.5 text-red-600"></i>
-                    <span>Limpar Filtros</span>
-                </button>
-            </div>
         </div>
 
-        <!-- BARRA NAVEGADORA DE DATA -->
         <div id="navigationBar" class="bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-2.5 shadow-sm">
-            <div class="flex items-center bg-columbia-700 text-white rounded-xl px-2 py-1 shadow-sm w-full sm:w-auto justify-between sm:justify-start">
+            <div class="flex items-center bg-columbia-700 text-white rounded-xl px-2 py-1 shadow-sm">
                 <button onclick="navigateDate(-1)" class="p-1 hover:bg-columbia-800 rounded-lg text-columbia-100 hover:text-white transition">
                     <i data-lucide="chevron-left" class="w-4 h-4"></i>
                 </button>
                 
                 <div class="flex items-center gap-2 px-2 sm:px-3">
                     <i data-lucide="calendar" class="w-4 h-4 text-columbia-100"></i>
-                    <span id="currentDateLabel" class="font-bold text-xs capitalize tracking-wide min-w-[140px] sm:min-w-[160px] text-center">Carregando...</span>
+                    <span id="currentDateLabel" class="font-bold text-xs capitalize tracking-wide min-w-[140px] text-center">Carregando...</span>
                 </div>
 
                 <button onclick="navigateDate(1)" class="p-1 hover:bg-columbia-800 rounded-lg text-columbia-100 hover:text-white transition">
@@ -271,153 +190,11 @@
 
     <!-- FOOTER -->
     <footer class="bg-white border-t border-slate-200 py-4 mt-8">
-        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-            <div class="flex items-center gap-2 font-medium">
-                <i data-lucide="code-2" class="w-4 h-4 text-columbia-600"></i>
-                <span>© 2026 Columbia Machine Brasil — Sistema de Gestão de Produção V7.6.6</span>
-            </div>
+        <div class="max-w-7xl mx-auto px-4 flex justify-between text-xs text-slate-500">
+            <span>© 2026 Columbia Machine Brasil — V7.6.6</span>
         </div>
     </footer>
 
-    <!-- MODAL SENHA -->
-    <div id="passwordModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-50">
-        <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-[95vw] sm:max-w-sm w-full overflow-hidden border border-slate-200">
-            <div class="bg-columbia-700 px-4 sm:px-5 py-3.5 flex justify-between items-center text-white">
-                <div class="flex items-center gap-2 font-bold text-sm">
-                    <i data-lucide="lock" class="w-4 h-4 text-amber-400"></i>
-                    <span>Acesso Restrito</span>
-                </div>
-                <button onclick="closePasswordModal()" class="text-columbia-100 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
-            </div>
-            <div class="p-4 sm:p-5 space-y-4 text-xs">
-                <p class="text-slate-600 font-medium">Digite a senha para exibir os valores de orçamento e totais:</p>
-                <div class="relative">
-                    <input type="password" id="inputPassword" onkeydown="checkPasswordKey(event)" placeholder="Digite a senha..." autocomplete="new-password" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-slate-800 text-xs focus:outline-none focus:border-columbia-700 font-medium">
-                    <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
-                        <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
-                    </button>
-                </div>
-                <p id="passwordError" class="text-red-600 text-[11px] font-bold hidden">Senha incorreta. Tente novamente.</p>
-            </div>
-            <div class="bg-slate-50 px-4 sm:px-5 py-3 border-t border-slate-200 flex justify-end gap-2">
-                <button onclick="closePasswordModal()" class="px-3.5 py-1.5 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition">Cancelar</button>
-                <button onclick="validatePassword()" class="px-4 py-1.5 bg-columbia-700 text-white rounded-xl font-bold hover:bg-columbia-800 shadow-sm transition">Confirmar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL RENEGOCIAÇÃO -->
-    <div id="altRenegociationFormModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-[70]">
-        <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-[95vw] sm:max-w-md w-full overflow-hidden border border-slate-200">
-            <div class="bg-purple-800 px-4 sm:px-5 py-3.5 flex justify-between items-center text-white">
-                <div class="flex items-center gap-2 font-bold text-sm">
-                    <i data-lucide="calendar-clock" class="w-4 h-4 text-purple-300"></i>
-                    <span id="altRenHeaderTitle" class="truncate max-w-[260px] sm:max-w-none">Alterar Data Renegociada</span>
-                </div>
-                <button onclick="closeAltRenegociationFormModal()" class="text-purple-200 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
-            </div>
-            <div class="p-4 sm:p-5 space-y-4 text-xs">
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Nova Data de Renegociação:</label>
-                    <input type="date" id="inputNewRenegociationDate" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-purple-600 font-semibold">
-                    <span class="text-[10px] text-slate-400 italic">Deixe limpo para remover a data renegociada.</span>
-                </div>
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Justificativa da Alteração <span class="text-red-500">*</span>:</label>
-                    <textarea id="textareaJustification" rows="3" placeholder="Digite o motivo da alteração (obrigatório)..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-purple-600 font-medium custom-scroll"></textarea>
-                </div>
-                <p id="altRenegociationFormError" class="text-red-600 text-[11px] font-bold hidden"></p>
-            </div>
-            <div class="bg-slate-50 px-4 sm:px-5 py-3 border-t border-slate-200 flex justify-end gap-2">
-                <button onclick="closeAltRenegociationFormModal()" class="px-3.5 py-1.5 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition">Cancelar</button>
-                <button id="btnSaveRenegociation" onclick="submitAltRenegociation()" class="px-4 py-1.5 bg-purple-700 text-white rounded-xl font-bold hover:bg-purple-800 shadow-sm transition flex items-center gap-1.5">
-                    <i data-lucide="save" class="w-3.5 h-3.5"></i>
-                    <span>Salvar Alteração</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DETALHES OS -->
-    <div id="osModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-2.5 sm:p-4 z-50">
-        <div class="bg-white text-slate-800 rounded-2xl shadow-2xl max-w-[95vw] sm:max-w-lg w-full flex flex-col max-h-[90vh] overflow-hidden border border-slate-200">
-            <div class="bg-columbia-700 px-4 sm:px-6 py-3 flex justify-between items-center text-white shrink-0">
-                <div class="min-w-0 pr-2">
-                    <span id="mOS" class="text-[10px] sm:text-xs font-bold bg-columbia-900 text-white px-2 py-0.5 rounded uppercase"></span>
-                    <h3 id="mTitulo" class="font-bold text-xs sm:text-sm mt-1 text-white truncate"></h3>
-                </div>
-                <button onclick="closeModal()" class="text-columbia-100 hover:text-white p-1 shrink-0"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <div class="p-3.5 sm:p-5 space-y-3 text-xs overflow-y-auto custom-scroll flex-1">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-200">
-                    <div><span class="text-slate-500 block font-semibold">Nº Pedido</span><span id="mPedido" class="font-bold text-slate-800"></span></div>
-                    <div><span class="text-slate-500 block font-semibold">Cliente</span><span id="mCliente" class="font-bold text-slate-800"></span></div>
-                    <div><span class="text-slate-500 block font-semibold">Segmento</span><span id="mSegmento" class="font-bold text-columbia-700"></span></div>
-                    <div><span class="text-slate-500 block font-semibold">Código Interno</span><span id="mCodInterno" class="font-bold text-slate-800 font-mono"></span></div>
-                    <div><span class="text-slate-500 block font-semibold">Origem</span><span id="mOrigem" class="font-bold text-slate-800"></span></div>
-                    <div><span class="text-slate-500 block font-semibold">Engenharia Status</span><span id="mEngenhariaStatus" class="font-bold text-slate-800"></span></div>
-                    <div><span class="text-slate-500 block font-semibold">OS Filhos (Quais)</span><span id="mOsFilhosQuais" class="font-bold text-columbia-700 font-mono"></span></div>
-                    <div><span class="text-slate-500 block font-semibold">Possui Orçamento</span><span id="mPossuiOrcamento" class="font-bold text-slate-800"></span></div>
-                    <div><span class="text-slate-500 block font-semibold">Preço Geral / Valor</span><span id="mPreco" class="font-bold text-emerald-600"></span></div>
-                    <div><span class="text-slate-500 block font-semibold">Nº do Orçamento</span><span id="mNumOrcamento" class="font-bold text-columbia-700"></span></div>
-                </div>
-
-                <div id="mAnexosContainer" class="space-y-1.5 pt-1 hidden">
-                    <h4 class="font-bold text-blue-800 uppercase tracking-wider text-[10px]">Anexos / Desenhos Técnicos (PDF)</h4>
-                    <div id="mAnexosList" class="flex flex-wrap gap-2 bg-blue-50/60 p-2.5 rounded-xl border border-blue-200"></div>
-                </div>
-
-                <div class="space-y-1 pt-1">
-                    <h4 class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Processos Pendentes (PP Pendentes)</h4>
-                    <div class="bg-amber-50/60 border border-amber-200/80 p-2.5 rounded-xl font-medium text-slate-700 leading-relaxed text-[11px]" id="mPpPendentes">-</div>
-                </div>
-
-                <div class="space-y-1 pt-1">
-                    <h4 class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Apontamento em Andamento</h4>
-                    <div id="mApontamentoContainer" class="p-2.5 sm:p-3 rounded-xl border flex flex-col gap-1.5">
-                        <div class="flex items-center justify-between">
-                            <span class="font-bold text-xs" id="mApontamentoStatusTitle">Status</span>
-                            <span id="mApontamentoBadge"></span>
-                        </div>
-                        <p class="text-[11px] font-mono leading-relaxed" id="mApontamentoDetalheText">-</p>
-                    </div>
-                </div>
-
-                <div class="space-y-1.5 pt-2 border-t border-slate-200">
-                    <h4 class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Datas do Processo</h4>
-                    <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px]">
-                        <div><span class="text-slate-500 block">Abertura OS:</span> <span id="mAbertura" class="font-semibold text-slate-700"></span></div>
-                        <div><span class="text-slate-500 block">Data Renegociada:</span> <span id="mDtRenegociada" class="font-bold text-purple-700"></span></div>
-                        <div><span class="text-slate-500 block">Prev. Entrega Orçamento:</span> <span id="mPrevEntregaOrcamento" class="font-semibold text-columbia-700"></span></div>
-                        <div><span class="text-slate-500 block">Prev. Entrega OS:</span> <span id="mPrevEntregaOS" class="font-semibold text-columbia-700"></span></div>
-                        <div><span class="text-slate-500 block">Último Apontamento:</span> <span id="mApontamento" class="font-semibold text-slate-700"></span></div>
-                        <div><span class="text-slate-500 block">Entrega Normalizada:</span> <span id="mEntregaNorm" class="font-bold text-amber-600"></span></div>
-                    </div>
-                </div>
-
-                <div class="space-y-1.5 pt-2 border-t border-slate-200">
-                    <h4 class="font-bold text-purple-800 uppercase tracking-wider text-[10px]">Justificativa da Renegociação</h4>
-                    <div class="bg-purple-50/70 border border-purple-200 p-2.5 rounded-xl font-mono text-[11px] text-purple-900 leading-relaxed" id="mJustificativa">-</div>
-                </div>
-            </div>
-
-            <div class="bg-slate-50 px-3.5 sm:px-5 py-2.5 sm:py-3 border-t border-slate-200 flex flex-wrap justify-between items-center gap-2 shrink-0">
-                <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
-                    <button onclick="openAltRenegociationFormModal()" class="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1">
-                        <i data-lucide="calendar-cog" class="w-3.5 h-3.5"></i>
-                        <span>Alterar Renegociação</span>
-                    </button>
-                    <button id="btnEnviarLimbo" onclick="executarAcaoLimbo()" class="px-3 py-1.5 rounded-xl font-bold text-xs transition shadow-sm flex items-center gap-1">
-                        <i data-lucide="ghost" class="w-3.5 h-3.5"></i>
-                        <span id="txtLabelBtnLimbo">Enviar ao Limbo</span>
-                    </button>
-                </div>
-                <button onclick="closeModal()" class="w-full sm:w-auto px-4 py-1.5 bg-columbia-700 text-white rounded-xl font-semibold hover:bg-columbia-800 shadow-sm transition text-center">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- JAVASCRIPT GLOBAL COMPLETO RESTAURADO -->
     <script>
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         const API_HR_A_MAIS = 'https://columbia.consultoriarf.net/hr-a-mais';
@@ -428,175 +205,36 @@
         let rawFaturamentoData = [];
         let rawAnexosPendentes = [];
         let currentDate = new Date();
-        let selectedItemModal = null; 
-
         let currentView = 'week';
         let abaAtiva = 'dashboard';
-
-        let showConcluidas = false; 
-        let isFaturamentoLoading = false; 
-        let onlyCurrentMonth = true;
-        let onlyWithBudget = false;
         let isValuesUnlocked = false;
 
         document.addEventListener('DOMContentLoaded', () => {
             const nomeUser = localStorage.getItem('columbia_usuario_nome');
-            if (nomeUser) {
-                const displayEl = document.getElementById('userDisplayName');
-                if (displayEl) displayEl.textContent = nomeUser;
-            }
+            if (nomeUser) document.getElementById('userDisplayName').textContent = nomeUser;
 
             configurarVisibilidadeAbas();
             lucide.createIcons();
-            setViewMode('week', false);
             fetchData();
             fetchFaturamentoData(true);
+            fetchConferenciaData(true);
 
             setInterval(() => {
-                const isModalOpen = !document.getElementById('osModal').classList.contains('hidden') ||
-                                    !document.getElementById('altRenegociationFormModal').classList.contains('hidden') ||
-                                    !document.getElementById('passwordModal').classList.contains('hidden');
-                
-                if (!isModalOpen) {
-                    if (abaAtiva === 'dashboard' || abaAtiva === 'limbo') {
-                        fetchData(true);
-                    } else if (abaAtiva === 'conferencia') {
-                        fetchConferenciaData(true);
-                    } else if (abaAtiva === 'faturamento') {
-                        fetchFaturamentoData(true);
-                    } else if (abaAtiva === 'anexos') {
-                        fetchAnexosPendentData();
-                    }
-                }
+                if (abaAtiva === 'dashboard' || abaAtiva === 'limbo') fetchData(true);
+                else if (abaAtiva === 'faturamento') fetchFaturamentoData(true);
+                else if (abaAtiva === 'conferencia') fetchConferenciaData(true);
+                else if (abaAtiva === 'anexos') fetchAnexosPendentData();
             }, 30000);
         });
 
         function setViewMode(mode, triggerRender = true) {
             currentView = 'week';
-            localStorage.setItem('columbia_preferred_view', 'week');
             if (triggerRender) renderView();
-        }
-
-        window.setElText = function(id, text) {
-            const el = document.getElementById(id);
-            if (el) el.textContent = text;
-        };
-
-        function formatDate(dtStr) {
-            if (!dtStr || dtStr === 'NaT' || dtStr === 'None' || dtStr === 'null') return '-';
-            const cleanStr = String(dtStr).trim();
-            if (cleanStr.length < 10) return '-';
-            const yyyyMmDd = cleanStr.substring(0, 10);
-            const parts = yyyyMmDd.split('-');
-            if (parts.length === 3) {
-                return `${parts[2]}/${parts[1]}/${parts[0]}`;
-            }
-            return cleanStr;
-        }
-
-        function parseValue(val) {
-            if (val === null || val === undefined) return 0;
-            if (typeof val === 'number') return val;
-            let str = String(val).trim().replace('R$', '').replace(/\s/g, '');
-            if (str.includes(',') && str.includes('.')) {
-                str = str.replace(/\./g, '').replace(',', '.');
-            } else if (str.includes(',')) {
-                str = str.replace(',', '.');
-            }
-            const parsed = parseFloat(str);
-            return isNaN(parsed) ? 0 : parsed;
-        }
-
-        function formatBRL(value) {
-            if (abaAtiva === 'faturamento') {
-                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
-            }
-            if (!isValuesUnlocked) return 'R$ *****';
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
-        }
-
-        function getISOWeekNumber(d) {
-            let date;
-            if (typeof d === 'string') {
-                const yyyyMmDd = d.substring(0, 10).split('-');
-                if (yyyyMmDd.length === 3) {
-                    date = new Date(Date.UTC(parseInt(yyyyMmDd[0]), parseInt(yyyyMmDd[1]) - 1, parseInt(yyyyMmDd[2])));
-                } else {
-                    date = new Date(d);
-                }
-            } else {
-                date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-            }
-
-            const dayNum = date.getUTCDay() || 7;
-            date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-            return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-        }
-
-        function navigateDate(delta) {
-            if (abaAtiva === 'faturamento') {
-                currentDate.setMonth(currentDate.getMonth() + delta);
-            } else if (currentView === 'week') {
-                currentDate.setDate(currentDate.getDate() + (delta * 7));
-            } else {
-                currentDate.setDate(currentDate.getDate() + delta);
-            }
-            renderView();
-        }
-
-        function resetToToday() {
-            currentDate = new Date();
-            renderView();
-        }
-
-        function updateDateLabel() {
-            const label = document.getElementById('currentDateLabel');
-            if (!label) return;
-
-            const search = (document.getElementById('searchInput')?.value || '').trim();
-            if (search && abaAtiva === 'dashboard') {
-                label.textContent = "Busca Geral Ativa";
-                return;
-            }
-            
-            if (abaAtiva === 'faturamento') {
-                const monthStr = currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-                label.textContent = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
-            } else {
-                const targetDate = new Date(currentDate);
-                let dayOfWeek = targetDate.getDay() - 1;
-                if (dayOfWeek === -1) dayOfWeek = 6;
-                const wStart = new Date(targetDate);
-                wStart.setDate(wStart.getDate() - dayOfWeek);
-                const wEnd = new Date(wStart);
-                wEnd.setDate(wEnd.getDate() + 6);
-
-                const weekNum = getISOWeekNumber(wStart);
-                const fmtDay = (d) => String(d.getDate()).padStart(2, '0');
-                const fmtMonth = (d) => String(d.getMonth() + 1).padStart(2, '0');
-
-                label.textContent = `Semana ${weekNum} (${fmtDay(wStart)}/${fmtMonth(wStart)} - ${fmtDay(wEnd)}/${fmtMonth(wEnd)})`;
-            }
-        }
-
-        function configurarVisibilidadeAbas() {
-            const valFaturamento = localStorage.getItem('columbia_perm_faturamento');
-            const valFinalizacao = localStorage.getItem('columbia_perm_finalizacao');
-            const valAnexo = localStorage.getItem('columbia_perm_anexo');
-
-            const btnAbaFaturamento = document.getElementById('btnAbaFaturamento');
-            const btnAbaConferencia = document.getElementById('btnAbaConferencia');
-            const btnAbaAnexos = document.getElementById('btnAbaAnexos');
-
-            if (btnAbaFaturamento) btnAbaFaturamento.classList.toggle('hidden', valFaturamento !== '1');
-            if (btnAbaConferencia) btnAbaConferencia.classList.toggle('hidden', valFinalizacao !== '1');
-            if (btnAbaAnexos) btnAbaAnexos.classList.toggle('hidden', valAnexo !== '1');
         }
 
         function setAbaAtiva(novaAba) {
             abaAtiva = novaAba;
-
+            
             const metricsBar = document.getElementById('metricsBar');
             const filtersBar = document.getElementById('filtersBar');
             const navigationBar = document.getElementById('navigationBar');
@@ -610,7 +248,17 @@
                 if (filtersBar) filtersBar.classList.remove('hidden');
                 if (navigationBar) navigationBar.classList.add('hidden');
                 fetchAnexosPendentData();
-            } else {
+            } else if (abaAtiva === 'faturamento') {
+                if (metricsBar) metricsBar.classList.add('hidden');
+                if (filtersBar) filtersBar.classList.remove('hidden');
+                if (navigationBar) navigationBar.classList.remove('hidden');
+                fetchFaturamentoData();
+            } else if (abaAtiva === 'conferencia') {
+                if (metricsBar) metricsBar.classList.add('hidden');
+                if (filtersBar) filtersBar.classList.add('hidden');
+                if (navigationBar) navigationBar.classList.remove('hidden');
+                fetchConferenciaData();
+            } else if (abaAtiva === 'limbo') {
                 if (metricsBar) metricsBar.classList.add('hidden');
                 if (filtersBar) filtersBar.classList.add('hidden');
                 if (navigationBar) navigationBar.classList.add('hidden');
@@ -619,292 +267,160 @@
             renderView();
         }
 
-        function populateSelectOptions() {
-            const fillSelect = (id, key, label) => {
-                const sel = document.getElementById(id);
-                if (!sel) return;
-                const opts = [...new Set(rawData.map(i => i[key]).filter(Boolean))].sort();
-                sel.innerHTML = `<option value="">${label}</option>` + opts.map(o => `<option value="${o}">${o}</option>`).join('');
-            };
+        function configurarVisibilidadeAbas() {
+            const valFaturamento = localStorage.getItem('columbia_perm_faturamento');
+            const valFinalizacao = localStorage.getItem('columbia_perm_finalizacao');
+            const valAnexo = localStorage.getItem('columbia_perm_anexo');
 
-            fillSelect('segmentoFilter', 'segmento', 'Segmento (Todos)');
-            fillSelect('clientFilter', 'cliente', 'Todos os Clientes');
-            fillSelect('engenhariaFilter', 'engenharia_status', 'Engenharia (Todos)');
-            fillSelect('comprasFilter', 'status_compras', 'Compras (Todos)');
-            fillSelect('terceirosFilter', 'status_terceiros', 'Terceiros (Todos)');
-        }
-
-        function getFilteredData() {
-            const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
-            const atrasadaFiltro = document.getElementById('atrasadaFilter')?.value || '';
-            const apontamentoFiltro = document.getElementById('apontamentoAbertoFilter')?.value || '';
-            const segmento = document.getElementById('segmentoFilter')?.value || '';
-            const producao = document.getElementById('producaoFilter')?.value || '';
-            const cliente = document.getElementById('clientFilter')?.value || '';
-            const engenharia = document.getElementById('engenhariaFilter')?.value || '';
-            const compras = document.getElementById('comprasFilter')?.value || '';
-            const terceiros = document.getElementById('terceirosFilter')?.value || '';
-
-            return rawData.filter(item => {
-                const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
-                if (estaNoLimbo) return false;
-
-                const isConcluido = String(item.concluido || '').toLowerCase() === 'sim' || String(item.concluido || '').toLowerCase() === 's' || String(item.concluido || '') === '1';
-                if (!showConcluidas && isConcluido) return false;
-
-                if (search) {
-                    const matchOS = String(item.n_os || '').toLowerCase().includes(search);
-                    const matchTitulo = String(item.titulo || '').toLowerCase().includes(search);
-                    const matchCliente = String(item.cliente || '').toLowerCase().includes(search);
-                    const matchOrigem = String(item.origem || '').toLowerCase().includes(search);
-                    if (!matchOS && !matchTitulo && !matchCliente && !matchOrigem) return false;
-                }
-
-                if (atrasadaFiltro) {
-                    const isAtrasada = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
-                    if (atrasadaFiltro === 'sim' && !isAtrasada) return false;
-                    if (atrasadaFiltro === 'nao' && isAtrasada) return false;
-                }
-
-                if (apontamentoFiltro) {
-                    const temAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
-                    if (apontamentoFiltro === 'sim' && !temAberto) return false;
-                    if (apontamentoFiltro === 'nao' && temAberto) return false;
-                }
-
-                if (segmento && (item.segmento || '') !== segmento) return false;
-                if (cliente && (item.cliente || '') !== cliente) return false;
-                if (engenharia && (item.engenharia_status || '') !== engenharia) return false;
-                if (compras && (item.status_compras || '') !== compras) return false;
-                if (terceiros && (item.status_terceiros || '') !== terceiros) return false;
-
-                if (producao === 'finalizado') {
-                    const st = String(item.status_producao || '').toLowerCase();
-                    if (!st.includes('100%') && !st.includes('finalizado')) return false;
-                } else if (producao === 'nao_finalizado') {
-                    const st = String(item.status_producao || '').toLowerCase();
-                    if (st.includes('100%') || st.includes('finalizado')) return false;
-                }
-
-                if (onlyWithBudget) {
-                    const hasB = String(item.possui_orcamento || '').toLowerCase();
-                    if (hasB !== 'sim' && hasB !== 's' && hasB !== '1') return false;
-                }
-
-                return true;
-            });
-        }
-
-        function updateMetrics(filtered) {
-            const totalOS = filtered.length;
-            const atrasadas = filtered.filter(i => String(i.atrasada || '').toLowerCase() === 'sim' || String(i.atrasada || '').toLowerCase() === 's').length;
-            const semOrcamento = filtered.filter(i => {
-                const hasB = String(i.possui_orcamento || '').toLowerCase();
-                return hasB !== 'sim' && hasB !== 's' && hasB !== '1';
-            }).length;
-
-            const valorTotal = filtered.reduce((acc, i) => acc + parseValue(i.preco_geral_a_vista || i.orcamento), 0);
-
-            setElText('metricTotalOS', totalOS);
-            setElText('metricAtrasadas', atrasadas);
-            setElText('metricSemOrcamento', semOrcamento);
-            setElText('metricValorTotal', formatBRL(valorTotal));
-
-            const totalLimbo = rawData.filter(i => String(i.u_limbo) === '1' || i.u_limbo === 1).length;
-            setElText('txtBtnLimbo', `Limbo (${totalLimbo})`);
+            document.getElementById('btnAbaFaturamento')?.classList.toggle('hidden', valFaturamento !== '1');
+            document.getElementById('btnAbaConferencia')?.classList.toggle('hidden', valFinalizacao !== '1');
+            document.getElementById('btnAbaAnexos')?.classList.toggle('hidden', valAnexo !== '1');
         }
 
         function renderView() {
             updateDateLabel();
-            if (abaAtiva === 'anexos') {
+            if (abaAtiva === 'dashboard') {
+                renderDashboardView();
+            } else if (abaAtiva === 'faturamento') {
+                renderFaturamentoView();
+            } else if (abaAtiva === 'conferencia') {
+                renderConferenciaView();
+            } else if (abaAtiva === 'limbo') {
+                renderLimboView();
+            } else if (abaAtiva === 'anexos') {
                 renderPaginaAnexosView();
-            } else {
-                const filtered = getFilteredData();
-                updateMetrics(filtered);
-                renderWeekGrid(filtered);
             }
             lucide.createIcons();
         }
 
-        function renderOSCard(item) {
-            const isAtrasado = String(item.atrasada || '').toLowerCase() === 'sim' || String(item.atrasada || '').toLowerCase() === 's';
-            const prodStatus = item.status_producao || '0%';
-            const clienteNome = item.cliente || 'CLIENTE NÃO INFORMADO';
-            const origem = item.origem || 'SEM ORIGEM';
-            const osNome = item.titulo || 'SEM NOME';
-            const segmento = item.segmento || 'GERAL';
+        // RENDER DASHBOARD / PRODUÇÃO
+        function renderDashboardView() {
+            const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
 
-            const compras = item.status_compras || 'N/A';
-            const terceiros = item.status_terceiros || 'N/A';
-            const engenharia = item.engenharia_status || 'N/A';
-
-            const temApontamentoAberto = String(item.tem_apontamento_aberto || '').toLowerCase() === 'sim';
-            const detalheApontamento = item.apontamentos_abertos_detalhe || 'Nenhum operador apontando no momento';
-
-            const nOsClean = String(item.n_os).trim();
-
-            return `
-                <div onclick="openModal('${nOsClean}')" class="group bg-white border border-slate-200 hover:border-columbia-500 hover:shadow-md p-3.5 rounded-2xl cursor-pointer transition-all duration-200 flex flex-col justify-between gap-2.5 relative overflow-hidden">
-                    <div class="absolute left-0 top-0 bottom-0 w-1.5 ${isAtrasado ? 'bg-red-500' : 'bg-emerald-500'}"></div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1 pl-1">
-                            <span class="font-mono text-xs font-extrabold text-columbia-700 bg-columbia-50 px-2 py-0.5 rounded-lg border border-columbia-100">
-                                OS ${item.n_os}
-                            </span>
-                            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full ${isAtrasado ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}">
-                                ${isAtrasado ? 'Atrasado' : 'No prazo'}
-                            </span>
-                        </div>
-
-                        <div class="pl-1 space-y-0.5">
-                            <p class="text-xs font-black text-slate-800 tracking-tight uppercase"><span class="text-[9px] text-slate-400 font-normal">Origem:</span> ${origem}</p>
-                            <p class="text-[11px] font-bold text-slate-700 line-clamp-2 leading-snug" title="${osNome}">${osNome}</p>
-                        </div>
-                    </div>
-
-                    <div class="space-y-2 pl-1">
-                        <div class="flex items-center justify-between text-[10px] pt-1.5 border-t border-slate-100">
-                            <span class="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md border border-slate-200 uppercase">${segmento}</span>
-                            <span class="text-slate-500 font-semibold uppercase truncate max-w-[130px]" title="${clienteNome}">${clienteNome}</span>
-                        </div>
-
-                        <div class="grid grid-cols-1 gap-1 text-[10px] bg-slate-50/80 p-2.5 rounded-xl border border-slate-100 font-medium">
-                            <div class="flex justify-between items-center"><span class="text-slate-400 font-bold">Compras:</span> <span class="font-bold text-slate-700 truncate max-w-[140px]">${compras}</span></div>
-                            <div class="flex justify-between items-center"><span class="text-slate-400 font-bold">Terceiros:</span> <span class="font-bold text-slate-700 truncate max-w-[140px]">${terceiros}</span></div>
-                            <div class="flex justify-between items-center"><span class="text-slate-400 font-bold">Engenharia:</span> <span class="font-bold text-slate-700 truncate max-w-[140px]">${engenharia}</span></div>
-                            <div class="flex justify-between items-center pt-1 border-t border-slate-200/60 mt-0.5"><span class="text-slate-500 font-extrabold">Produção:</span> <span class="font-black text-columbia-700 font-mono text-xs">${prodStatus}</span></div>
-                        </div>
-
-                        <div class="${temApontamentoAberto ? 'bg-emerald-50 border-emerald-300' : 'bg-red-50 border-red-200'} border p-2 rounded-xl text-[10px]">
-                            <p class="font-mono text-[9.5px] leading-tight ${temApontamentoAberto ? 'text-emerald-900 font-bold' : 'text-red-600 italic'}" title="${detalheApontamento}">
-                                ${detalheApontamento}
-                            </p>
-                        </div>
+            const filtered = rawData.filter(i => !i.u_limbo || i.u_limbo === 0);
+            
+            grid.innerHTML = `
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-md">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                        ${filtered.map(item => `
+                            <div class="bg-white border border-slate-200 p-3.5 rounded-2xl shadow-xs">
+                                <span class="font-mono text-xs font-extrabold text-columbia-700">OS ${item.n_os}</span>
+                                <h4 class="font-bold text-xs text-slate-800 mt-1">${item.titulo || 'SEM TÍTULO'}</h4>
+                                <p class="text-[10px] text-slate-500 mt-2">Cliente: ${item.cliente || '-'}</p>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `;
         }
 
-        function renderWeekGrid(filtered) {
+        // RENDER FATURAMENTO
+        function renderFaturamentoView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
 
             grid.innerHTML = `
-                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-md">
-                    ${filtered.length === 0 ? `
-                        <div class="flex flex-col items-center justify-center py-12 text-slate-400 gap-2">
-                            <i data-lucide="calendar-x" class="w-10 h-10 stroke-1 text-slate-300"></i>
-                            <p class="text-xs font-semibold">Nenhuma Ordem de Serviço encontrada.</p>
-                        </div>
-                    ` : `
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
-                            ${filtered.map(item => renderOSCard(item)).join('')}
-                        </div>
-                    `}
+                <div class="bg-white border border-blue-200 rounded-2xl p-4 shadow-md">
+                    <h3 class="font-bold text-slate-800 text-sm mb-3">Resumo de Faturamento</h3>
+                    <div class="space-y-2">
+                        ${rawFaturamentoData.slice(0, 15).map(item => `
+                            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex justify-between items-center text-xs">
+                                <div>
+                                    <span class="font-bold text-columbia-700">Orçamento: ${item.n_orcamento || '-'}</span>
+                                    <p class="text-slate-600 font-medium">${item.cliente || 'CLIENTE NÃO INFORMADO'}</p>
+                                </div>
+                                <span class="font-mono font-bold text-emerald-600">R$ ${item.vl_faturado || '0,00'}</span>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             `;
         }
 
-        // RENDER DA ABA LIBERAR ANEXOS
+        // RENDER CONFERÊNCIA
+        function renderConferenciaView() {
+            const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
+
+            grid.innerHTML = `
+                <div class="bg-white border border-indigo-200 rounded-2xl p-4 shadow-md">
+                    <h3 class="font-bold text-slate-800 text-sm mb-3">Conferência de Apontamentos (Horas a Mais)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        ${rawConferenciaData.slice(0, 12).map(item => `
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1">
+                                <span class="font-bold text-columbia-700">OS: ${item.cod_os_completo || item.n_os || '-'}</span>
+                                <p class="text-slate-800 font-bold">👤 ${item.funcionario || 'N/A'}</p>
+                                <p class="text-red-600 font-mono font-bold">Horas a mais: +${item.horas_a_mais || 0} hrs</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // RENDER LIMBO
+        function renderLimboView() {
+            const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
+
+            const limboItems = rawData.filter(i => String(i.u_limbo) === '1' || i.u_limbo === 1);
+
+            grid.innerHTML = `
+                <div class="bg-white border border-amber-300 rounded-2xl p-4 shadow-md">
+                    <h3 class="font-bold text-amber-900 text-sm mb-3">OSs no Limbo (${limboItems.length})</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        ${limboItems.map(item => `
+                            <div class="bg-amber-50/50 border border-amber-200 p-3 rounded-xl text-xs">
+                                <span class="font-bold text-amber-900">OS ${item.n_os}</span>
+                                <p class="font-medium text-slate-700 mt-1">${item.titulo || 'Sem Título'}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // RENDER LIBERAR ANEXOS
         function renderPaginaAnexosView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
 
             if (!rawAnexosPendentes || rawAnexosPendentes.length === 0) {
                 grid.innerHTML = `
-                    <div class="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center text-slate-400 flex flex-col items-center gap-3 shadow-sm">
-                        <i data-lucide="check-circle" class="w-10 h-10 sm:w-12 sm:h-12 text-emerald-400 stroke-1"></i>
+                    <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
+                        <i data-lucide="check-circle" class="w-10 h-10 text-emerald-400 mx-auto mb-2"></i>
                         <p class="text-xs font-bold text-slate-600">Não há nenhum anexo pendente para liberação no momento!</p>
                     </div>
                 `;
                 return;
             }
 
-            const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
-            const segmentoFiltro = document.getElementById('segmentoFilter')?.value || '';
-            const clienteFiltro = document.getElementById('clientFilter')?.value || '';
-
-            const anexosFiltrados = rawAnexosPendentes.filter(item => {
-                if (segmentoFiltro && String(item.segmento || '') !== segmentoFiltro) return false;
-                if (clienteFiltro && String(item.cliente || '') !== clienteFiltro) return false;
-
-                if (search) {
-                    const matchOrcamento = String(item.n_orcamento || '').toLowerCase().includes(search);
-                    const matchCliente = String(item.cliente || '').toLowerCase().includes(search);
-                    const matchOS = String(item.cod_os_completo || '').toLowerCase().includes(search);
-                    const matchArquivo = String(item.nome_arquivo || '').toLowerCase().includes(search);
-                    if (!matchOrcamento && !matchCliente && !matchOS && !matchArquivo) return false;
-                }
-
-                return true;
-            });
-
-            if (anexosFiltrados.length === 0) {
-                grid.innerHTML = `
-                    <div class="bg-white rounded-2xl border border-teal-200 p-8 sm:p-12 text-center text-slate-400 flex flex-col items-center gap-2 shadow-sm">
-                        <i data-lucide="file-x" class="w-10 h-10 text-teal-300 stroke-1"></i>
-                        <p class="text-xs font-bold text-slate-600">Nenhum anexo encontrado para os filtros selecionados.</p>
-                    </div>
-                `;
-                return;
-            }
-
             const agrupadoPorOrcamento = {};
-            anexosFiltrados.forEach(item => {
+            rawAnexosPendentes.forEach(item => {
                 const orc = item.n_orcamento;
                 if (!agrupadoPorOrcamento[orc]) {
-                    agrupadoPorOrcamento[orc] = {
-                        n_orcamento: orc,
-                        cliente: item.cliente,
-                        arquivos: []
-                    };
+                    agrupadoPorOrcamento[orc] = { n_orcamento: orc, cliente: item.cliente, arquivos: [] };
                 }
                 agrupadoPorOrcamento[orc].arquivos.push(item);
             });
 
-            const listaOrcamentos = Object.values(agrupadoPorOrcamento);
-
             let html = `
-                <div class="bg-white rounded-2xl border border-teal-200 p-3.5 sm:p-5 shadow-sm mb-4 flex flex-wrap justify-between items-center gap-3">
-                    <div class="flex items-center gap-2.5 sm:gap-3">
-                        <div class="p-2 sm:p-2.5 bg-teal-100 text-teal-800 rounded-xl">
-                            <i data-lucide="paperclip" class="w-5 h-5 sm:w-6 sm:h-6"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-extrabold text-slate-900 text-xs sm:text-base">Anexos Pendentes de Liberação</h3>
-                            <p class="text-[10px] sm:text-xs text-slate-500 font-medium">Visualize o arquivo ou copie para a OS Principal e Estrutura.</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <button onclick="liberarAnexosSelecionados()" 
-                                class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-extrabold text-xs transition shadow-sm flex items-center gap-1.5">
-                            <i data-lucide="check-square" class="w-4 h-4"></i>
-                            <span>Liberar Anexos Selecionados</span>
-                        </button>
-                    </div>
+                <div class="bg-white rounded-2xl border border-teal-200 p-4 shadow-sm mb-4 flex justify-between items-center">
+                    <h3 class="font-extrabold text-slate-900 text-sm">Anexos Pendentes de Liberação</h3>
+                    <button onclick="liberarAnexosSelecionados()" class="px-3.5 py-2 bg-teal-600 text-white rounded-xl font-bold text-xs">Liberar Selecionados</button>
                 </div>
-
                 <div class="space-y-4">
             `;
 
-            listaOrcamentos.forEach(grupo => {
+            Object.values(agrupadoPorOrcamento).forEach(grupo => {
                 html += `
                     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                        <div class="bg-slate-800 text-white px-3.5 sm:px-4 py-2.5 flex justify-between items-center flex-wrap gap-2">
+                        <div class="bg-slate-800 text-white px-4 py-2.5 flex justify-between items-center text-xs">
                             <div class="flex items-center gap-3">
-                                <input type="checkbox" onchange="toggleMarcarAnexosDoOrcamento(this, ${grupo.n_orcamento})" 
-                                       title="Marcar/Desmarcar todos deste orçamento"
-                                       class="w-4 h-4 rounded text-teal-500 focus:ring-teal-400 cursor-pointer">
-                                <div>
-                                    <span class="font-bold text-xs text-teal-400 font-mono">ORÇAMENTO Nº ${grupo.n_orcamento}</span>
-                                    <h4 class="font-bold text-xs text-slate-200 uppercase truncate max-w-[260px] sm:max-w-none">${grupo.cliente}</h4>
-                                </div>
+                                <input type="checkbox" onchange="toggleMarcarAnexosDoOrcamento(this, ${grupo.n_orcamento})" class="w-4 h-4 rounded text-teal-500 cursor-pointer">
+                                <span class="font-bold text-teal-400">ORÇAMENTO Nº ${grupo.n_orcamento} - ${grupo.cliente}</span>
                             </div>
-                            <span class="bg-slate-700 text-teal-300 font-mono text-[10px] font-bold px-2.5 py-1 rounded-lg border border-slate-600">
-                                ${grupo.arquivos.length} arquivo(s)
-                            </span>
                         </div>
 
                         <div class="p-3 bg-slate-50/50 space-y-2">
@@ -918,38 +434,25 @@
                                 }).replace(/"/g, '&quot;');
 
                                 const badgeOrigem = arq.origem_anexo === 'ESTRUTURA' 
-                                    ? `<span class="bg-purple-100 text-purple-800 border border-purple-300 text-[9px] font-black px-2 py-0.5 rounded-md">ESTRUTURA (OS ${arq.cod_os_origem_anexo})</span>`
-                                    : `<span class="bg-blue-100 text-blue-800 border border-blue-300 text-[9px] font-black px-2 py-0.5 rounded-md">OS PRINCIPAL</span>`;
+                                    ? `<span class="bg-purple-100 text-purple-800 border border-purple-300 text-[9px] font-bold px-2 py-0.5 rounded-md">ESTRUTURA (OS ${arq.cod_os_origem_anexo})</span>`
+                                    : `<span class="bg-blue-100 text-blue-800 border border-blue-300 text-[9px] font-bold px-2 py-0.5 rounded-md">OS PRINCIPAL</span>`;
 
                                 return `
-                                    <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs hover:border-teal-300 transition">
+                                    <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex justify-between items-center text-xs">
                                         <div class="flex items-center gap-3">
-                                            <input type="checkbox" 
-                                                   data-orcamento="${grupo.n_orcamento}" 
-                                                   value="${itemJson}" 
-                                                   class="chkAnexoItem w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer">
+                                            <input type="checkbox" data-orcamento="${grupo.n_orcamento}" value="${itemJson}" class="chkAnexoItem w-4 h-4 rounded text-teal-600 cursor-pointer">
                                             <div>
                                                 <div class="flex items-center gap-2 mb-0.5">
                                                     <span class="font-mono font-bold text-columbia-700">OS ${arq.cod_os_completo}</span>
                                                     ${badgeOrigem}
                                                 </div>
                                                 <p class="font-bold text-slate-800">${arq.nome_arquivo}</p>
-                                                <span class="text-[10px] text-slate-400 font-medium">${arq.subtitulo || ''}</span>
                                             </div>
                                         </div>
 
                                         <div class="flex items-center gap-2">
-                                            <button onclick="visualizarAnexoPendente(event, ${arq.cod_empresa}, ${arq.cod_os_origem_anexo}, ${arq.cod_anexo})" 
-                                                    class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
-                                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
-                                                <span>Ver Anexo</span>
-                                            </button>
-
-                                            <button onclick="copiarAnexoParaDesenhos(event, ${arq.cod_empresa}, ${arq.cod_os_principal}, ${arq.cod_os_aux_principal}, ${arq.cod_os_origem_anexo}, ${arq.cod_anexo})" 
-                                                    class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
-                                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                                                <span>Copiar p/ Desenhos</span>
-                                            </button>
+                                            <button onclick="visualizarAnexoPendente(event, ${arq.cod_empresa}, ${arq.cod_os_origem_anexo}, ${arq.cod_anexo})" class="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-bold text-[11px]">Ver Anexo</button>
+                                            <button onclick="copiarAnexoParaDesenhos(event, ${arq.cod_empresa}, ${arq.cod_os_principal}, ${arq.cod_os_aux_principal}, ${arq.cod_os_origem_anexo}, ${arq.cod_anexo})" class="px-2.5 py-1 bg-amber-600 text-white rounded-lg font-bold text-[11px]">Copiar p/ Desenhos</button>
                                         </div>
                                     </div>
                                 `;
@@ -959,65 +462,37 @@
                 `;
             });
 
-            html += `</div>`;
-            grid.innerHTML = html;
-            lucide.createIcons();
+            grid.innerHTML = html + `</div>`;
         }
 
         function toggleMarcarAnexosDoOrcamento(masterChk, n_orcamento) {
-            const checkboxes = document.querySelectorAll(`.chkAnexoItem[data-orcamento="${n_orcamento}"]`);
-            checkboxes.forEach(chk => chk.checked = masterChk.checked);
+            document.querySelectorAll(`.chkAnexoItem[data-orcamento="${n_orcamento}"]`).forEach(chk => chk.checked = masterChk.checked);
         }
 
         async function copiarAnexoParaDesenhos(event, cod_empresa, cod_os_principal, cod_os_aux_principal, cod_os_origem_anexo, cod_anexo) {
             if (event) event.stopPropagation();
-
             if (!confirm('Deseja copiar este anexo para a OS Principal e para a Estrutura?')) return;
 
             try {
-                const btnTarget = event ? event.currentTarget : null;
-                if (btnTarget) { btnTarget.disabled = true; btnTarget.classList.add('opacity-50'); }
-
                 const response = await fetch(`${API_URL}/copiar-para-desenhos`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        cod_empresa,
-                        cod_os_principal,
-                        cod_os_aux_principal,
-                        cod_os_origem_anexo,
-                        cod_anexo
-                    })
+                    body: JSON.stringify({ cod_empresa, cod_os_principal, cod_os_aux_principal, cod_os_origem_anexo, cod_anexo })
                 });
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.detail || 'Erro ao copiar anexo.');
+                if (response.ok) {
+                    alert('Anexo copiado com sucesso!');
+                    fetchAnexosPendentData();
+                } else {
+                    alert('Erro ao copiar anexo.');
                 }
-
-                const data = await response.json();
-                alert(data.mensagem || 'Anexo copiado com sucesso!');
-                fetchAnexosPendentData();
-
-            } catch (error) {
-                alert(`Falha ao copiar anexo: ${error.message}`);
-            } finally {
-                if (event && event.currentTarget) {
-                    event.currentTarget.disabled = false;
-                    event.currentTarget.classList.remove('opacity-50');
-                }
-            }
+            } catch (e) { alert(e.message); }
         }
 
         async function liberarAnexosSelecionados() {
             const marcados = Array.from(document.querySelectorAll('.chkAnexoItem:checked')).map(chk => JSON.parse(chk.value));
+            if (marcados.length === 0) return alert("Selecione pelo menos um anexo.");
 
-            if (marcados.length === 0) {
-                alert("Selecione pelo menos um anexo para liberar e copiar para desenhos.");
-                return;
-            }
-
-            if (!confirm(`Deseja copiar e liberar os ${marcados.length} anexo(s) selecionado(s) para a OS Principal e Estrutura?`)) return;
+            if (!confirm(`Deseja copiar e liberar os ${marcados.length} anexo(s) selecionados?`)) return;
 
             try {
                 const response = await fetch(`${API_URL}/liberar-anexos-orcamento`, {
@@ -1025,216 +500,86 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ anexos: marcados })
                 });
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.detail || 'Erro ao processar liberação.');
+                if (response.ok) {
+                    alert('Anexos liberados com sucesso!');
+                    fetchAnexosPendentData();
                 }
-
-                const resData = await response.json();
-                alert(resData.mensagem || 'Anexos liberados com sucesso!');
-                fetchAnexosPendentData();
-            } catch (error) {
-                alert(`Falha: ${error.message}`);
-            }
+            } catch (e) { alert(e.message); }
         }
 
         async function visualizarAnexoPendente(event, cod_empresa, cod_os_origem_anexo, cod_anexo) {
             if (event) event.stopPropagation();
-
             try {
-                const btnTarget = event ? event.currentTarget : null;
-                if (btnTarget) { btnTarget.disabled = true; btnTarget.classList.add('opacity-50'); }
-
-                const url = `${API_URL}/anexo-visualizar?cod_empresa=${cod_empresa}&cod_os=${cod_os_origem_anexo}&cod_os_aux=1&codigo=${cod_anexo}`;
-                const response = await fetch(url);
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.detail || 'Não foi possível carregar o anexo de origem.');
-                }
-
+                const response = await fetch(`${API_URL}/anexo-visualizar?cod_empresa=${cod_empresa}&cod_os=${cod_os_origem_anexo}&cod_os_aux=1&codigo=${cod_anexo}`);
                 const data = await response.json();
-                if (!data.pdf_base64) { alert('Arquivo não encontrado.'); return; }
-
-                const byteCharacters = atob(data.pdf_base64);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                if (data.pdf_base64) {
+                    const byteCharacters = atob(data.pdf_base64);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    const fileBlob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/pdf' });
+                    window.open(URL.createObjectURL(fileBlob), '_blank');
                 }
-                const byteArray = new Uint8Array(byteNumbers);
-                const fileBlob = new Blob([byteArray], { type: 'application/pdf' });
-
-                const fileURL = URL.createObjectURL(fileBlob);
-                window.open(fileURL, '_blank');
-
-            } catch (error) {
-                alert(`Erro ao visualizar anexo: ${error.message}`);
-            } finally {
-                if (event && event.currentTarget) {
-                    event.currentTarget.disabled = false;
-                    event.currentTarget.classList.remove('opacity-50');
-                }
-            }
+            } catch (e) { alert('Erro ao abrir anexo.'); }
         }
 
+        // CARREGAMENTO DE DADOS DAS APIS
         async function fetchData(isSilent = false) {
-            const refreshIcon = document.getElementById('refreshIcon');
-            if (!isSilent && refreshIcon) refreshIcon.classList.add('animate-spin');
-
             try {
-                const response = await fetch(`${API_URL}?_t=${Date.now()}`);
-                if (response.ok) {
-                    rawData = await response.json();
+                const res = await fetch(`${API_URL}?_t=${Date.now()}`);
+                if (res.ok) {
+                    rawData = await res.json();
                     populateSelectOptions();
                     if (abaAtiva === 'dashboard' || abaAtiva === 'limbo') renderView();
                 }
-            } catch (e) { 
-                console.error('Erro ao carregar dados:', e); 
-            } finally {
-                if (refreshIcon) refreshIcon.classList.remove('animate-spin');
-            }
+            } catch (e) { console.error(e); }
         }
 
         async function fetchFaturamentoData(isSilent = false) {
             try {
-                const response = await fetch(`${API_FATURAMENTO}?_t=${Date.now()}`);
-                if (response.ok) rawFaturamentoData = await response.json();
+                const res = await fetch(`${API_FATURAMENTO}?_t=${Date.now()}`);
+                if (res.ok) {
+                    rawFaturamentoData = await res.json();
+                    if (abaAtiva === 'faturamento') renderView();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function fetchConferenciaData(isSilent = false) {
+            try {
+                const res = await fetch(`${API_HR_A_MAIS}?_t=${Date.now()}`);
+                if (res.ok) {
+                    rawConferenciaData = await res.json();
+                    if (abaAtiva === 'conferencia') renderView();
+                }
             } catch (e) { console.error(e); }
         }
 
         async function fetchAnexosPendentData() {
             try {
-                const response = await fetch(`${API_URL}/anexo?_t=${Date.now()}`);
-                if (response.ok) {
-                    rawAnexosPendentes = await response.json();
-                    if (abaAtiva === 'anexos') renderPaginaAnexosView();
+                const res = await fetch(`${API_URL}/anexo?_t=${Date.now()}`);
+                if (res.ok) {
+                    rawAnexosPendentes = await res.json();
+                    if (abaAtiva === 'anexos') renderView();
                 }
             } catch (e) { console.error(e); }
         }
 
-        function toggleConcluidasFilter() {
-            showConcluidas = !showConcluidas;
-            renderView();
-        }
-
-        function toggleOrcamentoFilter() {
-            onlyWithBudget = !onlyWithBudget;
-            renderView();
-        }
-
-        function clearAllFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('atrasadaFilter').value = '';
-            document.getElementById('apontamentoAbertoFilter').value = '';
-            document.getElementById('segmentoFilter').value = '';
-            document.getElementById('producaoFilter').value = '';
-            document.getElementById('clientFilter').value = '';
-            document.getElementById('engenhariaFilter').value = '';
-            document.getElementById('comprasFilter').value = '';
-            document.getElementById('terceirosFilter').value = '';
-            showConcluidas = false;
-            renderView();
-        }
-
-        function handleValueVisibility() {
-            if (isValuesUnlocked) {
-                isValuesUnlocked = false;
-                renderView();
-            } else {
-                openPasswordModal();
+        function populateSelectOptions() {
+            const seg = document.getElementById('segmentoFilter');
+            const cli = document.getElementById('clientFilter');
+            if (seg && rawData.length) {
+                const opts = [...new Set(rawData.map(i => i.segmento).filter(Boolean))].sort();
+                seg.innerHTML = '<option value="">Segmento (Todos)</option>' + opts.map(o => `<option value="${o}">${o}</option>`).join('');
+            }
+            if (cli && rawData.length) {
+                const opts = [...new Set(rawData.map(i => i.cliente).filter(Boolean))].sort();
+                cli.innerHTML = '<option value="">Todos os Clientes</option>' + opts.map(o => `<option value="${o}">${o}</option>`).join('');
             }
         }
 
-        function openPasswordModal() {
-            document.getElementById('passwordModal')?.classList.remove('hidden');
-            document.getElementById('passwordModal')?.classList.add('flex');
-        }
-
-        function closePasswordModal() {
-            document.getElementById('passwordModal')?.classList.add('hidden');
-            document.getElementById('passwordModal')?.classList.remove('flex');
-        }
-
-        function validatePassword() {
-            const input = document.getElementById('inputPassword').value;
-            if (input === 'Colmac@2026') {
-                isValuesUnlocked = true;
-                closePasswordModal();
-                renderView();
-            } else {
-                document.getElementById('passwordError')?.classList.remove('hidden');
-            }
-        }
-
-        function checkPasswordKey(e) { if (e.key === 'Enter') validatePassword(); }
-
-        function togglePasswordVisibility() {
-            const input = document.getElementById('inputPassword');
-            if (input) input.type = input.type === 'password' ? 'text' : 'password';
-        }
-
-        function openModal(n_os) {
-            const item = rawData.find(i => String(i.n_os).trim() === String(n_os).trim());
-            if (!item) return;
-            selectedItemModal = item;
-
-            setElText('mOS', `OS ${item.n_os || 'N/A'}`);
-            setElText('mTitulo', item.titulo || 'Sem Título');
-            setElText('mPedido', item.n_pedido || '-');
-            setElText('mCliente', item.cliente || '-');
-            setElText('mSegmento', item.segmento || '-');
-            setElText('mCodInterno', item.cod_interno || '-');
-            setElText('mOrigem', item.origem || '-');
-            setElText('mEngenhariaStatus', item.engenharia_status || '-');
-
-            document.getElementById('osModal')?.classList.remove('hidden');
-            document.getElementById('osModal')?.classList.add('flex');
-        }
-
-        function closeModal() {
-            document.getElementById('osModal')?.classList.add('hidden');
-            document.getElementById('osModal')?.classList.remove('flex');
-        }
-
-        function openAltRenegociationFormModal() {
-            document.getElementById('altRenegociationFormModal')?.classList.remove('hidden');
-            document.getElementById('altRenegociationFormModal')?.classList.add('flex');
-        }
-
-        function closeAltRenegociationFormModal() {
-            document.getElementById('altRenegociationFormModal')?.classList.add('hidden');
-            document.getElementById('altRenegociationFormModal')?.classList.remove('flex');
-        }
-
-        async function submitAltRenegociation() {
-            if (!selectedItemModal) return;
-            const newDate = document.getElementById('inputNewRenegociationDate').value;
-            const userTexto = document.getElementById('textareaJustification').value.trim();
-
-            if (!userTexto) {
-                alert('A justificativa é obrigatória.');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_URL}/${selectedItemModal.n_os}/alterar-renegociacao`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        u_data_renegociacao: newDate || null,
-                        U_JUST_ALT_DT_REN: userTexto
-                    })
-                });
-
-                if (response.ok) {
-                    closeAltRenegociationFormModal();
-                    closeModal();
-                    fetchData();
-                } else {
-                    alert('Falha ao alterar a data.');
-                }
-            } catch (e) { alert(e.message); }
+        function updateDateLabel() {
+            const label = document.getElementById('currentDateLabel');
+            if (label) label.textContent = currentDate.toLocaleDateString('pt-BR');
         }
 
         function efetuarLogout() {
