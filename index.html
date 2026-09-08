@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.2.0</title>
+    <title>Programação de Produção - Columbia V7.6.5</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.2.0</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.5</p>
                 </div>
             </div>
 
@@ -85,7 +85,7 @@
                     <span id="userDisplayName">Usuário</span>
                 </div>
 
-                <!-- ABAS DE NAVEGAÇÃO INTERNA NO HEADER (SISTEMA DE ABAS SPA) -->
+                <!-- ABAS DE NAVEGAÇÃO INTERNA NO HEADER -->
                 <button id="btnAbaDashboard" onclick="setAbaAtiva('dashboard')" class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-columbia-900 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md border border-columbia-500 shrink-0">
                     <i data-lucide="calendar" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span>Produção</span>
@@ -101,6 +101,12 @@
                 <button id="btnAbaConferencia" onclick="setAbaAtiva('conferencia')" class="hidden flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
                     <i data-lucide="clipboard-check" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span class="truncate">Conferência</span>
+                </button>
+
+                <!-- ABA LIBERAR ANEXOS (Exclusiva para u_anexo = 1) -->
+                <button id="btnAbaAnexos" onclick="setAbaAtiva('anexos')" class="hidden flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold rounded-xl text-[11px] sm:text-xs transition shadow-md shrink-0">
+                    <i data-lucide="paperclip" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                    <span>Liberar Anexos</span>
                 </button>
 
                 <!-- BOTÃO OS'S NO LIMBO -->
@@ -156,14 +162,19 @@
         
         <div id="filtersBar" class="bg-white p-2.5 sm:p-3.5 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shadow-sm">
             
-            <!-- Busca Geral Universal -->
+            <!-- Busca Geral Universal com Trava Anti-Autofill -->
             <div class="flex items-center gap-2 flex-1 min-w-[180px] sm:min-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <input type="text" 
+                <input type="search" 
                        id="searchInput" 
+                       name="columbia_search_query"
                        oninput="renderView()" 
-                       placeholder="Pesquisar (OS, Título, Cliente, Origem, NF, Cod. Interno...)" 
-                       autocomplete="off"
+                       placeholder="Pesquisar (OS, Título, Cliente, Origem, NF, Cod. Interno, Orçamento...)" 
+                       autocomplete="new-password"
+                       autocorrect="off"
+                       autocapitalize="none"
+                       spellcheck="false"
+                       role="searchbox"
                        class="w-full text-xs bg-transparent text-slate-800 focus:outline-none placeholder-slate-400 font-medium">
             </div>
 
@@ -188,7 +199,7 @@
             </div>
 
             <!-- Filtro por Segmento -->
-            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
+            <div id="segmentoContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="layers" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="segmentoFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
                     <option value="">Segmento (Todos)</option>
@@ -206,7 +217,7 @@
             </div>
 
             <!-- Filtro por Cliente -->
-            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
+            <div id="clienteContainer" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 w-full sm:w-auto">
                 <i data-lucide="user" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <select id="clientFilter" onchange="renderView()" class="text-xs bg-transparent text-slate-700 focus:outline-none cursor-pointer w-full sm:max-w-[130px] font-medium">
                     <option value="">Todos os Clientes</option>
@@ -294,7 +305,7 @@
         <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
             <div class="flex items-center gap-2 font-medium">
                 <i data-lucide="code-2" class="w-4 h-4 text-columbia-600"></i>
-                <span>© 2026 Columbia Machine Brasil — Sistema de Gestão de Produção</span>
+                <span>© 2026 Columbia Machine Brasil — Sistema de Gestão de Produção V7.6.0</span>
             </div>
         </div>
     </footer>
@@ -315,7 +326,8 @@
                 
                 <div class="relative">
                     <input type="password" id="inputPassword" onkeydown="checkPasswordKey(event)" placeholder="Digite a senha..." 
-                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-slate-800 text-xs focus:outline-none focus:border-columbia-600 font-medium">
+                           autocomplete="new-password"
+                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-slate-800 text-xs focus:outline-none focus:border-columbia-700 font-medium">
                     <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
                         <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
                     </button>
@@ -466,7 +478,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO NO ESCOPO GLOBAL -->
+    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO NO ESCOPO GLOBAL COM CHECAGEM DE NULOS -->
     <script>
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         const API_HR_A_MAIS = 'https://columbia.consultoriarf.net/hr-a-mais';
@@ -475,6 +487,7 @@
         let rawData = [];
         let rawConferenciaData = [];
         let rawFaturamentoData = [];
+        let rawAnexosPendentes = [];
         let currentDate = new Date();
         let selectedItemModal = null; 
 
@@ -515,6 +528,8 @@
                         fetchConferenciaData(true);
                     } else if (abaAtiva === 'faturamento') {
                         fetchFaturamentoData(true);
+                    } else if (abaAtiva === 'anexos') {
+                        fetchAnexosPendentData();
                     }
                 }
             }, 30000);
@@ -742,6 +757,7 @@
                     throw new Error(errorData.detail || 'Falha ao salvar a alteração no banco.');
                 }
 
+                // ATUALIZAÇÃO IMEDIATA NA MEMÓRIA LOCAL
                 const updatedOSStr = String(selectedItemModal.n_os).trim();
                 rawData.forEach(i => {
                     if (String(i.n_os).trim() === updatedOSStr) {
@@ -833,28 +849,19 @@
         function configurarVisibilidadeAbas() {
             const valFaturamento = localStorage.getItem('columbia_perm_faturamento');
             const valFinalizacao = localStorage.getItem('columbia_perm_finalizacao');
+            const valAnexo = localStorage.getItem('columbia_perm_anexo');
 
             const permFaturamento = valFaturamento !== null && String(valFaturamento).trim() === '1';
             const permFinalizacao = valFinalizacao !== null && String(valFinalizacao).trim() === '1';
+            const permAnexo = valAnexo !== null && String(valAnexo).trim() === '1';
 
             const btnAbaFaturamento = document.getElementById('btnAbaFaturamento');
             const btnAbaConferencia = document.getElementById('btnAbaConferencia');
+            const btnAbaAnexos = document.getElementById('btnAbaAnexos');
 
-            if (btnAbaFaturamento) {
-                if (permFaturamento) {
-                    btnAbaFaturamento.classList.remove('hidden');
-                } else {
-                    btnAbaFaturamento.classList.add('hidden');
-                }
-            }
-
-            if (btnAbaConferencia) {
-                if (permFinalizacao) {
-                    btnAbaConferencia.classList.remove('hidden');
-                } else {
-                    btnAbaConferencia.classList.add('hidden');
-                }
-            }
+            if (btnAbaFaturamento) btnAbaFaturamento.classList.toggle('hidden', !permFaturamento);
+            if (btnAbaConferencia) btnAbaConferencia.classList.toggle('hidden', !permFinalizacao);
+            if (btnAbaAnexos) btnAbaAnexos.classList.toggle('hidden', !permAnexo);
         }
 
         function setAbaAtiva(novaAba) {
@@ -867,11 +874,14 @@
             const btnDashboard = document.getElementById('btnAbaDashboard');
             const btnFaturamento = document.getElementById('btnAbaFaturamento');
             const btnConferencia = document.getElementById('btnAbaConferencia');
+            const btnAnexos = document.getElementById('btnAbaAnexos');
             const btnLimbo = document.getElementById('btnVerLimbo');
 
             const atrasadaContainer = document.getElementById('atrasadaContainer');
             const apontamentoContainer = document.getElementById('apontamentoContainer');
             const producaoContainer = document.getElementById('producaoContainer');
+            const segmentoContainer = document.getElementById('segmentoContainer');
+            const clienteContainer = document.getElementById('clienteContainer');
             const engenhariaContainer = document.getElementById('engenhariaContainer');
             const comprasContainer = document.getElementById('comprasContainer');
             const terceirosContainer = document.getElementById('terceirosContainer');
@@ -881,6 +891,7 @@
             if (btnDashboard) btnDashboard.className = "flex items-center gap-1.5 px-3 py-2 bg-columbia-800 hover:bg-columbia-900 text-white font-extrabold rounded-xl text-xs transition shadow-md shrink-0";
             if (btnFaturamento) btnFaturamento.className = "flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-xs transition shadow-md shrink-0";
             if (btnConferencia) btnConferencia.className = "flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs transition shadow-md shrink-0";
+            if (btnAnexos) btnAnexos.className = "flex items-center gap-1.5 px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold rounded-xl text-xs transition shadow-md shrink-0";
             if (btnLimbo) btnLimbo.className = "flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow-md shrink-0";
 
             configurarVisibilidadeAbas();
@@ -894,6 +905,8 @@
                 if (atrasadaContainer) atrasadaContainer.classList.remove('hidden');
                 if (apontamentoContainer) apontamentoContainer.classList.remove('hidden');
                 if (producaoContainer) producaoContainer.classList.remove('hidden');
+                if (segmentoContainer) segmentoContainer.classList.remove('hidden');
+                if (clienteContainer) clienteContainer.classList.remove('hidden');
                 if (engenhariaContainer) engenhariaContainer.classList.remove('hidden');
                 if (comprasContainer) comprasContainer.classList.remove('hidden');
                 if (terceirosContainer) terceirosContainer.classList.remove('hidden');
@@ -910,6 +923,8 @@
                 if (atrasadaContainer) atrasadaContainer.classList.add('hidden');
                 if (apontamentoContainer) apontamentoContainer.classList.add('hidden');
                 if (producaoContainer) producaoContainer.classList.add('hidden');
+                if (segmentoContainer) segmentoContainer.classList.remove('hidden');
+                if (clienteContainer) clienteContainer.classList.remove('hidden');
                 if (engenhariaContainer) engenhariaContainer.classList.add('hidden');
                 if (comprasContainer) comprasContainer.classList.add('hidden');
                 if (terceirosContainer) terceirosContainer.classList.add('hidden');
@@ -926,6 +941,26 @@
                 if (navigationBar) navigationBar.classList.remove('hidden'); 
                 if (viewModeContainer) viewModeContainer.classList.add('hidden');
                 fetchConferenciaData();
+            } else if (abaAtiva === 'anexos') {
+                if (btnAnexos) btnAnexos.className = "flex items-center gap-1.5 px-3 py-2 bg-teal-900 border border-teal-400 text-white font-black rounded-xl text-xs transition shadow-md shrink-0";
+                if (metricsBar) metricsBar.classList.add('hidden');
+                
+                // EXIBE APENAS BUSCA GERAL, SEGMENTO E CLIENTE
+                if (filtersBar) filtersBar.classList.remove('hidden');
+                if (navigationBar) navigationBar.classList.add('hidden');
+
+                if (atrasadaContainer) atrasadaContainer.classList.add('hidden');
+                if (apontamentoContainer) apontamentoContainer.classList.add('hidden');
+                if (producaoContainer) producaoContainer.classList.add('hidden');
+                if (segmentoContainer) segmentoContainer.classList.remove('hidden');
+                if (clienteContainer) clienteContainer.classList.remove('hidden');
+                if (engenhariaContainer) engenhariaContainer.classList.add('hidden');
+                if (comprasContainer) comprasContainer.classList.add('hidden');
+                if (terceirosContainer) terceirosContainer.classList.add('hidden');
+                if (extraButtonsContainer) extraButtonsContainer.classList.add('hidden');
+                if (viewModeContainer) viewModeContainer.classList.add('hidden');
+
+                fetchAnexosPendentData();
             } else {
                 if (metricsBar) metricsBar.classList.add('hidden');
                 if (filtersBar) filtersBar.classList.add('hidden');
@@ -944,6 +979,7 @@
             localStorage.removeItem('columbia_usuario_nome');
             localStorage.removeItem('columbia_perm_faturamento');
             localStorage.removeItem('columbia_perm_finalizacao');
+            localStorage.removeItem('columbia_perm_anexo');
             window.location.href = 'login.html';
         }
 
@@ -1084,8 +1120,12 @@
                     alert('Não foi possível atualizar os dados de produção. Verifique a conexão com o servidor.');
                 }
             } finally {
-                if (refreshIcon) refreshIcon.classList.remove('animate-spin');
-                if (btnRefresh) btnRefresh.disabled = false;
+                if (refreshIcon) {
+                    refreshIcon.classList.remove('animate-spin');
+                }
+                if (btnRefresh) {
+                    btnRefresh.disabled = false;
+                }
                 lucide.createIcons();
             }
         }
@@ -1119,6 +1159,56 @@
             } finally {
                 isFaturamentoLoading = false;
                 if (abaAtiva === 'faturamento') renderPaginaFaturamentoView();
+            }
+        }
+
+        async function fetchAnexosPendentData() {
+            const grid = document.getElementById('calendarGrid');
+            if (grid && rawAnexosPendentes.length === 0) {
+                grid.innerHTML = `
+                    <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500 flex flex-col items-center gap-3">
+                        <i data-lucide="loader-2" class="w-8 h-8 text-teal-600 animate-spin"></i>
+                        <p class="text-xs font-bold">Buscando anexos pendentes de liberação...</p>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/anexo?_t=${Date.now()}`);
+                if (!response.ok) throw new Error('Erro ao buscar anexos pendentes.');
+                rawAnexosPendentes = await response.json();
+                
+                // Atualiza opções dos dropdowns com base nos anexos retornados
+                populateSelectOptionsAnexos();
+
+                if (abaAtiva === 'anexos') renderPaginaAnexosView();
+            } catch (err) {
+                console.error('Erro ao buscar anexos pendentes:', err);
+                if (grid) {
+                    grid.innerHTML = `<p class="text-red-600 text-xs text-center font-bold p-6">Erro ao carregar os dados de anexos.</p>`;
+                }
+            }
+        }
+
+        function populateSelectOptionsAnexos() {
+            if (!rawAnexosPendentes || rawAnexosPendentes.length === 0) return;
+
+            const segSel = document.getElementById('segmentoFilter');
+            const cliSel = document.getElementById('clientFilter');
+
+            if (segSel) {
+                const curSeg = segSel.value;
+                const segs = [...new Set(rawAnexosPendentes.map(a => a.segmento).filter(Boolean))].sort();
+                segSel.innerHTML = '<option value="">Segmento (Todos)</option>' + segs.map(s => `<option value="${s}">${s}</option>`).join('');
+                segSel.value = curSeg;
+            }
+
+            if (cliSel) {
+                const curCli = cliSel.value;
+                const clis = [...new Set(rawAnexosPendentes.map(a => a.cliente).filter(Boolean))].sort();
+                cliSel.innerHTML = '<option value="">Todos os Clientes</option>' + clis.map(c => `<option value="${c}">${c}</option>`).join('');
+                cliSel.value = curCli;
             }
         }
 
@@ -1356,6 +1446,12 @@
                 return;
             }
 
+            if (abaAtiva === 'anexos') {
+                renderPaginaAnexosView();
+                lucide.createIcons();
+                return;
+            }
+
             updateDateLabel();
             const filtered = getFilteredData();
             updateMetrics(filtered);
@@ -1368,6 +1464,299 @@
                 renderWeekGrid(filtered);
             }
             lucide.createIcons();
+        }
+
+        // ==============================================================================
+        // RENDERIZAÇÃO E LÓGICA DA ABA LIBERAR ANEXOS (COM SUPORTE A ESTRUTURA E COPIA DUP)
+        // ==============================================================================
+        function renderPaginaAnexosView() {
+            const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
+
+            if (!rawAnexosPendentes || rawAnexosPendentes.length === 0) {
+                grid.innerHTML = `
+                    <div class="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center text-slate-400 flex flex-col items-center gap-3 shadow-sm">
+                        <i data-lucide="check-circle" class="w-10 h-10 sm:w-12 sm:h-12 text-emerald-400 stroke-1"></i>
+                        <p class="text-xs font-bold text-slate-600">Não há nenhum anexo pendente para liberação no momento!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // CAPTURA VALORES DE BUSCA, SEGMENTO E CLIENTE
+            const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+            const segmentoFiltro = document.getElementById('segmentoFilter')?.value || '';
+            const clienteFiltro = document.getElementById('clientFilter')?.value || '';
+
+            // APLICAÇÃO COMPLETA DOS FILTROS
+            const anexosFiltrados = rawAnexosPendentes.filter(item => {
+                if (segmentoFiltro && String(item.segmento || '') !== segmentoFiltro) return false;
+                if (clienteFiltro && String(item.cliente || '') !== clienteFiltro) return false;
+
+                if (search) {
+                    const matchOrcamento = String(item.n_orcamento || '').toLowerCase().includes(search);
+                    const matchCliente = String(item.cliente || '').toLowerCase().includes(search);
+                    const matchOS = String(item.cod_os_completo || '').toLowerCase().includes(search);
+                    const matchArquivo = String(item.nome_arquivo || '').toLowerCase().includes(search);
+                    const matchSubtitulo = String(item.subtitulo || '').toLowerCase().includes(search);
+                    if (!matchOrcamento && !matchCliente && !matchOS && !matchArquivo && !matchSubtitulo) return false;
+                }
+
+                return true;
+            });
+
+            if (anexosFiltrados.length === 0) {
+                grid.innerHTML = `
+                    <div class="bg-white rounded-2xl border border-teal-200 p-8 sm:p-12 text-center text-slate-400 flex flex-col items-center gap-2 shadow-sm">
+                        <i data-lucide="file-x" class="w-10 h-10 text-teal-300 stroke-1"></i>
+                        <p class="text-xs font-bold text-slate-600">Nenhum anexo encontrado para os filtros selecionados.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const agrupadoPorOrcamento = {};
+            anexosFiltrados.forEach(item => {
+                const orc = item.n_orcamento;
+                if (!agrupadoPorOrcamento[orc]) {
+                    agrupadoPorOrcamento[orc] = {
+                        n_orcamento: orc,
+                        cliente: item.cliente,
+                        arquivos: []
+                    };
+                }
+                agrupadoPorOrcamento[orc].arquivos.push(item);
+            });
+
+            const listaOrcamentos = Object.values(agrupadoPorOrcamento);
+
+            let html = `
+                <!-- BARRA SUPERIOR DE AÇÕES GERAIS -->
+                <div class="bg-white rounded-2xl border border-teal-200 p-3.5 sm:p-5 shadow-sm mb-4 flex flex-wrap justify-between items-center gap-3">
+                    <div class="flex items-center gap-2.5 sm:gap-3">
+                        <div class="p-2 sm:p-2.5 bg-teal-100 text-teal-800 rounded-xl">
+                            <i data-lucide="paperclip" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-slate-900 text-xs sm:text-base">Anexos Pendentes de Liberação</h3>
+                            <p class="text-[10px] sm:text-xs text-slate-500 font-medium">Selecione os arquivos individualmente ou marque a caixa do orçamento.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="liberarAnexosSelecionados()" 
+                                class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-extrabold text-xs transition shadow-sm flex items-center gap-1.5">
+                            <i data-lucide="check-square" class="w-4 h-4"></i>
+                            <span>Liberar Anexos Selecionados</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+            `;
+
+            listaOrcamentos.forEach(grupo => {
+                html += `
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <!-- CABEÇALHO DO ORÇAMENTO COM CHECKBOX SELEÇÃO GLOBAL DO GRUPO -->
+                        <div class="bg-slate-800 text-white px-3.5 sm:px-4 py-2.5 flex justify-between items-center flex-wrap gap-2">
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" onchange="toggleMarcarAnexosDoOrcamento(this, ${grupo.n_orcamento})" 
+                                       title="Marcar/Desmarcar todos os arquivos deste orçamento"
+                                       class="w-4 h-4 rounded text-teal-500 focus:ring-teal-400 cursor-pointer">
+                                <div>
+                                    <span class="font-bold text-xs text-teal-400 font-mono">ORÇAMENTO Nº ${grupo.n_orcamento}</span>
+                                    <h4 class="font-bold text-xs text-slate-200 uppercase truncate max-w-[260px] sm:max-w-none">${grupo.cliente}</h4>
+                                </div>
+                            </div>
+                            <span class="bg-slate-700 text-teal-300 font-mono text-[10px] font-bold px-2.5 py-1 rounded-lg border border-slate-600">
+                                ${grupo.arquivos.length} arquivo(s)
+                            </span>
+                        </div>
+
+                        <!-- LISTA DE ARQUIVOS COM CHECKBOX INDIVIDUAL E MAPEAMENTO DAS CHAVES NOVAS -->
+                        <div class="p-3 bg-slate-50/50 space-y-2">
+                            ${grupo.arquivos.map(arq => {
+                                const itemJson = JSON.stringify({
+                                    cod_empresa: arq.cod_empresa,
+                                    cod_os_principal: arq.cod_os_principal,
+                                    cod_os_aux_principal: arq.cod_os_aux_principal,
+                                    cod_os_origem_anexo: arq.cod_os_origem_anexo,
+                                    cod_anexo: arq.cod_anexo
+                                }).replace(/"/g, '&quot;');
+
+                                const badgeOrigem = arq.origem_anexo === 'ESTRUTURA' 
+                                    ? `<span class="bg-purple-100 text-purple-800 border border-purple-300 text-[9px] font-black px-2 py-0.5 rounded-md">ESTRUTURA (OS ${arq.cod_os_origem_anexo})</span>`
+                                    : `<span class="bg-blue-100 text-blue-800 border border-blue-300 text-[9px] font-black px-2 py-0.5 rounded-md">OS PRINCIPAL</span>`;
+
+                                return `
+                                    <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs hover:border-teal-300 transition">
+                                        <div class="flex items-center gap-3">
+                                            <input type="checkbox" 
+                                                   data-orcamento="${grupo.n_orcamento}" 
+                                                   value="${itemJson}" 
+                                                   class="chkAnexoItem w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer">
+                                            <div>
+                                                <div class="flex items-center gap-2 mb-0.5">
+                                                    <span class="font-mono font-bold text-columbia-700">OS ${arq.cod_os_completo}</span>
+                                                    ${badgeOrigem}
+                                                </div>
+                                                <p class="font-bold text-slate-800">${arq.nome_arquivo}</p>
+                                                <span class="text-[10px] text-slate-400 font-medium">${arq.subtitulo || ''}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center gap-2">
+                                            <!-- VER ANEXO -->
+                                            <button onclick="visualizarAnexoPendente(event, ${arq.cod_empresa}, ${arq.cod_os_origem_anexo}, ${arq.cod_anexo})" 
+                                                    class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
+                                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                                <span>Ver Anexo</span>
+                                            </button>
+
+                                            <!-- COPIAR P/ DESENHOS -->
+                                            <button onclick="copiarAnexoParaDesenhos(event, ${arq.cod_empresa}, ${arq.cod_os_principal}, ${arq.cod_os_aux_principal}, ${arq.cod_os_origem_anexo}, ${arq.cod_anexo})" 
+                                                    class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
+                                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                                <span>Copiar p/ Desenhos</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            grid.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        // Marca/Desmarca todos os checkboxes de um orçamento específico
+        function toggleMarcarAnexosDoOrcamento(masterChk, n_orcamento) {
+            const checkboxes = document.querySelectorAll(`.chkAnexoItem[data-orcamento="${n_orcamento}"]`);
+            checkboxes.forEach(chk => chk.checked = masterChk.checked);
+        }
+
+        // Libera somente os anexos cujas caixas estejam marcadas
+        async function liberarAnexosSelecionados() {
+            const marcados = Array.from(document.querySelectorAll('.chkAnexoItem:checked')).map(chk => JSON.parse(chk.value));
+
+            if (marcados.length === 0) {
+                alert("Selecione pelo menos um anexo individual para liberar.");
+                return;
+            }
+
+            if (!confirm(`Deseja liberar os ${marcados.length} anexo(s) selecionado(s)?`)) return;
+
+            await enviarRequisicaoLiberacao({ anexos: marcados });
+        }
+
+        // COPIAR ANEXO INDIVIDUAL
+        async function copiarAnexoParaDesenhos(event, cod_empresa, cod_os_principal, cod_os_aux_principal, cod_os_origem_anexo, cod_anexo) {
+            if (event) event.stopPropagation();
+
+            if (!confirm('Deseja copiar este anexo para a OS Principal e para a Estrutura?')) return;
+
+            try {
+                const btnTarget = event ? event.currentTarget : null;
+                if (btnTarget) { btnTarget.disabled = true; btnTarget.classList.add('opacity-50'); }
+
+                const response = await fetch(`${API_URL}/copiar-para-desenhos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        cod_empresa,
+                        cod_os_principal,
+                        cod_os_aux_principal,
+                        cod_os_origem_anexo,
+                        cod_anexo
+                    })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Erro ao copiar anexo.');
+                }
+
+                const data = await response.json();
+                alert(data.mensagem || 'Anexo copiado com sucesso!');
+                
+                fetchAnexosPendentData();
+
+            } catch (error) {
+                alert(`Falha ao copiar anexo: ${error.message}`);
+            } finally {
+                if (event && event.currentTarget) {
+                    event.currentTarget.disabled = false;
+                    event.currentTarget.classList.remove('opacity-50');
+                }
+            }
+        }
+
+        // VISUALIZAR ANEXO PENDENTE
+        async function visualizarAnexoPendente(event, cod_empresa, cod_os_origem_anexo, cod_anexo) {
+            if (event) event.stopPropagation();
+
+            try {
+                const btnTarget = event ? event.currentTarget : null;
+                if (btnTarget) { btnTarget.disabled = true; btnTarget.classList.add('opacity-50'); }
+
+                const url = `${API_URL}/anexo-visualizar?cod_empresa=${cod_empresa}&cod_os=${cod_os_origem_anexo}&cod_os_aux=1&codigo=${cod_anexo}`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Não foi possível carregar o anexo de origem.');
+                }
+
+                const data = await response.json();
+                if (!data.pdf_base64) { alert('Arquivo não encontrado.'); return; }
+
+                const byteCharacters = atob(data.pdf_base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const fileBlob = new Blob([byteArray], { type: 'application/pdf' });
+
+                const fileURL = URL.createObjectURL(fileBlob);
+                window.open(fileURL, '_blank');
+
+            } catch (error) {
+                alert(`Erro ao visualizar anexo: ${error.message}`);
+            } finally {
+                if (event && event.currentTarget) {
+                    event.currentTarget.disabled = false;
+                    event.currentTarget.classList.remove('opacity-50');
+                }
+            }
+        }
+
+        // Função de envio
+        async function enviarRequisicaoLiberacao(payload) {
+            try {
+                const response = await fetch(`${API_URL}/liberar-anexos-orcamento`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Erro ao processar liberação.');
+                }
+
+                const resData = await response.json();
+                alert(`Sucesso! ${resData.registros_afetados || ''} anexo(s) liberado(s).`);
+                fetchAnexosPendentData();
+            } catch (error) {
+                console.error('Erro ao liberar anexos:', error);
+                alert(`Falha: ${error.message}`);
+            }
         }
 
         function renderPaginaConferenciaView() {
