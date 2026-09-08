@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.6.5</title>
+    <title>Programação de Produção - Columbia V7.6.6</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.5</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.6</p>
                 </div>
             </div>
 
@@ -305,7 +305,7 @@
         <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
             <div class="flex items-center gap-2 font-medium">
                 <i data-lucide="code-2" class="w-4 h-4 text-columbia-600"></i>
-                <span>© 2026 Columbia Machine Brasil — Sistema de Gestão de Produção V7.6.0</span>
+                <span>© 2026 Columbia Machine Brasil — Sistema de Gestão de Produção V7.6.6</span>
             </div>
         </div>
     </footer>
@@ -478,7 +478,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO NO ESCOPO GLOBAL COM CHECAGEM DE NULOS -->
+    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO NO ESCOPO GLOBAL -->
     <script>
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         const API_HR_A_MAIS = 'https://columbia.consultoriarf.net/hr-a-mais';
@@ -945,7 +945,6 @@
                 if (btnAnexos) btnAnexos.className = "flex items-center gap-1.5 px-3 py-2 bg-teal-900 border border-teal-400 text-white font-black rounded-xl text-xs transition shadow-md shrink-0";
                 if (metricsBar) metricsBar.classList.add('hidden');
                 
-                // EXIBE APENAS BUSCA GERAL, SEGMENTO E CLIENTE
                 if (filtersBar) filtersBar.classList.remove('hidden');
                 if (navigationBar) navigationBar.classList.add('hidden');
 
@@ -980,6 +979,8 @@
             localStorage.removeItem('columbia_perm_faturamento');
             localStorage.removeItem('columbia_perm_finalizacao');
             localStorage.removeItem('columbia_perm_anexo');
+            localStorage.removeItem('columbia_perm_vendedor');
+            localStorage.removeItem('columbia_cod_responsavel');
             window.location.href = 'login.html';
         }
 
@@ -1120,12 +1121,8 @@
                     alert('Não foi possível atualizar os dados de produção. Verifique a conexão com o servidor.');
                 }
             } finally {
-                if (refreshIcon) {
-                    refreshIcon.classList.remove('animate-spin');
-                }
-                if (btnRefresh) {
-                    btnRefresh.disabled = false;
-                }
+                if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+                if (btnRefresh) btnRefresh.disabled = false;
                 lucide.createIcons();
             }
         }
@@ -1179,7 +1176,6 @@
                 if (!response.ok) throw new Error('Erro ao buscar anexos pendentes.');
                 rawAnexosPendentes = await response.json();
                 
-                // Atualiza opções dos dropdowns com base nos anexos retornados
                 populateSelectOptionsAnexos();
 
                 if (abaAtiva === 'anexos') renderPaginaAnexosView();
@@ -1339,6 +1335,7 @@
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
         }
 
+        // V7.6.6: FILTRAGEM POR VENDEDOR QUANDO U_VENDEDOR == 1 (CSENHA.CODIGO = COD_RESPONSAVEL)
         function getFilteredData() {
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
             const atrasadaFiltro = document.getElementById('atrasadaFilter')?.value || '';
@@ -1350,9 +1347,21 @@
             const compras = document.getElementById('comprasFilter')?.value || '';
             const terceiros = document.getElementById('terceirosFilter')?.value || '';
 
+            // Dados de Vendedor no LocalStorage
+            const isVendedor = String(localStorage.getItem('columbia_perm_vendedor') || '').trim() === '1';
+            const userCodResponsavel = String(localStorage.getItem('columbia_cod_responsavel') || '').trim();
+
             return rawData.filter(item => {
                 const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
                 if (estaNoLimbo) return false;
+
+                // REGRA SIMPLES: Se o usuário logado for vendedor (u_vendedor == 1), filtra APENAS as OS's do seu cod_responsavel
+                if (isVendedor && userCodResponsavel !== '') {
+                    const osCodResp = String(item.cod_responsavel ?? '').trim();
+                    if (osCodResp !== userCodResponsavel) {
+                        return false;
+                    }
+                }
 
                 const isConcluido = String(item.concluido || '').toLowerCase() === 'sim' || String(item.concluido || '').toLowerCase() === 's' || String(item.concluido || '') === '1';
                 if (!showConcluidas && isConcluido) {
@@ -1467,7 +1476,7 @@
         }
 
         // ==============================================================================
-        // RENDERIZAÇÃO E LÓGICA DA ABA LIBERAR ANEXOS (COM SUPORTE A ESTRUTURA E COPIA DUP)
+        // RENDERIZAÇÃO E LÓGICA DA ABA LIBERAR ANEXOS
         // ==============================================================================
         function renderPaginaAnexosView() {
             const grid = document.getElementById('calendarGrid');
@@ -1483,12 +1492,10 @@
                 return;
             }
 
-            // CAPTURA VALORES DE BUSCA, SEGMENTO E CLIENTE
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
             const segmentoFiltro = document.getElementById('segmentoFilter')?.value || '';
             const clienteFiltro = document.getElementById('clientFilter')?.value || '';
 
-            // APLICAÇÃO COMPLETA DOS FILTROS
             const anexosFiltrados = rawAnexosPendentes.filter(item => {
                 if (segmentoFiltro && String(item.segmento || '') !== segmentoFiltro) return false;
                 if (clienteFiltro && String(item.cliente || '') !== clienteFiltro) return false;
@@ -1531,7 +1538,6 @@
             const listaOrcamentos = Object.values(agrupadoPorOrcamento);
 
             let html = `
-                <!-- BARRA SUPERIOR DE AÇÕES GERAIS -->
                 <div class="bg-white rounded-2xl border border-teal-200 p-3.5 sm:p-5 shadow-sm mb-4 flex flex-wrap justify-between items-center gap-3">
                     <div class="flex items-center gap-2.5 sm:gap-3">
                         <div class="p-2 sm:p-2.5 bg-teal-100 text-teal-800 rounded-xl">
@@ -1558,7 +1564,6 @@
             listaOrcamentos.forEach(grupo => {
                 html += `
                     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                        <!-- CABEÇALHO DO ORÇAMENTO COM CHECKBOX SELEÇÃO GLOBAL DO GRUPO -->
                         <div class="bg-slate-800 text-white px-3.5 sm:px-4 py-2.5 flex justify-between items-center flex-wrap gap-2">
                             <div class="flex items-center gap-3">
                                 <input type="checkbox" onchange="toggleMarcarAnexosDoOrcamento(this, ${grupo.n_orcamento})" 
@@ -1574,7 +1579,6 @@
                             </span>
                         </div>
 
-                        <!-- LISTA DE ARQUIVOS COM CHECKBOX INDIVIDUAL E MAPEAMENTO DAS CHAVES NOVAS -->
                         <div class="p-3 bg-slate-50/50 space-y-2">
                             ${grupo.arquivos.map(arq => {
                                 const itemJson = JSON.stringify({
@@ -1607,14 +1611,12 @@
                                         </div>
 
                                         <div class="flex items-center gap-2">
-                                            <!-- VER ANEXO -->
                                             <button onclick="visualizarAnexoPendente(event, ${arq.cod_empresa}, ${arq.cod_os_origem_anexo}, ${arq.cod_anexo})" 
                                                     class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
                                                 <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                                 <span>Ver Anexo</span>
                                             </button>
 
-                                            <!-- COPIAR P/ DESENHOS -->
                                             <button onclick="copiarAnexoParaDesenhos(event, ${arq.cod_empresa}, ${arq.cod_os_principal}, ${arq.cod_os_aux_principal}, ${arq.cod_os_origem_anexo}, ${arq.cod_anexo})" 
                                                     class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] transition flex items-center gap-1 shadow-xs">
                                                 <i data-lucide="copy" class="w-3.5 h-3.5"></i>
@@ -1634,13 +1636,11 @@
             lucide.createIcons();
         }
 
-        // Marca/Desmarca todos os checkboxes de um orçamento específico
         function toggleMarcarAnexosDoOrcamento(masterChk, n_orcamento) {
             const checkboxes = document.querySelectorAll(`.chkAnexoItem[data-orcamento="${n_orcamento}"]`);
             checkboxes.forEach(chk => chk.checked = masterChk.checked);
         }
 
-        // Libera somente os anexos cujas caixas estejam marcadas
         async function liberarAnexosSelecionados() {
             const marcados = Array.from(document.querySelectorAll('.chkAnexoItem:checked')).map(chk => JSON.parse(chk.value));
 
@@ -1654,7 +1654,6 @@
             await enviarRequisicaoLiberacao({ anexos: marcados });
         }
 
-        // COPIAR ANEXO INDIVIDUAL
         async function copiarAnexoParaDesenhos(event, cod_empresa, cod_os_principal, cod_os_aux_principal, cod_os_origem_anexo, cod_anexo) {
             if (event) event.stopPropagation();
 
@@ -1696,7 +1695,6 @@
             }
         }
 
-        // VISUALIZAR ANEXO PENDENTE
         async function visualizarAnexoPendente(event, cod_empresa, cod_os_origem_anexo, cod_anexo) {
             if (event) event.stopPropagation();
 
@@ -1736,7 +1734,6 @@
             }
         }
 
-        // Função de envio
         async function enviarRequisicaoLiberacao(payload) {
             try {
                 const response = await fetch(`${API_URL}/liberar-anexos-orcamento`, {
