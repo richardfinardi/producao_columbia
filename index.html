@@ -18,7 +18,7 @@
     <meta property="og:url" content="https://consultoriarf.net/producao_columbia/">
     <meta property="og:type" content="website">
     
-    <title>Programação de Produção - Columbia V7.6.6</title>
+    <title>Programação de Produção - Columbia V7.6.7</title>
 
     <!-- VERIFICAÇÃO DE AUTENTICAÇÃO ANTES DE RENDERIZAR A PÁGINA -->
     <script>
@@ -73,7 +73,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white leading-tight">Columbia Machine Brasil</h1>
-                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.6</p>
+                    <p class="text-[10px] sm:text-xs text-columbia-100">Controle de Produção V7.6.7</p>
                 </div>
             </div>
 
@@ -305,7 +305,7 @@
         <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
             <div class="flex items-center gap-2 font-medium">
                 <i data-lucide="code-2" class="w-4 h-4 text-columbia-600"></i>
-                <span>© 2026 Columbia Machine Brasil — Sistema de Gestão de Produção V7.6.6</span>
+                <span>© 2026 Columbia Machine Brasil — Sistema de Gestão de Produção V7.6.7</span>
             </div>
         </div>
     </footer>
@@ -478,7 +478,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO NO ESCOPO GLOBAL -->
+    <!-- JAVASCRIPT LÓGICA E RENDERIZAÇÃO NO ESCOPO GLOBAL COM CHECAGEM DE NULOS -->
     <script>
         const API_URL = 'https://columbia.consultoriarf.net/producao';
         const API_HR_A_MAIS = 'https://columbia.consultoriarf.net/hr-a-mais';
@@ -505,6 +505,13 @@
             if (nomeUser) {
                 const displayEl = document.getElementById('userDisplayName');
                 if (displayEl) displayEl.textContent = nomeUser;
+            }
+
+            // V7.6.7: Se u_vendedor == 1 no CSENHA, exibe valores automaticamente sem pedir senha
+            const isVendedorVal = String(localStorage.getItem('columbia_perm_vendedor') || '').trim();
+            if (isVendedorVal === '1') {
+                isValuesUnlocked = true;
+                updateValueVisibilityUI();
             }
 
             configurarVisibilidadeAbas();
@@ -1335,7 +1342,6 @@
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
         }
 
-        // V7.6.6: FILTRAGEM POR VENDEDOR QUANDO U_VENDEDOR == 1 (CSENHA.CODIGO = COD_RESPONSAVEL)
         function getFilteredData() {
             const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
             const atrasadaFiltro = document.getElementById('atrasadaFilter')?.value || '';
@@ -1347,7 +1353,6 @@
             const compras = document.getElementById('comprasFilter')?.value || '';
             const terceiros = document.getElementById('terceirosFilter')?.value || '';
 
-            // Dados de Vendedor no LocalStorage
             const isVendedor = String(localStorage.getItem('columbia_perm_vendedor') || '').trim() === '1';
             const userCodResponsavel = String(localStorage.getItem('columbia_cod_responsavel') || '').trim();
 
@@ -1355,7 +1360,6 @@
                 const estaNoLimbo = String(item.u_limbo) === '1' || item.u_limbo === 1;
                 if (estaNoLimbo) return false;
 
-                // REGRA SIMPLES: Se o usuário logado for vendedor (u_vendedor == 1), filtra APENAS as OS's do seu cod_responsavel
                 if (isVendedor && userCodResponsavel !== '') {
                     const osCodResp = String(item.cod_responsavel ?? '').trim();
                     if (osCodResp !== userCodResponsavel) {
@@ -1475,9 +1479,6 @@
             lucide.createIcons();
         }
 
-        // ==============================================================================
-        // RENDERIZAÇÃO E LÓGICA DA ABA LIBERAR ANEXOS
-        // ==============================================================================
         function renderPaginaAnexosView() {
             const grid = document.getElementById('calendarGrid');
             if (!grid) return;
