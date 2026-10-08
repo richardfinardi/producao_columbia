@@ -1,100 +1,31 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="LOGO MINIMALISTA.png">
-    <title>Login - Columbia Machine</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        columbia: { 700: '#003e7e', 800: '#002e61', 900: '#001e40' }
-                    }
-                }
-            }
-        }
-    </script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#003e7e">
+  <title>Controle de Produção — Endereço desativado | Columbia</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#0f2741}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:linear-gradient(140deg,#eaf1f8,#f7fafd);display:grid;place-items:center;padding:24px}
+    main{width:min(560px,100%);border-radius:22px;background:white;border:1px solid #d8e3f0;box-shadow:0 15px 50px #003e7e15;text-align:center;padding:45px 30px}
+    .mark{margin:0 auto 18px;width:64px;height:64px;display:grid;place-items:center;background:#edf5ff;border-radius:18px;color:#003e7e;font-size:30px}
+    h1{font-size:clamp(24px,4.5vw,34px);margin:0 0 16px;color:#003e7e}
+    p{line-height:1.65;margin:0 0 16px;color:#526579}
+    a{display:inline-block;margin-top:12px;border-radius:11px;background:#003e7e;color:white;font-weight:800;padding:15px 24px;text-decoration:none}
+    a:hover{background:#002e61}
+    .note{font-size:13px;color:#64748b;margin-top:20px}
+  </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4 font-sans">
-
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden">
-        <div class="bg-columbia-700 p-6 text-center text-white">
-            <div class="flex justify-center mb-3">
-                <img src="./logo.png" alt="Columbia Machine" class="h-10 object-contain bg-white p-1 rounded-xl shadow-xs" onerror="this.style.display='none'">
-            </div>
-            <h1 class="text-xl font-extrabold tracking-wide">Columbia Machine Brasil</h1>
-            <p class="text-xs text-columbia-100 mt-1">Acesso ao Controle de Produção</p>
-        </div>
-
-        <form id="loginForm" onsubmit="handleLogin(event)" class="p-6 space-y-4 text-xs">
-            <div>
-                <label class="block font-bold text-slate-700 mb-1">Usuário:</label>
-                <input type="text" id="inputUsuario" required placeholder="Digite seu usuário GRV..." 
-                       class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-800 text-xs focus:outline-none focus:border-columbia-700 font-bold uppercase">
-            </div>
-
-            <div>
-                <label class="block font-bold text-slate-700 mb-1">Senha:</label>
-                <input type="password" id="inputSenha" required placeholder="Digite sua senha GRV..." 
-                       class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-800 text-xs focus:outline-none focus:border-columbia-700 font-medium">
-            </div>
-
-            <p id="msgError" class="text-red-600 font-bold text-center hidden bg-red-50 p-2.5 rounded-xl border border-red-200"></p>
-
-            <button type="submit" id="btnLogin" class="w-full py-3 bg-columbia-700 text-white font-extrabold rounded-xl hover:bg-columbia-800 transition shadow-md text-xs">
-                Entrar no Sistema
-            </button>
-        </form>
-    </div>
-
-    <script>
-        async function handleLogin(e) {
-            e.preventDefault();
-            const usuario = document.getElementById('inputUsuario').value.trim().toUpperCase();
-            const senha = document.getElementById('inputSenha').value;
-            
-            const msgError = document.getElementById('msgError');
-            const btnLogin = document.getElementById('btnLogin');
-
-            msgError.classList.add('hidden');
-            btnLogin.disabled = true;
-            btnLogin.textContent = 'Autenticando...';
-
-            try {
-                const response = await fetch('https://columbia.consultoriarf.net/producao/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usuario, senha })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.detail || 'Usuário ou senha inválidos.');
-                }
-
-                // Salva Token, Permissões e o Código do Vendedor no localStorage
-                localStorage.setItem('columbia_token', data.access_token);
-                localStorage.setItem('columbia_usuario_nome', data.usuario);
-                localStorage.setItem('columbia_perm_faturamento', data.u_faturamento ?? 0);
-                localStorage.setItem('columbia_perm_finalizacao', data.u_finalizacao ?? 0);
-                localStorage.setItem('columbia_perm_anexo', data.u_anexo ?? 0);
-                localStorage.setItem('columbia_perm_vendedor', data.u_vendedor ?? 0);
-                localStorage.setItem('columbia_cod_responsavel', data.cod_responsavel ?? '');
-
-                window.location.href = 'index.html';
-
-            } catch (error) {
-                msgError.textContent = error.message;
-                msgError.classList.remove('hidden');
-            } finally {
-                btnLogin.disabled = false;
-                btnLogin.textContent = 'Entrar no Sistema';
-            }
-        }
-    </script>
+<body>
+  <main>
+    <div class="mark" aria-hidden="true">↗</div>
+    <h1>Link desativado</h1>
+    <p>O Controle de Produção da Columbia foi integrado ao portal principal.</p>
+    <p>O acesso agora é feito pelo menu <strong>Columbia Machine Brasil</strong>, utilizando o login único e a permissão <strong>PCP</strong>.</p>
+    <a href="https://consultoriarf.net/columbia/">Acessar consultoriarf.net/columbia</a>
+    <p class="note">Depois do login, selecione <strong>Controle de Produção</strong>.</p>
+  </main>
 </body>
 </html>
